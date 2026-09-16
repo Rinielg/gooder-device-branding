@@ -19,24 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-SCOPE — PLEASE READ
-
-The MIT licence above covers the SOURCE CODE of this project only: everything
-under `app/src/`, the build tooling in `tools/`, and the documentation.
-
-It does NOT cover the bundled media assets, which are third-party and are
-included only so the studio runs as-is. No licence is granted for them here and
-they remain under whatever terms they arrived with:
-
-  - iphone-18-pro.usdz                 third-party device model
-  - app/public/models/*.glb            generated from that model
-  - app/public/textures/*              generated from that model; the four
-                                       wallpapers are Apple artwork
-  - screen/stock-wallpaper.jpg         Apple artwork
-  - Gradient BG 1 - Balanced Desktop.json   supplied background animation
-
-If you are reusing this project, supply your own model and background and
-rebuild the derived assets with ./tools/build.sh.

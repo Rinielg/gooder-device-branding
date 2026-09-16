@@ -203,8 +203,12 @@ and video need re-attaching after loading a project.
 
 ## Licence
 
-The source code is MIT — see [LICENSE](LICENSE). The bundled media assets are
-**not** covered by it; see below.
+The source code is MIT — see [LICENSE](LICENSE).
+
+The bundled media assets are **not** covered by it. The device model, the
+textures and wallpapers derived from it, and the background animation are
+third-party and carry their own terms — [NOTICE](NOTICE) sets out exactly what
+is and isn't covered.
 
 ---
 

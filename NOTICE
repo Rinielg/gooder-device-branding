@@ -1,0 +1,30 @@
+Gooder Device Branding
+Copyright (c) 2026 Riniel Gresse
+
+WHAT THE MIT LICENCE COVERS
+---------------------------
+The MIT licence in LICENSE covers the SOURCE CODE of this project only:
+everything under app/src/, the build tooling in tools/, and the documentation.
+
+WHAT IT DOES NOT COVER
+----------------------
+The bundled media assets are third-party. They are included so the studio runs
+as-is. NO LICENCE IS GRANTED FOR THEM by this repository, and they remain under
+whatever terms they arrived with:
+
+  iphone-18-pro.usdz                       third-party device model
+  app/public/models/*.glb                  generated from that model
+  app/public/textures/*                    generated from that model; the four
+                                           wallpapers are Apple artwork
+  screen/stock-wallpaper.jpg               Apple artwork
+  Gradient BG 1 - Balanced Desktop.json    supplied background animation
+
+If you are reusing this project, supply your own model and background and
+rebuild the derived assets with ./tools/build.sh.
+
+BUNDLED DEPENDENCIES
+--------------------
+Runtime dependencies are installed from npm and keep their own licences:
+three (MIT), gsap (standard "no charge" licence), dialkit (MIT),
+mediabunny (MPL-2.0), lottie-web (MIT), zustand (MIT), motion (MIT),
+react / react-dom (MIT).
