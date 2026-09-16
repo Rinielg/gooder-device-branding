@@ -1,0 +1,458 @@
+[
+  {
+    "@states": [
+      "Black"
+    ],
+    "vXbOrtDfSZOxrnw": {
+      "colorB": 0.026173099875450134,
+      "colorG": 0.026173099875450134,
+      "colorR": 0.02721180021762848,
+      "metalness": 0.8700000047683716
+    },
+    "NtNSwEIIFmIbXaY": {
+      "map": "RCZgSbfewfvKOvh",
+      "metalness": 0.30000001192092896,
+      "roughness": 0.4000000059604645
+    },
+    "ZoizrWFccovSVQl": {
+      "colorB": 0.04749999940395355,
+      "colorG": 0.047541700303554535,
+      "colorR": 0.05000000074505806,
+      "map": "GeKhADfikrfhGln",
+      "metalness": 0.8700000047683716
+    },
+    "xHXZphlQnPqfbqz": {
+      "aoMap": "rmbtiCKMcdkeWlF",
+      "colorB": 0.009999999776482582,
+      "colorG": 0.009999999776482582,
+      "colorR": 0.009999999776482582
+    },
+    "opLCHWKegPYqnYR": {
+      "colorB": 0.0166494008153677,
+      "colorG": 0.01666180044412613,
+      "colorR": 0.017389100044965744
+    },
+    "rDxDuNUnYMxIFFC": {
+      "colorB": 0.008310530334711075,
+      "colorG": 0.008316869847476482,
+      "colorR": 0.008682419545948505
+    },
+    "TsCoKngnEdcjZrd": {
+      "colorB": 0.026173099875450134,
+      "colorG": 0.026173099875450134,
+      "colorR": 0.02721180021762848
+    },
+    "ixdEQTtZsWDnJLg": {
+      "colorB": 0.3800559937953949,
+      "colorG": 0.2546539902687073,
+      "colorR": 0.20265300571918488
+    },
+    "NTQuwUynEytdoDZ": {
+      "colorB": 0.3826490044593811,
+      "colorG": 0.3659290075302124,
+      "colorR": 0.3496429920196533
+    },
+    "BdECJUdkVCrWlKB": {
+      "map": "niHcDsZiUMAqWqJ"
+    },
+    "YmlPswXiJMnOhti": {
+      "map": "GeKhADfikrfhGln",
+      "metalness": 0.5
+    },
+    "FoAbzXGuCEeVRQW": {
+      "colorB": 0.019999999552965164,
+      "colorG": 0.019713999703526497,
+      "colorR": 0.01955999992787838,
+      "metalness": 0.4000000059604645
+    },
+    "qExXyMScYDowRBN": {
+      "colorB": 0.00023300000466406346,
+      "colorG": 0.00023300000466406346,
+      "colorR": 0.00023300000466406346,
+      "roughness": 0.02
+    },
+    "PVNXZIVJlvoNsqb": {
+      "colorB": 0.01,
+      "colorG": 0.01,
+      "colorR": 0.01,
+      "metalness": 0.6,
+      "roughness": 0.25
+    },
+    "stlMkdXkRsspsoE": {
+      "colorB": 0.03999999910593033,
+      "colorG": 0.039427999407052994,
+      "colorR": 0.03911999985575676
+    },
+    "trJidQvKAjIlfOd": {
+      "colorB": 0.009999999776482582,
+      "colorG": 0.009999999776482582,
+      "colorR": 0.009999999776482582
+    },
+    "pkUBCyCvYJYVzTr": {
+      "emissiveMap": "evAOrRCvkIvCmyH"
+    },
+    "kZkIRyfgTGLpwyO": {
+      "colorB": 0.05000000074505806,
+      "colorG": 0.04852750152349472,
+      "colorR": 0.04780000075697899,
+      "metalness": 0.699999988079071
+    },
+    "hAKVdrzztJgljCR": {
+      "map": "ZIZlocwUPhckQul"
+    },
+    "oyfLuwvbNOEVdRP": {
+      "colorB": 0.006911229807883501,
+      "colorG": 0.0069158500991761684,
+      "colorR": 0.00719441007822752
+    },
+    "CLCwacSjWaAANNS": {
+      "colorB": 0.10732389986515045,
+      "colorG": 0.10719927996397019,
+      "colorR": 0.10713227018713951
+    }
+  },
+  {
+    "@states": [
+      "Plum"
+    ],
+    "vXbOrtDfSZOxrnw": {
+      "colorB": 0.04841160029172897,
+      "colorG": 0.04122279956936836,
+      "colorR": 0.0889815017580986,
+      "metalness": 0.8700000047683716
+    },
+    "NtNSwEIIFmIbXaY": {
+      "map": "hDYFpouwgGPeqCc",
+      "metalness": 0.30000001192092896,
+      "roughness": 0.47540000000596044
+    },
+    "ZoizrWFccovSVQl": {
+      "colorB": 0.04050000011920929,
+      "colorG": 0.029999999329447746,
+      "colorR": 0.11999999731779099,
+      "map": "FuhzTLpTutAAOTL",
+      "metalness": 0.8700000047683716
+    },
+    "xHXZphlQnPqfbqz": {
+      "aoMap": "rmbtiCKMcdkeWlF",
+      "colorB": 0.009999999776482582,
+      "colorG": 0.009999999776482582,
+      "colorR": 0.009999999776482582,
+      "metalness": 0.1,
+      "roughness": 0.9
+    },
+    "opLCHWKegPYqnYR": {
+      "colorB": 0.028846900910139084,
+      "colorG": 0.023136699572205544,
+      "colorR": 0.06372380256652832
+    },
+    "rDxDuNUnYMxIFFC": {
+      "colorB": 0.01332509983330965,
+      "colorG": 0.009293979965150356,
+      "colorR": 0.046203698962926865
+    },
+    "TsCoKngnEdcjZrd": {
+      "colorB": 0.04949279874563217,
+      "colorG": 0.0445558987557888,
+      "colorR": 0.0835350975394249
+    },
+    "ixdEQTtZsWDnJLg": {
+      "colorB": 0.25023800134658813,
+      "colorG": 0.23302200436592102,
+      "colorR": 0.3800559937953949
+    },
+    "NTQuwUynEytdoDZ": {
+      "colorB": 0.47492700815200806,
+      "colorG": 0.473004013299942,
+      "colorR": 0.4859110116958618
+    },
+    "BdECJUdkVCrWlKB": {
+      "map": "niHcDsZiUMAqWqJ"
+    },
+    "YmlPswXiJMnOhti": {
+      "map": "FuhzTLpTutAAOTL",
+      "metalness": 0.5
+    },
+    "FoAbzXGuCEeVRQW": {
+      "colorB": 0.02147899940609932,
+      "colorG": 0.01839499920606613,
+      "colorR": 0.05581299960613251,
+      "metalness": 0.0
+    },
+    "qExXyMScYDowRBN": {
+      "colorB": 0.00023300000466406346,
+      "colorG": 0.00023300000466406346,
+      "colorR": 0.00023300000466406346,
+      "roughness": 0.02
+    },
+    "PVNXZIVJlvoNsqb": {
+      "colorB": 0.048615600913763046,
+      "colorG": 0.042454998940229416,
+      "colorR": 0.07828830182552338,
+      "metalness": 0.6,
+      "roughness": 0.25
+    },
+    "stlMkdXkRsspsoE": {
+      "colorB": 0.03666260093450546,
+      "colorG": 0.03311099857091904,
+      "colorR": 0.06101889908313751
+    },
+    "trJidQvKAjIlfOd": {
+      "colorB": 0.009999999776482582,
+      "colorG": 0.009999999776482582,
+      "colorR": 0.009999999776482582,
+      "metalness": 0.9,
+      "roughness": 0.3
+    },
+    "pkUBCyCvYJYVzTr": {
+      "emissiveMap": "MyktPACgLIwAjCe"
+    },
+    "kZkIRyfgTGLpwyO": {
+      "colorB": 0.04699999839067459,
+      "colorG": 0.03999999910593033,
+      "colorR": 0.10000000149011612,
+      "metalness": 0.699999988079071
+    },
+    "hAKVdrzztJgljCR": {
+      "map": "VRtPYmIFNQQtSef"
+    },
+    "oyfLuwvbNOEVdRP": {
+      "colorB": 0.02147890068590641,
+      "colorG": 0.01839520037174225,
+      "colorR": 0.055813100188970566
+    },
+    "CLCwacSjWaAANNS": {
+      "colorB": 0.12780730307102203,
+      "colorG": 0.12754868984222412,
+      "colorR": 0.21404099464416504
+    }
+  },
+  {
+    "@states": [
+      "Silver"
+    ],
+    "vXbOrtDfSZOxrnw": {
+      "colorB": 0.8391270041465759,
+      "colorG": 0.8584570288658142,
+      "colorR": 0.8552160263061523,
+      "metalness": 0.6700000166893005
+    },
+    "NtNSwEIIFmIbXaY": {
+      "map": "JDQwTWDJgeXBbRs",
+      "metalness": 0.5000000059604645,
+      "roughness": 0.5400000005960465
+    },
+    "ZoizrWFccovSVQl": {
+      "colorB": 0.18000000715255737,
+      "colorG": 0.18000000715255737,
+      "colorR": 0.18000000715255737,
+      "map": "YDcvozuFRyymvXi",
+      "metalness": 0.6700000166893005
+    },
+    "xHXZphlQnPqfbqz": {
+      "aoMap": "rmbtiCKMcdkeWlF",
+      "colorB": 0.009999999776482582,
+      "colorG": 0.009999999776482582,
+      "colorR": 0.009999999776482582
+    },
+    "opLCHWKegPYqnYR": {
+      "colorB": 0.7059159874916077,
+      "colorG": 0.7388449907302856,
+      "colorR": 0.7332959771156311
+    },
+    "rDxDuNUnYMxIFFC": {
+      "colorB": 0.7059159874916077,
+      "colorG": 0.7388449907302856,
+      "colorR": 0.7332959771156311
+    },
+    "TsCoKngnEdcjZrd": {
+      "colorB": 0.6415680050849915,
+      "colorG": 0.656000018119812,
+      "colorR": 0.6535800099372864
+    },
+    "ixdEQTtZsWDnJLg": {
+      "colorB": 0.3800559937953949,
+      "colorG": 0.3800559937953949,
+      "colorR": 0.3800559937953949
+    },
+    "NTQuwUynEytdoDZ": {
+      "colorB": 0.6038269996643066,
+      "colorG": 0.5903570055961609,
+      "colorR": 0.5770630240440369
+    },
+    "BdECJUdkVCrWlKB": {
+      "map": "UshpheqHqDROwUK"
+    },
+    "YmlPswXiJMnOhti": {
+      "map": "YDcvozuFRyymvXi",
+      "metalness": 0.5
+    },
+    "FoAbzXGuCEeVRQW": {
+      "colorB": 0.34846100211143494,
+      "colorG": 0.3546920120716095,
+      "colorR": 0.35364899039268494,
+      "metalness": 0.0
+    },
+    "qExXyMScYDowRBN": {
+      "colorB": 0.0023300000466406345,
+      "colorG": 0.0023300000466406345,
+      "colorR": 0.0023300000466406345,
+      "roughness": 0.02
+    },
+    "PVNXZIVJlvoNsqb": {
+      "colorB": 0.9818969964981079,
+      "colorG": 1.0,
+      "colorR": 1.0,
+      "metalness": 0.4000000059604645,
+      "roughness": 0.25
+    },
+    "stlMkdXkRsspsoE": {
+      "colorB": 0.5220000147819519,
+      "colorG": 0.5070210099220276,
+      "colorR": 0.49903199076652527
+    },
+    "trJidQvKAjIlfOd": {
+      "colorB": 0.009999999776482582,
+      "colorG": 0.009999999776482582,
+      "colorR": 0.009999999776482582
+    },
+    "pkUBCyCvYJYVzTr": {
+      "emissiveMap": "azLJhzhlbPcZLiB"
+    },
+    "kZkIRyfgTGLpwyO": {
+      "colorB": 0.5230000019073486,
+      "colorG": 0.5075939893722534,
+      "colorR": 0.49998798966407776,
+      "metalness": 0.699999988079071
+    },
+    "hAKVdrzztJgljCR": {
+      "map": "exaOpVRTuDHEEab"
+    },
+    "oyfLuwvbNOEVdRP": {
+      "colorB": 0.6783679723739624,
+      "colorG": 0.6939079761505127,
+      "colorR": 0.6919249892234802
+    },
+    "CLCwacSjWaAANNS": {
+      "colorB": 1.0976972001791,
+      "colorG": 1.0978741198778152,
+      "colorR": 1.097844470143318
+    }
+  },
+  {
+    "@states": [
+      "Sky_Blue"
+    ],
+    "vXbOrtDfSZOxrnw": {
+      "colorB": 0.859551050066948,
+      "colorG": 0.6665459871292114,
+      "colorR": 0.5610179901123047,
+      "metalness": 0.7699999809265137
+    },
+    "NtNSwEIIFmIbXaY": {
+      "map": "eeCYQqqyBkPtwFx",
+      "metalness": 0.4000000059604645,
+      "roughness": 0.5400000005960465
+    },
+    "ZoizrWFccovSVQl": {
+      "colorB": 0.550000011920929,
+      "colorG": 0.3895829916000366,
+      "colorR": 0.30250000953674316,
+      "map": "hTgjdbMXdEcOnNE",
+      "metalness": 0.699999988079071
+    },
+    "xHXZphlQnPqfbqz": {
+      "aoMap": "rmbtiCKMcdkeWlF",
+      "colorB": 0.009999999776482582,
+      "colorG": 0.009999999776482582,
+      "colorR": 0.009999999776482582,
+      "metalness": 0.1,
+      "roughness": 0.9
+    },
+    "opLCHWKegPYqnYR": {
+      "colorB": 0.9551050066947937,
+      "colorG": 0.6665459871292114,
+      "colorR": 0.5610179901123047
+    },
+    "rDxDuNUnYMxIFFC": {
+      "colorB": 0.9551050066947937,
+      "colorG": 0.6665459871292114,
+      "colorR": 0.5610179901123047
+    },
+    "TsCoKngnEdcjZrd": {
+      "colorB": 0.6209160089492798,
+      "colorG": 0.42728400230407715,
+      "colorR": 0.35693299770355225
+    },
+    "ixdEQTtZsWDnJLg": {
+      "colorB": 0.3800559937953949,
+      "colorG": 0.1574389934539795,
+      "colorR": 0.08623319864273071
+    },
+    "NTQuwUynEytdoDZ": {
+      "colorB": 0.6038269996643066,
+      "colorG": 0.5650309920310974,
+      "colorR": 0.5382350087165833
+    },
+    "BdECJUdkVCrWlKB": {
+      "map": "UshpheqHqDROwUK"
+    },
+    "YmlPswXiJMnOhti": {
+      "map": "hTgjdbMXdEcOnNE",
+      "metalness": 0.5
+    },
+    "FoAbzXGuCEeVRQW": {
+      "colorB": 0.6209160089492798,
+      "colorG": 0.4132080078125,
+      "colorR": 0.3273710012435913,
+      "metalness": 0.0
+    },
+    "qExXyMScYDowRBN": {
+      "colorB": 0.0023300000466406345,
+      "colorG": 0.0023300000466406345,
+      "colorR": 0.0023300000466406345,
+      "roughness": 0.02
+    },
+    "PVNXZIVJlvoNsqb": {
+      "colorB": 0.9114069938659668,
+      "colorG": 0.5681229829788208,
+      "colorR": 0.44912898540496826,
+      "metalness": 0.6000000238418579,
+      "roughness": 0.25
+    },
+    "stlMkdXkRsspsoE": {
+      "colorB": 0.499457985162735,
+      "colorG": 0.31399598717689514,
+      "colorR": 0.24944399297237396
+    },
+    "trJidQvKAjIlfOd": {
+      "colorB": 0.009999999776482582,
+      "colorG": 0.009999999776482582,
+      "colorR": 0.009999999776482582,
+      "metalness": 0.7,
+      "roughness": 0.6
+    },
+    "pkUBCyCvYJYVzTr": {
+      "emissiveMap": "OEzzTveqWedAame"
+    },
+    "kZkIRyfgTGLpwyO": {
+      "colorB": 0.7293469905853271,
+      "colorG": 0.4559609889984131,
+      "colorR": 0.36106300354003906,
+      "metalness": 0.699999988079071
+    },
+    "hAKVdrzztJgljCR": {
+      "map": "BcmSUcegMbZPElx"
+    },
+    "oyfLuwvbNOEVdRP": {
+      "colorB": 0.7775539755821228,
+      "colorG": 0.5160539746284485,
+      "colorR": 0.40813198685646057
+    },
+    "CLCwacSjWaAANNS": {
+      "colorB": 1.4978741198778152,
+      "colorG": 1.085198860168457,
+      "colorR": 0.8638681900501252
+    }
+  }
+]

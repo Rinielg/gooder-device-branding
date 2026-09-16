@@ -1,0 +1,1870 @@
+{
+ "iphone-18-pro": {
+  "changingMaterials": [
+   "DodbyqhrrBLNbcB",
+   "vmHtEpzvjsKvWzR",
+   "NTEUvFZCGwiAbXI",
+   "VHayjpcemEFwuHx",
+   "fREYAZareuwsSmV",
+   "hGSiEINnkluBUrq",
+   "crYYDRbonRWlXIT",
+   "LcWrUUjMeaSXpwZ",
+   "bKCxnOaKtDpUlmo",
+   "nuwSyerWvJfhsMd",
+   "IxiedJEUxrDhLIX",
+   "WElbLmMkunjUugH",
+   "yPeTOPaiWwFMSdb",
+   "ZKYcumThEAllgKc",
+   "KSynYqGGNGMUJti",
+   "mEyfsugDbInWtmQ",
+   "VQDOOwQiAAkEseS",
+   "vUgmkmbQjXTaqEc"
+  ],
+  "variants": {
+   "Black": {
+    "id": "Black",
+    "label": "Black",
+    "swatch": "#1b1b1d",
+    "materials": {
+     "DodbyqhrrBLNbcB": {
+      "color": [
+       0.011645,
+       0.011645,
+       0.011645
+      ],
+      "metalness": 0.3,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "map": "ucFExOATvHJJuQp.png",
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "vmHtEpzvjsKvWzR": {
+      "color": [
+       0.008682,
+       0.008317,
+       0.008311
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "clearcoatRoughness": 0.001,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "NeAIKPqoNOObBNI.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "NTEUvFZCGwiAbXI": {
+      "color": [
+       0.027212,
+       0.026173,
+       0.026173
+      ],
+      "metalness": 1.0,
+      "roughness": 0.3,
+      "maps": {
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "VHayjpcemEFwuHx": {
+      "color": [
+       0.202653,
+       0.254654,
+       0.380056
+      ],
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "clearcoat": 0.2,
+      "clearcoatRoughness": 0.33,
+      "maps": {
+       "aoMap": "GjBphnLVWkiisKl.jpg"
+      }
+     },
+     "fREYAZareuwsSmV": {
+      "color": [
+       0.349643,
+       0.365929,
+       0.382649
+      ],
+      "metalness": 0.0,
+      "roughness": 0.4
+     },
+     "hGSiEINnkluBUrq": {
+      "color": [
+       0.03912,
+       0.039428,
+       0.04
+      ],
+      "metalness": 1.0,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.15,
+      "maps": {
+       "roughnessMap": "xdoKGdupOAjxLNU.png",
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "crYYDRbonRWlXIT": {
+      "color": [
+       0.017389,
+       0.016662,
+       0.016649
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "NeAIKPqoNOObBNI.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "LcWrUUjMeaSXpwZ": {
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "maps": {
+       "map": "BecYaxtIoQhaTDC.png"
+      }
+     },
+     "bKCxnOaKtDpUlmo": {
+      "color": [
+       0.01956,
+       0.019714,
+       0.02
+      ],
+      "roughness": 0.7,
+      "maps": {
+       "aoMap": "uWUtTYhIZknGRks.jpg"
+      }
+     },
+     "nuwSyerWvJfhsMd": {
+      "color": [
+       0.01956,
+       0.019714,
+       0.02
+      ],
+      "metalness": 0.4,
+      "roughness": 0.5
+     },
+     "IxiedJEUxrDhLIX": {
+      "color": [
+       0.65358,
+       0.656,
+       0.641568
+      ],
+      "metalness": 0.5,
+      "maps": {
+       "map": "xVmnUVjeBQbcboE.png",
+       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "WElbLmMkunjUugH": {
+      "color": [
+       0.05,
+       0.047542,
+       0.0475
+      ],
+      "metalness": 0.87,
+      "maps": {
+       "map": "xVmnUVjeBQbcboE.png",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "yPeTOPaiWwFMSdb": {
+      "color": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "metalness": 1.0,
+      "roughness": 0.22
+     },
+     "ZKYcumThEAllgKc": {
+      "color": [
+       0.007194,
+       0.006916,
+       0.006911
+      ],
+      "metalness": 0.3,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "KSynYqGGNGMUJti": {
+      "color": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "metalness": 0.0,
+      "roughness": 1.0,
+      "clearcoat": 0.25,
+      "clearcoatRoughness": 0.05,
+      "emissiveIntensity": 1.75,
+      "maps": {
+       "emissiveMap": "sYSiFKwyndDoOfT.jpg",
+       "aoMap": "EqKHXwnqXFcaaJA.jpg"
+      }
+     },
+     "mEyfsugDbInWtmQ": {
+      "color": [
+       0.0478,
+       0.048528,
+       0.05
+      ],
+      "metalness": 0.7,
+      "roughness": 0.15,
+      "maps": {
+       "aoMap": "RSlBROxKlHZKBTA.jpg",
+       "normalMap": "MyGYhOTzwVBlbeN.png"
+      }
+     },
+     "VQDOOwQiAAkEseS": {
+      "metalness": 1.0,
+      "maps": {
+       "map": "ozMyGTowiEniIKI.png",
+       "roughnessMap": "fyddebENwkTzIXJ.png",
+       "aoMap": "NapfxhXmAIKasCk.png",
+       "normalMap": "KCjzjPEMlSEiYxv.png"
+      }
+     },
+     "vUgmkmbQjXTaqEc": {
+      "color": [
+       0.027212,
+       0.026173,
+       0.026173
+      ],
+      "metalness": 0.87,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "NeAIKPqoNOObBNI.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     }
+    }
+   },
+   "Burgundy": {
+    "id": "Burgundy",
+    "label": "Plum",
+    "swatch": "#5b3a48",
+    "materials": {
+     "DodbyqhrrBLNbcB": {
+      "color": [
+       0.055813,
+       0.018395,
+       0.021479
+      ],
+      "metalness": 0.3,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "map": "wFIvzqeRiEsoYXe.png",
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "vmHtEpzvjsKvWzR": {
+      "color": [
+       0.046204,
+       0.009294,
+       0.013325
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "clearcoatRoughness": 0.001,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "NeAIKPqoNOObBNI.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "NTEUvFZCGwiAbXI": {
+      "color": [
+       0.083535,
+       0.044556,
+       0.049493
+      ],
+      "metalness": 1.0,
+      "roughness": 0.3,
+      "maps": {
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "VHayjpcemEFwuHx": {
+      "color": [
+       0.380056,
+       0.233022,
+       0.250238
+      ],
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "clearcoat": 0.2,
+      "clearcoatRoughness": 0.33,
+      "maps": {
+       "aoMap": "GjBphnLVWkiisKl.jpg"
+      }
+     },
+     "fREYAZareuwsSmV": {
+      "color": [
+       0.485911,
+       0.473004,
+       0.474927
+      ],
+      "metalness": 0.0,
+      "roughness": 0.4
+     },
+     "hGSiEINnkluBUrq": {
+      "color": [
+       0.061019,
+       0.033111,
+       0.036663
+      ],
+      "metalness": 1.0,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.15,
+      "maps": {
+       "roughnessMap": "xdoKGdupOAjxLNU.png",
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "crYYDRbonRWlXIT": {
+      "color": [
+       0.063724,
+       0.023137,
+       0.028847
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "NeAIKPqoNOObBNI.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "LcWrUUjMeaSXpwZ": {
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "maps": {
+       "map": "BecYaxtIoQhaTDC.png"
+      }
+     },
+     "bKCxnOaKtDpUlmo": {
+      "color": [
+       0.046,
+       0.0184,
+       0.022999
+      ],
+      "roughness": 0.7,
+      "maps": {
+       "aoMap": "uWUtTYhIZknGRks.jpg"
+      }
+     },
+     "nuwSyerWvJfhsMd": {
+      "color": [
+       0.055813,
+       0.018395,
+       0.021479
+      ],
+      "metalness": 0.0,
+      "roughness": 0.5
+     },
+     "IxiedJEUxrDhLIX": {
+      "color": [
+       0.65358,
+       0.656,
+       0.641568
+      ],
+      "metalness": 0.5,
+      "maps": {
+       "map": "TmzVuvAAiiUepdl.png",
+       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "WElbLmMkunjUugH": {
+      "color": [
+       0.12,
+       0.03,
+       0.0405
+      ],
+      "metalness": 0.87,
+      "maps": {
+       "map": "TmzVuvAAiiUepdl.png",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "yPeTOPaiWwFMSdb": {
+      "color": [
+       0.078288,
+       0.042455,
+       0.048616
+      ],
+      "metalness": 1.0,
+      "roughness": 0.22
+     },
+     "ZKYcumThEAllgKc": {
+      "color": [
+       0.055813,
+       0.018395,
+       0.021479
+      ],
+      "metalness": 0.3,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "KSynYqGGNGMUJti": {
+      "color": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "metalness": 0.0,
+      "roughness": 1.0,
+      "clearcoat": 0.25,
+      "clearcoatRoughness": 0.05,
+      "emissiveIntensity": 1.75,
+      "maps": {
+       "emissiveMap": "YdpTjeQvCBWCMKR.jpg",
+       "aoMap": "EqKHXwnqXFcaaJA.jpg"
+      }
+     },
+     "mEyfsugDbInWtmQ": {
+      "color": [
+       0.1,
+       0.04,
+       0.047
+      ],
+      "metalness": 0.7,
+      "roughness": 0.15,
+      "maps": {
+       "aoMap": "RSlBROxKlHZKBTA.jpg",
+       "normalMap": "MyGYhOTzwVBlbeN.png"
+      }
+     },
+     "VQDOOwQiAAkEseS": {
+      "metalness": 1.0,
+      "maps": {
+       "map": "udoRGnBtuGXqKBw.png",
+       "roughnessMap": "fyddebENwkTzIXJ.png",
+       "aoMap": "NapfxhXmAIKasCk.png",
+       "normalMap": "KCjzjPEMlSEiYxv.png"
+      }
+     },
+     "vUgmkmbQjXTaqEc": {
+      "color": [
+       0.088982,
+       0.041223,
+       0.048412
+      ],
+      "metalness": 0.87,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "NeAIKPqoNOObBNI.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     }
+    }
+   },
+   "Glacier": {
+    "id": "Glacier",
+    "label": "Sky Blue",
+    "swatch": "#a8c4dd",
+    "materials": {
+     "DodbyqhrrBLNbcB": {
+      "color": [
+       0.408132,
+       0.516643,
+       0.777554
+      ],
+      "metalness": 0.4,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "map": "NtrMWcZSfIQHrGc.png",
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "vmHtEpzvjsKvWzR": {
+      "color": [
+       0.561018,
+       0.666546,
+       0.955105
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "clearcoatRoughness": 0.001,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "NeAIKPqoNOObBNI.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "NTEUvFZCGwiAbXI": {
+      "color": [
+       0.356933,
+       0.427284,
+       0.620916
+      ],
+      "metalness": 1.0,
+      "roughness": 0.3,
+      "maps": {
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "VHayjpcemEFwuHx": {
+      "color": [
+       0.086233,
+       0.157439,
+       0.380056
+      ],
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "clearcoat": 0.2,
+      "clearcoatRoughness": 0.33,
+      "maps": {
+       "aoMap": "GjBphnLVWkiisKl.jpg"
+      }
+     },
+     "fREYAZareuwsSmV": {
+      "color": [
+       0.538235,
+       0.565031,
+       0.603827
+      ],
+      "metalness": 0.0,
+      "roughness": 0.4
+     },
+     "hGSiEINnkluBUrq": {
+      "color": [
+       0.249444,
+       0.313996,
+       0.499458
+      ],
+      "metalness": 1.0,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.15,
+      "maps": {
+       "roughnessMap": "xdoKGdupOAjxLNU.png",
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "crYYDRbonRWlXIT": {
+      "color": [
+       0.561018,
+       0.666546,
+       0.955105
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "NeAIKPqoNOObBNI.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "LcWrUUjMeaSXpwZ": {
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "maps": {
+       "map": "xcbGbChigHGEmpW.png"
+      }
+     },
+     "bKCxnOaKtDpUlmo": {
+      "color": [
+       0.223984,
+       0.278586,
+       0.43388
+      ],
+      "roughness": 0.7,
+      "maps": {
+       "aoMap": "uWUtTYhIZknGRks.jpg"
+      }
+     },
+     "nuwSyerWvJfhsMd": {
+      "color": [
+       0.327371,
+       0.413208,
+       0.620916
+      ],
+      "metalness": 0.0,
+      "roughness": 0.5
+     },
+     "IxiedJEUxrDhLIX": {
+      "color": [
+       0.65358,
+       0.656,
+       0.641568
+      ],
+      "metalness": 0.5,
+      "maps": {
+       "map": "cdDgSjDGIojYKog.png",
+       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "WElbLmMkunjUugH": {
+      "color": [
+       0.3025,
+       0.389583,
+       0.55
+      ],
+      "metalness": 0.7,
+      "maps": {
+       "map": "cdDgSjDGIojYKog.png",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "yPeTOPaiWwFMSdb": {
+      "color": [
+       0.449129,
+       0.568123,
+       0.911407
+      ],
+      "metalness": 0.6,
+      "roughness": 0.2
+     },
+     "ZKYcumThEAllgKc": {
+      "color": [
+       0.408132,
+       0.516054,
+       0.777554
+      ],
+      "metalness": 0.3,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "KSynYqGGNGMUJti": {
+      "color": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "metalness": 0.0,
+      "roughness": 1.0,
+      "clearcoat": 0.25,
+      "clearcoatRoughness": 0.05,
+      "emissiveIntensity": 1.75,
+      "maps": {
+       "emissiveMap": "pMCUHrXFoskvAnX.jpg",
+       "aoMap": "EqKHXwnqXFcaaJA.jpg"
+      }
+     },
+     "mEyfsugDbInWtmQ": {
+      "color": [
+       0.361063,
+       0.455961,
+       0.729347
+      ],
+      "metalness": 0.7,
+      "roughness": 0.15,
+      "maps": {
+       "aoMap": "RSlBROxKlHZKBTA.jpg",
+       "normalMap": "MyGYhOTzwVBlbeN.png"
+      }
+     },
+     "VQDOOwQiAAkEseS": {
+      "metalness": 1.0,
+      "maps": {
+       "map": "hMvYDZQQhWJKPek.png",
+       "roughnessMap": "fyddebENwkTzIXJ.png",
+       "aoMap": "NapfxhXmAIKasCk.png",
+       "normalMap": "KCjzjPEMlSEiYxv.png"
+      }
+     },
+     "vUgmkmbQjXTaqEc": {
+      "color": [
+       0.561018,
+       0.666546,
+       0.955105
+      ],
+      "metalness": 0.77,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "NeAIKPqoNOObBNI.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     }
+    }
+   },
+   "Silver": {
+    "id": "Silver",
+    "label": "Silver",
+    "swatch": "#d8d8d6",
+    "materials": {
+     "DodbyqhrrBLNbcB": {
+      "color": [
+       0.690254,
+       0.692071,
+       0.676573
+      ],
+      "metalness": 0.5,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "map": "SsQAEoPnxZJybcr.png",
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "vmHtEpzvjsKvWzR": {
+      "color": [
+       0.733296,
+       0.738845,
+       0.705916
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "clearcoatRoughness": 0.001,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "NeAIKPqoNOObBNI.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "NTEUvFZCGwiAbXI": {
+      "color": [
+       0.65358,
+       0.656,
+       0.641568
+      ],
+      "metalness": 1.0,
+      "roughness": 0.3,
+      "maps": {
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "VHayjpcemEFwuHx": {
+      "color": [
+       0.380056,
+       0.380056,
+       0.380056
+      ],
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "clearcoat": 0.2,
+      "clearcoatRoughness": 0.33,
+      "maps": {
+       "aoMap": "GjBphnLVWkiisKl.jpg"
+      }
+     },
+     "fREYAZareuwsSmV": {
+      "color": [
+       0.577063,
+       0.590357,
+       0.603827
+      ],
+      "metalness": 0.0,
+      "roughness": 0.4
+     },
+     "hGSiEINnkluBUrq": {
+      "color": [
+       0.499032,
+       0.507021,
+       0.522
+      ],
+      "metalness": 1.0,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.15,
+      "maps": {
+       "roughnessMap": "xdoKGdupOAjxLNU.png",
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "crYYDRbonRWlXIT": {
+      "color": [
+       0.733296,
+       0.738845,
+       0.705916
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "NeAIKPqoNOObBNI.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "LcWrUUjMeaSXpwZ": {
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "maps": {
+       "map": "xcbGbChigHGEmpW.png"
+      }
+     },
+     "bKCxnOaKtDpUlmo": {
+      "color": [
+       0.404947,
+       0.406448,
+       0.397492
+      ],
+      "roughness": 0.7,
+      "maps": {
+       "aoMap": "uWUtTYhIZknGRks.jpg"
+      }
+     },
+     "nuwSyerWvJfhsMd": {
+      "color": [
+       0.353649,
+       0.354692,
+       0.348461
+      ],
+      "metalness": 0.0,
+      "roughness": 0.5
+     },
+     "IxiedJEUxrDhLIX": {
+      "color": [
+       0.65358,
+       0.656,
+       0.641568
+      ],
+      "metalness": 0.5,
+      "maps": {
+       "map": "zVBODeQZzUJSryr.png",
+       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "WElbLmMkunjUugH": {
+      "color": [
+       0.65358,
+       0.656,
+       0.641568
+      ],
+      "metalness": 0.67,
+      "maps": {
+       "map": "zVBODeQZzUJSryr.png",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "yPeTOPaiWwFMSdb": {
+      "color": [
+       1.0,
+       1.0,
+       0.981897
+      ],
+      "metalness": 0.4,
+      "roughness": 0.2
+     },
+     "ZKYcumThEAllgKc": {
+      "color": [
+       0.691925,
+       0.693908,
+       0.678368
+      ],
+      "metalness": 0.3,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "aoMap": "NeAIKPqoNOObBNI.jpg"
+      }
+     },
+     "KSynYqGGNGMUJti": {
+      "color": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "metalness": 0.0,
+      "roughness": 1.0,
+      "clearcoat": 0.25,
+      "clearcoatRoughness": 0.05,
+      "emissiveIntensity": 1.75,
+      "maps": {
+       "emissiveMap": "iOEORLKDNbHPXmM.jpg",
+       "aoMap": "EqKHXwnqXFcaaJA.jpg"
+      }
+     },
+     "mEyfsugDbInWtmQ": {
+      "color": [
+       0.499988,
+       0.507594,
+       0.523
+      ],
+      "metalness": 0.7,
+      "roughness": 0.15,
+      "maps": {
+       "aoMap": "RSlBROxKlHZKBTA.jpg",
+       "normalMap": "MyGYhOTzwVBlbeN.png"
+      }
+     },
+     "VQDOOwQiAAkEseS": {
+      "metalness": 1.0,
+      "maps": {
+       "map": "haiOGhJxPVnXpLR.png",
+       "roughnessMap": "fyddebENwkTzIXJ.png",
+       "aoMap": "NapfxhXmAIKasCk.png",
+       "normalMap": "KCjzjPEMlSEiYxv.png"
+      }
+     },
+     "vUgmkmbQjXTaqEc": {
+      "color": [
+       0.855216,
+       0.858457,
+       0.839127
+      ],
+      "metalness": 0.67,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "NeAIKPqoNOObBNI.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     }
+    }
+   }
+  }
+ },
+ "iphone-18-pro-max": {
+  "changingMaterials": [
+   "DodbyqhrrBLNbcB",
+   "vmHtEpzvjsKvWzR",
+   "NTEUvFZCGwiAbXI",
+   "VHayjpcemEFwuHx",
+   "fREYAZareuwsSmV",
+   "hGSiEINnkluBUrq",
+   "crYYDRbonRWlXIT",
+   "LcWrUUjMeaSXpwZ",
+   "bKCxnOaKtDpUlmo",
+   "nuwSyerWvJfhsMd",
+   "IxiedJEUxrDhLIX",
+   "WElbLmMkunjUugH",
+   "yPeTOPaiWwFMSdb",
+   "ZKYcumThEAllgKc",
+   "KSynYqGGNGMUJti",
+   "mEyfsugDbInWtmQ",
+   "VQDOOwQiAAkEseS",
+   "vUgmkmbQjXTaqEc"
+  ],
+  "variants": {
+   "Black": {
+    "id": "Black",
+    "label": "Black",
+    "swatch": "#1b1b1d",
+    "materials": {
+     "DodbyqhrrBLNbcB": {
+      "color": [
+       0.011645,
+       0.011645,
+       0.011645
+      ],
+      "metalness": 0.3,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "map": "ucFExOATvHJJuQp.png",
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "vmHtEpzvjsKvWzR": {
+      "color": [
+       0.008682,
+       0.008317,
+       0.008311
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "clearcoatRoughness": 0.001,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "LXEfDmVsceZRJUH.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "NTEUvFZCGwiAbXI": {
+      "color": [
+       0.027212,
+       0.026173,
+       0.026173
+      ],
+      "metalness": 1.0,
+      "roughness": 0.3,
+      "maps": {
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "VHayjpcemEFwuHx": {
+      "color": [
+       0.202653,
+       0.254654,
+       0.380056
+      ],
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "clearcoat": 0.2,
+      "clearcoatRoughness": 0.33,
+      "maps": {
+       "aoMap": "GjBphnLVWkiisKl.jpg"
+      }
+     },
+     "fREYAZareuwsSmV": {
+      "color": [
+       0.349643,
+       0.365929,
+       0.382649
+      ],
+      "metalness": 0.0,
+      "roughness": 0.4
+     },
+     "hGSiEINnkluBUrq": {
+      "color": [
+       0.03912,
+       0.039428,
+       0.04
+      ],
+      "metalness": 1.0,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.15,
+      "maps": {
+       "roughnessMap": "xdoKGdupOAjxLNU.png",
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "crYYDRbonRWlXIT": {
+      "color": [
+       0.017389,
+       0.016662,
+       0.016649
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "LXEfDmVsceZRJUH.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "LcWrUUjMeaSXpwZ": {
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "maps": {
+       "map": "BecYaxtIoQhaTDC.png"
+      }
+     },
+     "bKCxnOaKtDpUlmo": {
+      "color": [
+       0.01956,
+       0.019714,
+       0.02
+      ],
+      "roughness": 0.7,
+      "maps": {
+       "aoMap": "uWUtTYhIZknGRks.jpg"
+      }
+     },
+     "nuwSyerWvJfhsMd": {
+      "color": [
+       0.01956,
+       0.019714,
+       0.02
+      ],
+      "metalness": 0.4,
+      "roughness": 0.5
+     },
+     "IxiedJEUxrDhLIX": {
+      "color": [
+       0.65358,
+       0.656,
+       0.641568
+      ],
+      "metalness": 0.5,
+      "maps": {
+       "map": "xVmnUVjeBQbcboE.png",
+       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "WElbLmMkunjUugH": {
+      "color": [
+       0.05,
+       0.047542,
+       0.0475
+      ],
+      "metalness": 0.87,
+      "maps": {
+       "map": "xVmnUVjeBQbcboE.png"
+      }
+     },
+     "yPeTOPaiWwFMSdb": {
+      "color": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "metalness": 1.0,
+      "roughness": 0.22
+     },
+     "ZKYcumThEAllgKc": {
+      "color": [
+       0.007194,
+       0.006916,
+       0.006911
+      ],
+      "metalness": 0.3,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "KSynYqGGNGMUJti": {
+      "color": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "metalness": 0.0,
+      "roughness": 1.0,
+      "clearcoat": 0.25,
+      "clearcoatRoughness": 0.05,
+      "emissiveIntensity": 1.75,
+      "maps": {
+       "emissiveMap": "sYSiFKwyndDoOfT.jpg",
+       "aoMap": "EqKHXwnqXFcaaJA.jpg"
+      }
+     },
+     "mEyfsugDbInWtmQ": {
+      "color": [
+       0.0478,
+       0.048528,
+       0.05
+      ],
+      "metalness": 0.7,
+      "roughness": 0.15,
+      "maps": {
+       "aoMap": "RSlBROxKlHZKBTA.jpg",
+       "normalMap": "MyGYhOTzwVBlbeN.png"
+      }
+     },
+     "VQDOOwQiAAkEseS": {
+      "metalness": 1.0,
+      "maps": {
+       "map": "ozMyGTowiEniIKI.png",
+       "roughnessMap": "fyddebENwkTzIXJ.png",
+       "aoMap": "NapfxhXmAIKasCk.png",
+       "normalMap": "KCjzjPEMlSEiYxv.png"
+      }
+     },
+     "vUgmkmbQjXTaqEc": {
+      "color": [
+       0.027212,
+       0.026173,
+       0.026173
+      ],
+      "metalness": 0.87,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "LXEfDmVsceZRJUH.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     }
+    }
+   },
+   "Burgundy": {
+    "id": "Burgundy",
+    "label": "Plum",
+    "swatch": "#5b3a48",
+    "materials": {
+     "DodbyqhrrBLNbcB": {
+      "color": [
+       0.055813,
+       0.018395,
+       0.021479
+      ],
+      "metalness": 0.3,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "map": "wFIvzqeRiEsoYXe.png",
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "vmHtEpzvjsKvWzR": {
+      "color": [
+       0.046204,
+       0.009294,
+       0.013325
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "clearcoatRoughness": 0.001,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "LXEfDmVsceZRJUH.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "NTEUvFZCGwiAbXI": {
+      "color": [
+       0.083535,
+       0.044556,
+       0.049493
+      ],
+      "metalness": 1.0,
+      "roughness": 0.3,
+      "maps": {
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "VHayjpcemEFwuHx": {
+      "color": [
+       0.380056,
+       0.233022,
+       0.250238
+      ],
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "clearcoat": 0.2,
+      "clearcoatRoughness": 0.33,
+      "maps": {
+       "aoMap": "GjBphnLVWkiisKl.jpg"
+      }
+     },
+     "fREYAZareuwsSmV": {
+      "color": [
+       0.485911,
+       0.473004,
+       0.474927
+      ],
+      "metalness": 0.0,
+      "roughness": 0.4
+     },
+     "hGSiEINnkluBUrq": {
+      "color": [
+       0.061019,
+       0.033111,
+       0.036663
+      ],
+      "metalness": 1.0,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.15,
+      "maps": {
+       "roughnessMap": "xdoKGdupOAjxLNU.png",
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "crYYDRbonRWlXIT": {
+      "color": [
+       0.063724,
+       0.023137,
+       0.028847
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "LXEfDmVsceZRJUH.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "LcWrUUjMeaSXpwZ": {
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "maps": {
+       "map": "BecYaxtIoQhaTDC.png"
+      }
+     },
+     "bKCxnOaKtDpUlmo": {
+      "color": [
+       0.046,
+       0.0184,
+       0.022999
+      ],
+      "roughness": 0.7,
+      "maps": {
+       "aoMap": "uWUtTYhIZknGRks.jpg"
+      }
+     },
+     "nuwSyerWvJfhsMd": {
+      "color": [
+       0.055813,
+       0.018395,
+       0.021479
+      ],
+      "metalness": 0.0,
+      "roughness": 0.5
+     },
+     "IxiedJEUxrDhLIX": {
+      "color": [
+       0.65358,
+       0.656,
+       0.641568
+      ],
+      "metalness": 0.5,
+      "maps": {
+       "map": "TmzVuvAAiiUepdl.png",
+       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "WElbLmMkunjUugH": {
+      "color": [
+       0.12,
+       0.03,
+       0.0405
+      ],
+      "metalness": 0.87,
+      "maps": {
+       "map": "TmzVuvAAiiUepdl.png"
+      }
+     },
+     "yPeTOPaiWwFMSdb": {
+      "color": [
+       0.078288,
+       0.042455,
+       0.048616
+      ],
+      "metalness": 1.0,
+      "roughness": 0.22
+     },
+     "ZKYcumThEAllgKc": {
+      "color": [
+       0.055813,
+       0.018395,
+       0.021479
+      ],
+      "metalness": 0.3,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "KSynYqGGNGMUJti": {
+      "color": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "metalness": 0.0,
+      "roughness": 1.0,
+      "clearcoat": 0.25,
+      "clearcoatRoughness": 0.05,
+      "emissiveIntensity": 1.75,
+      "maps": {
+       "emissiveMap": "YdpTjeQvCBWCMKR.jpg",
+       "aoMap": "EqKHXwnqXFcaaJA.jpg"
+      }
+     },
+     "mEyfsugDbInWtmQ": {
+      "color": [
+       0.1,
+       0.04,
+       0.047
+      ],
+      "metalness": 0.7,
+      "roughness": 0.15,
+      "maps": {
+       "aoMap": "RSlBROxKlHZKBTA.jpg",
+       "normalMap": "MyGYhOTzwVBlbeN.png"
+      }
+     },
+     "VQDOOwQiAAkEseS": {
+      "metalness": 1.0,
+      "maps": {
+       "map": "udoRGnBtuGXqKBw.png",
+       "roughnessMap": "fyddebENwkTzIXJ.png",
+       "aoMap": "NapfxhXmAIKasCk.png",
+       "normalMap": "KCjzjPEMlSEiYxv.png"
+      }
+     },
+     "vUgmkmbQjXTaqEc": {
+      "color": [
+       0.088982,
+       0.041223,
+       0.048412
+      ],
+      "metalness": 0.87,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "LXEfDmVsceZRJUH.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     }
+    }
+   },
+   "Glacier": {
+    "id": "Glacier",
+    "label": "Sky Blue",
+    "swatch": "#a8c4dd",
+    "materials": {
+     "DodbyqhrrBLNbcB": {
+      "color": [
+       0.408132,
+       0.516643,
+       0.777554
+      ],
+      "metalness": 0.4,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "map": "NtrMWcZSfIQHrGc.png",
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "vmHtEpzvjsKvWzR": {
+      "color": [
+       0.561018,
+       0.666546,
+       0.955105
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "clearcoatRoughness": 0.001,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "LXEfDmVsceZRJUH.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "NTEUvFZCGwiAbXI": {
+      "color": [
+       0.356933,
+       0.427284,
+       0.620916
+      ],
+      "metalness": 1.0,
+      "roughness": 0.3,
+      "maps": {
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "VHayjpcemEFwuHx": {
+      "color": [
+       0.086233,
+       0.157439,
+       0.380056
+      ],
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "clearcoat": 0.2,
+      "clearcoatRoughness": 0.33,
+      "maps": {
+       "aoMap": "GjBphnLVWkiisKl.jpg"
+      }
+     },
+     "fREYAZareuwsSmV": {
+      "color": [
+       0.538235,
+       0.565031,
+       0.603827
+      ],
+      "metalness": 0.0,
+      "roughness": 0.4
+     },
+     "hGSiEINnkluBUrq": {
+      "color": [
+       0.249444,
+       0.313996,
+       0.499458
+      ],
+      "metalness": 1.0,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.15,
+      "maps": {
+       "roughnessMap": "xdoKGdupOAjxLNU.png",
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "crYYDRbonRWlXIT": {
+      "color": [
+       0.561018,
+       0.666546,
+       0.955105
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "LXEfDmVsceZRJUH.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "LcWrUUjMeaSXpwZ": {
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "maps": {
+       "map": "xcbGbChigHGEmpW.png"
+      }
+     },
+     "bKCxnOaKtDpUlmo": {
+      "color": [
+       0.223984,
+       0.278586,
+       0.43388
+      ],
+      "roughness": 0.7,
+      "maps": {
+       "aoMap": "uWUtTYhIZknGRks.jpg"
+      }
+     },
+     "nuwSyerWvJfhsMd": {
+      "color": [
+       0.327371,
+       0.413208,
+       0.620916
+      ],
+      "metalness": 0.0,
+      "roughness": 0.5
+     },
+     "IxiedJEUxrDhLIX": {
+      "color": [
+       0.65358,
+       0.656,
+       0.641568
+      ],
+      "metalness": 0.5,
+      "maps": {
+       "map": "cdDgSjDGIojYKog.png",
+       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "WElbLmMkunjUugH": {
+      "color": [
+       0.3025,
+       0.389583,
+       0.55
+      ],
+      "metalness": 0.7,
+      "maps": {
+       "map": "cdDgSjDGIojYKog.png"
+      }
+     },
+     "yPeTOPaiWwFMSdb": {
+      "color": [
+       0.449129,
+       0.568123,
+       0.911407
+      ],
+      "metalness": 0.6,
+      "roughness": 0.2
+     },
+     "ZKYcumThEAllgKc": {
+      "color": [
+       0.408132,
+       0.516054,
+       0.777554
+      ],
+      "metalness": 0.3,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "KSynYqGGNGMUJti": {
+      "color": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "metalness": 0.0,
+      "roughness": 1.0,
+      "clearcoat": 0.25,
+      "clearcoatRoughness": 0.05,
+      "emissiveIntensity": 1.75,
+      "maps": {
+       "emissiveMap": "pMCUHrXFoskvAnX.jpg",
+       "aoMap": "EqKHXwnqXFcaaJA.jpg"
+      }
+     },
+     "mEyfsugDbInWtmQ": {
+      "color": [
+       0.361063,
+       0.455961,
+       0.729347
+      ],
+      "metalness": 0.7,
+      "roughness": 0.15,
+      "maps": {
+       "aoMap": "RSlBROxKlHZKBTA.jpg",
+       "normalMap": "MyGYhOTzwVBlbeN.png"
+      }
+     },
+     "VQDOOwQiAAkEseS": {
+      "metalness": 1.0,
+      "maps": {
+       "map": "hMvYDZQQhWJKPek.png",
+       "roughnessMap": "fyddebENwkTzIXJ.png",
+       "aoMap": "NapfxhXmAIKasCk.png",
+       "normalMap": "KCjzjPEMlSEiYxv.png"
+      }
+     },
+     "vUgmkmbQjXTaqEc": {
+      "color": [
+       0.561018,
+       0.666546,
+       0.955105
+      ],
+      "metalness": 0.77,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "LXEfDmVsceZRJUH.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     }
+    }
+   },
+   "Silver": {
+    "id": "Silver",
+    "label": "Silver",
+    "swatch": "#d8d8d6",
+    "materials": {
+     "DodbyqhrrBLNbcB": {
+      "color": [
+       0.690254,
+       0.692071,
+       0.676573
+      ],
+      "metalness": 0.5,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "map": "SsQAEoPnxZJybcr.png",
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "vmHtEpzvjsKvWzR": {
+      "color": [
+       0.733296,
+       0.738845,
+       0.705916
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "clearcoatRoughness": 0.001,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "LXEfDmVsceZRJUH.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "NTEUvFZCGwiAbXI": {
+      "color": [
+       0.65358,
+       0.656,
+       0.641568
+      ],
+      "metalness": 1.0,
+      "roughness": 0.3,
+      "maps": {
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "VHayjpcemEFwuHx": {
+      "color": [
+       0.380056,
+       0.380056,
+       0.380056
+      ],
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "clearcoat": 0.2,
+      "clearcoatRoughness": 0.33,
+      "maps": {
+       "aoMap": "GjBphnLVWkiisKl.jpg"
+      }
+     },
+     "fREYAZareuwsSmV": {
+      "color": [
+       0.577063,
+       0.590357,
+       0.603827
+      ],
+      "metalness": 0.0,
+      "roughness": 0.4
+     },
+     "hGSiEINnkluBUrq": {
+      "color": [
+       0.499032,
+       0.507021,
+       0.522
+      ],
+      "metalness": 1.0,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.15,
+      "maps": {
+       "roughnessMap": "xdoKGdupOAjxLNU.png",
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "crYYDRbonRWlXIT": {
+      "color": [
+       0.733296,
+       0.738845,
+       0.705916
+      ],
+      "metalness": 0.5,
+      "roughness": 0.1,
+      "clearcoat": 0.0,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "LXEfDmVsceZRJUH.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "LcWrUUjMeaSXpwZ": {
+      "metalness": 0.0,
+      "roughness": 0.33,
+      "maps": {
+       "map": "xcbGbChigHGEmpW.png"
+      }
+     },
+     "bKCxnOaKtDpUlmo": {
+      "color": [
+       0.404947,
+       0.406448,
+       0.397492
+      ],
+      "roughness": 0.7,
+      "maps": {
+       "aoMap": "uWUtTYhIZknGRks.jpg"
+      }
+     },
+     "nuwSyerWvJfhsMd": {
+      "color": [
+       0.353649,
+       0.354692,
+       0.348461
+      ],
+      "metalness": 0.0,
+      "roughness": 0.5
+     },
+     "IxiedJEUxrDhLIX": {
+      "color": [
+       0.65358,
+       0.656,
+       0.641568
+      ],
+      "metalness": 0.5,
+      "maps": {
+       "map": "zVBODeQZzUJSryr.png",
+       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     },
+     "WElbLmMkunjUugH": {
+      "color": [
+       0.65358,
+       0.656,
+       0.641568
+      ],
+      "metalness": 0.67,
+      "maps": {
+       "map": "zVBODeQZzUJSryr.png"
+      }
+     },
+     "yPeTOPaiWwFMSdb": {
+      "color": [
+       1.0,
+       1.0,
+       0.981897
+      ],
+      "metalness": 0.4,
+      "roughness": 0.2
+     },
+     "ZKYcumThEAllgKc": {
+      "color": [
+       0.691925,
+       0.693908,
+       0.678368
+      ],
+      "metalness": 0.3,
+      "roughness": 0.5,
+      "clearcoat": 0.1,
+      "clearcoatRoughness": 0.4,
+      "maps": {
+       "aoMap": "LXEfDmVsceZRJUH.jpg"
+      }
+     },
+     "KSynYqGGNGMUJti": {
+      "color": [
+       0.0,
+       0.0,
+       0.0
+      ],
+      "metalness": 0.0,
+      "roughness": 1.0,
+      "clearcoat": 0.25,
+      "clearcoatRoughness": 0.05,
+      "emissiveIntensity": 1.75,
+      "maps": {
+       "emissiveMap": "iOEORLKDNbHPXmM.jpg",
+       "aoMap": "EqKHXwnqXFcaaJA.jpg"
+      }
+     },
+     "mEyfsugDbInWtmQ": {
+      "color": [
+       0.499988,
+       0.507594,
+       0.523
+      ],
+      "metalness": 0.7,
+      "roughness": 0.15,
+      "maps": {
+       "aoMap": "RSlBROxKlHZKBTA.jpg",
+       "normalMap": "MyGYhOTzwVBlbeN.png"
+      }
+     },
+     "VQDOOwQiAAkEseS": {
+      "metalness": 1.0,
+      "maps": {
+       "map": "haiOGhJxPVnXpLR.png",
+       "roughnessMap": "fyddebENwkTzIXJ.png",
+       "aoMap": "NapfxhXmAIKasCk.png",
+       "normalMap": "KCjzjPEMlSEiYxv.png"
+      }
+     },
+     "vUgmkmbQjXTaqEc": {
+      "color": [
+       0.855216,
+       0.858457,
+       0.839127
+      ],
+      "metalness": 0.67,
+      "maps": {
+       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "aoMap": "LXEfDmVsceZRJUH.jpg",
+       "normalMap": "RrbeEmIUUhCQiSw.png"
+      }
+     }
+    }
+   }
+  }
+ }
+}
