@@ -11,6 +11,27 @@ npm run dev      # http://localhost:5199
 npm run build    # static output in app/dist — deploy that folder anywhere
 ```
 
+### Deploying
+
+The app lives in `app/`, not at the repository root, so a host pointed at the
+root will not find a `package.json`. The committed `vercel.json` handles that
+for Vercel:
+
+```json
+{
+  "installCommand": "npm ci --prefix app",
+  "buildCommand": "npm run build --prefix app",
+  "outputDirectory": "app/dist"
+}
+```
+
+Leave Vercel's **Root Directory** setting empty so it picks this up. Setting
+Root Directory to `app` instead also works, but then `vercel.json` is ignored —
+do one or the other, not both.
+
+It is a purely static build with no server, no environment variables and no
+runtime configuration, so any static host works the same way.
+
 ---
 
 ## What's here
@@ -177,6 +198,13 @@ Keyframes, saved views, colourway, frame and lighting persist to
 `localStorage` and can be exported to a JSON project file. Uploaded media does
 not travel with the project — object URLs do not survive a reload — so images
 and video need re-attaching after loading a project.
+
+---
+
+## Licence
+
+The source code is MIT — see [LICENSE](LICENSE). The bundled media assets are
+**not** covered by it; see below.
 
 ---
 

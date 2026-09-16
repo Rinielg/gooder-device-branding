@@ -1,0 +1,42 @@
+MIT License
+
+Copyright (c) 2026 Riniel Gresse
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+SCOPE — PLEASE READ
+
+The MIT licence above covers the SOURCE CODE of this project only: everything
+under `app/src/`, the build tooling in `tools/`, and the documentation.
+
+It does NOT cover the bundled media assets, which are third-party and are
+included only so the studio runs as-is. No licence is granted for them here and
+they remain under whatever terms they arrived with:
+
+  - iphone-18-pro.usdz                 third-party device model
+  - app/public/models/*.glb            generated from that model
+  - app/public/textures/*              generated from that model; the four
+                                       wallpapers are Apple artwork
+  - screen/stock-wallpaper.jpg         Apple artwork
+  - Gradient BG 1 - Balanced Desktop.json   supplied background animation
+
+If you are reusing this project, supply your own model and background and
+rebuild the derived assets with ./tools/build.sh.
