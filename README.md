@@ -1,5 +1,7 @@
 # Gooder Device Branding
 
+**Live:** https://gooder-device-branding.vercel.app
+
 A hostable web page that renders the iPhone 18 Pro / Pro Max in 3D inside a
 configurable frame, animates it on a keyframe timeline, and exports the result
 as a PNG or an MP4 at the frame's exact dimensions.
@@ -28,6 +30,9 @@ for Vercel:
 Leave Vercel's **Root Directory** setting empty so it picks this up. Setting
 Root Directory to `app` instead also works, but then `vercel.json` is ignored —
 do one or the other, not both.
+
+The Vercel project is linked to this repository, so pushes to `main` deploy
+automatically.
 
 It is a purely static build with no server, no environment variables and no
 runtime configuration, so any static host works the same way.

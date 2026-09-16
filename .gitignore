@@ -11,3 +11,6 @@ dist/
 # editor / local
 *.log
 .vite/
+
+# vercel local link
+.vercel/
