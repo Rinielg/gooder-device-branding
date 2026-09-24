@@ -101,8 +101,14 @@ export function Dials() {
 
   return (
     <div className="dial-host">
-      {/* DialKit themes itself, so it has to be told which one we are in. */}
-      <DialRoot mode="inline" theme={theme} defaultOpen />
+      {/*
+        * DialKit themes itself, so it has to be told which one we are in.
+        *
+        * `productionEnabled` because it is not a debug overlay here — it is the
+        * numeric half of the transform controls, and it renders `null` in a
+        * production build without this.
+        */}
+      <DialRoot mode="inline" theme={theme} defaultOpen productionEnabled />
     </div>
   )
 }
