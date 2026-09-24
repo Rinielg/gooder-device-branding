@@ -228,7 +228,9 @@ export function Viewport() {
       if (st.playing && tl.animated) {
         const sampled = tl.sampleTransform(t, st.transform)
         stage.applyTransform(sampled)
-        st.setTransform(sampled)
+        // silent: the timeline writing its own result back is not an edit, so
+        // it must not lay down a key on every frame.
+        st.setTransform(sampled, { silent: true })
       } else {
         stage.applyTransform(st.transform)
       }

@@ -5,7 +5,7 @@ import {
   type BackgroundState, type Composition, type DeviceId, type FrameState, type LegacyKeyframe,
   type LightId, type LightSettings, type LightingState, type SavedView,
   type ScreenState, type StageState, type Track, type TrackId, type TrackKey,
-  type Transform, type VariantManifest,
+  type Transform, type TrackValue, type VariantManifest,
 } from '../engine/types'
 import {
   TRACKS, TRACK_ORDER, isRegistered, lastKeyTime, makeTrack, makeTrackKey,
@@ -104,7 +104,10 @@ function migrateLighting(persisted: Partial<Project>): LightingState {
 /* ------------------------------------------------------------------ */
 
 /** Everything a track may read, for keying and for migration. */
-const trackSource = (s: TrackSource): TrackSource => s
+const trackSource = (s: TrackSource): TrackSource => ({
+  transform: s.transform, stage: s.stage, lighting: s.lighting,
+  screen: s.screen, background: s.background,
+})
 
 /**
  * Drop anything the registry does not recognise and put the rest in a known
@@ -332,6 +335,47 @@ function dropTrack(s: Project, id: TrackId): { composition: Composition } {
   return { composition: { ...s.composition, tracks } }
 }
 
+/**
+ * Write the pose into the keys as it is edited.
+ *
+ * Once a property is animated, moving it at a new time *means* putting a key
+ * there — that is what every animation tool does, and it is the difference
+ * between posing the device and having the next scrub silently throw the pose
+ * away.
+ *
+ * Only tracks that are already animated take part. Posing an unkeyed device
+ * must not start an animation by accident, so the first key stays deliberate.
+ *
+ * Which tracks are affected is derived by reading them before and after rather
+ * than declared, so the registry stays the only description of a track.
+ */
+function autoKey(s: Store, transform: Transform): { composition: Composition } | null {
+  const time = quantise(s.playhead)
+  const before = trackSource({ ...s, transform: s.transform })
+  const after_ = trackSource({ ...s, transform })
+  let tracks = s.composition.tracks
+  let touched = false
+
+  for (const id of TRACK_ORDER) {
+    const def = TRACKS[id]
+    const track = tracks[id]
+    if (!def?.write || !track) continue
+    const value = def.read(after_)
+    if (sameValue(value, def.read(before))) continue
+    const existing = track.keys.find((k) => Math.abs(k.time - time) < 1e-3)
+    const keys = existing
+      ? track.keys.map((k) => (k.id === existing.id ? { ...k, value } : k))
+      : sortKeys([...track.keys, makeTrackKey(time, value)])
+    tracks = { ...tracks, [id]: { ...track, keys } }
+    touched = true
+  }
+
+  return touched ? { composition: { ...s.composition, tracks } } : null
+}
+
+const sameValue = (a: TrackValue, b: TrackValue) =>
+  Object.keys(a).every((k) => a[k] === b[k])
+
 export const useStore = create<Store>((set, get) => {
   const persist = () => {
     const s = get()
@@ -375,7 +419,15 @@ export const useStore = create<Store>((set, get) => {
       lighting: { ...s.lighting, lights: { ...s.lighting.lights, [id]: { ...s.lighting.lights[id], ...v } } },
     })),
     resetLighting: () => set(after({ lighting: structuredClone(DEFAULT_LIGHTING) })),
-    setTransform: (t) => set((s) => after({ transform: { ...s.transform, ...t } })),
+    setTransform: (t, opts) => set((s) => {
+      const transform = { ...s.transform, ...t }
+      // Playback and scrubbing write the sampled pose back so the dials follow
+      // along. That is the timeline talking to itself, not an edit, and keying
+      // it would lay down a key on every frame.
+      if (opts?.silent || s.playing || s.exporting) return after({ transform })
+      const keyed = autoKey(s, transform)
+      return after(keyed ? { transform, ...keyed } : { transform })
+    }),
 
     setBackground: (b, blob) => set((s) => after({
       background: { ...s.background, ...b },
@@ -517,10 +569,19 @@ export const MIN_COMPOSITION = 4
  * still override it, so dragging one past the end extends the composition
  * rather than silently clipping it.
  *
- * With no explicit length it is derived: long enough for every key and for the
- * background animation to finish.
+ * With no explicit length: once anything is keyed the clip follows the keys,
+ * because the animation is the thing being made. Letting a 20s background hold
+ * the ruler open means a three-second animation is previewed as three marks
+ * against seventeen seconds of nothing. A second of headroom is kept past the
+ * last key so the animation can always be extended by clicking past its end.
  */
-export const compositionDuration = (c: Composition, backgroundDuration: number) =>
-  c.duration > 0
-    ? Math.max(c.duration, lastKeyTime(c))
-    : Math.max(lastKeyTime(c), backgroundDuration, MIN_COMPOSITION)
+export const compositionDuration = (c: Composition, backgroundDuration: number) => {
+  if (c.duration > 0) return Math.max(c.duration, lastKeyTime(c))
+  const keys = lastKeyTime(c)
+  return keys > 0
+    ? Math.max(keys + 1, MIN_COMPOSITION)
+    : Math.max(backgroundDuration, MIN_COMPOSITION)
+}
+
+/** Where the animation itself ends. Playback rewinds from here, not from the clip end. */
+export const animationEnd = (c: Composition) => lastKeyTime(c)

@@ -184,6 +184,12 @@ Existing work is preserved and `STORAGE_KEY` is **not** bumped.
    segment arriving at the selected key, with a sampled ease preview (accurate
    for non-bezier eases like `back` and `expo`), draggable handles for custom
    cubic-beziers, time, duration and per-channel value editing.
+4b. ~~**Authoring UX pass.**~~ **Done** — auto-key once a property is animated,
+   a per-row key indicator that toggles, playback that rewinds from the end,
+   and an auto clip length that follows the keys rather than the background.
+   Raised by use: the five-step flow (pose, key, click the timeline, pose,
+   play) did not work, because step four was discarded and step five played
+   dead air.
 5. **Extend tracks** to camera, lighting, screen and background — including the
    `Lighting` helper fix and `Stage.applySampled`.
 6. **Light theme:** tokens, then sweep every panel.

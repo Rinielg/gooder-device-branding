@@ -309,6 +309,8 @@ input[type="color"] {
 }
 .tl-mute:hover, .tl-head-btn:hover { background: var(--panel); color: var(--text); }
 .tl-head-btn.danger:hover { color: var(--danger); }
+.tl-head-btn.key { font-size: 12px; }
+.tl-head-btn.key.on { color: var(--accent); }
 .tl-chips { display: inline-flex; gap: 2px; flex: none; }
 .tl-chips i { width: 5px; height: 5px; border-radius: 50%; }
 

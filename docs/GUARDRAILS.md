@@ -174,6 +174,27 @@ all of them.
 **A GSAP tween of duration 0 is applied immediately, not at its position.** Two
 keys at the same instant need a sub-frame duration (`1e-4`) to step cleanly.
 
+**Anything that writes the sampled pose back to the store must pass
+`{ silent: true }`.** `setTransform` auto-keys, so the playback loop and the
+scrubber — which write the timeline's own output back so the dials follow —
+would otherwise lay down a key on every frame. The store also refuses to key
+while `playing` or `exporting` as a second line of defence.
+
+**Auto-key only fires for tracks that already exist.** Posing an unkeyed device
+must not start an animation by accident, so the first key stays a deliberate
+act.
+
+**Playback rewinds when the playhead sits at the end of the animation.** Keying
+a pose leaves the playhead on the last key, so without this the first press of
+play runs the tail of the clip, where by definition nothing moves — which reads
+exactly like a broken timeline. This was the single biggest source of "it does
+not work".
+
+**A hidden browser pane throttles `requestAnimationFrame` to zero.** Playback
+measured through the devtools console will sit perfectly still and look broken;
+`document.visibilityState` is the check. Take a screenshot to force frames
+before timing anything that depends on the render loop.
+
 **Timeline positions are pixels, not percentages.** A percentage cannot zoom,
 which is why the old single row could never show less than the whole
 composition. The lanes are a scroll container of `duration * pxPerSec`.

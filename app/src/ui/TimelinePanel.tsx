@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useStore, compositionDuration } from '../state/store'
+import { useStore, animationEnd, compositionDuration } from '../state/store'
 import { engine } from '../engine/handle'
 import { TRACKS, TRACK_ORDER, hasAnimation, quantise, trackDef } from '../engine/tracks'
 import type { Composition, Track, TrackId } from '../engine/types'
@@ -112,9 +112,26 @@ export function TimelinePanel() {
     const tl = engine.timeline
     const st = useStore.getState()
     if (tl && hasAnimation(st.composition)) {
-      st.setTransform(tl.sampleTransform(t, st.transform))
+      st.setTransform(tl.sampleTransform(t, st.transform), { silent: true })
     }
   }, [setPlayhead])
+
+  /**
+   * Play from the top when the playhead is already sitting at the end.
+   *
+   * Keying a pose leaves the playhead on the last key, so without this the
+   * first press of play runs the tail of the clip, where by definition nothing
+   * moves — which reads exactly like a broken timeline.
+   */
+  const togglePlay = useCallback(() => {
+    const st = useStore.getState()
+    if (!st.playing) {
+      const end = animationEnd(st.composition)
+      const stop = end > 0 ? end : compositionDuration(st.composition, st.backgroundDuration)
+      if (st.playhead >= stop - 1e-3) scrubTo(0)
+    }
+    setPlaying(!st.playing)
+  }, [scrubTo, setPlaying])
 
   /* ---------------- dragging ---------------- */
   type Drag =
@@ -166,7 +183,7 @@ export function TimelinePanel() {
       const tag = (e.target as HTMLElement | null)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
       const st = useStore.getState()
-      if (e.code === 'Space') { e.preventDefault(); setPlaying(!st.playing) }
+      if (e.code === 'Space') { e.preventDefault(); togglePlay() }
       else if (e.code === 'KeyK') { e.preventDefault(); keyPose() }
       else if ((e.code === 'Delete' || e.code === 'Backspace') && st.selection) {
         e.preventDefault()
@@ -175,7 +192,7 @@ export function TimelinePanel() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [keyPose, removeKey, setPlaying])
+  }, [keyPose, removeKey, togglePlay])
 
   const ticks = useMemo(() => buildTicks(duration, pxPerSec), [duration, pxPerSec])
   const contentWidth = duration * pxPerSec + LANE_PAD * 2
@@ -185,7 +202,7 @@ export function TimelinePanel() {
     <div className="tl">
       <div className="tl-transport">
         <button type="button" className="btn icon" onClick={() => { setPlaying(false); scrubTo(0) }} title="Go to start">⏮</button>
-        <button type="button" className="btn icon primary" onClick={() => setPlaying(!playing)} title="Play / pause (space)">
+        <button type="button" className="btn icon primary" onClick={togglePlay} title="Play / pause (space)">
           {playing ? '❚❚' : '▶'}
         </button>
         <button type="button" className={loop ? 'btn icon on' : 'btn icon'} onClick={() => setLoop(!loop)} title="Loop">⟳</button>
@@ -239,11 +256,18 @@ export function TimelinePanel() {
                     <i key={ch.key} style={{ background: ch.colour }} title={ch.label} />
                   ))}
                 </span>
-                <button
-                  type="button" className="tl-head-btn"
-                  title={`Key ${def.label.toLowerCase()} at the playhead`}
-                  onClick={() => keyTrack(track.id)}
-                >◆</button>
+                {(() => {
+                  const here = track.keys.find((k) => Math.abs(k.time - playhead) < 1e-3)
+                  return (
+                    <button
+                      type="button" className={`tl-head-btn key${here ? ' on' : ''}`}
+                      title={here
+                        ? `Remove the ${def.label.toLowerCase()} key at the playhead`
+                        : `Key ${def.label.toLowerCase()} at the playhead`}
+                      onClick={() => (here ? removeKey(track.id, here.id) : keyTrack(track.id))}
+                    >{here ? '◆' : '◇'}</button>
+                  )
+                })()}
                 <button
                   type="button" className="tl-head-btn danger"
                   title={`Stop animating ${def.label.toLowerCase()}`}
@@ -334,8 +358,9 @@ export function TimelinePanel() {
 
       {rows.length === 0 ? (
         <p className="note tl-empty">
-          Pose the device, then <strong>Key pose</strong> to animate the whole transform — or pick a
-          single property from <strong>Animate</strong> to give it its own row.
+          Pose the device, then <strong>Key pose</strong> to start animating. After that, posing the
+          device at a new point on the timeline keys itself. Pick a single property from
+          <strong> Animate</strong> to give it its own row.
         </p>
       ) : (
         <TransitionPanel />
