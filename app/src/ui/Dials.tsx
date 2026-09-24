@@ -36,6 +36,7 @@ export function Dials() {
     }
   })
 
+  const theme = useStore((s) => s.theme)
   const dial = useDialKitController('Transform', config, { persist: false })
   const transform = useStore((s) => s.transform)
   const stage = useStore((s) => s.stage)
@@ -100,7 +101,8 @@ export function Dials() {
 
   return (
     <div className="dial-host">
-      <DialRoot mode="inline" theme="dark" defaultOpen />
+      {/* DialKit themes itself, so it has to be told which one we are in. */}
+      <DialRoot mode="inline" theme={theme} defaultOpen />
     </div>
   )
 }

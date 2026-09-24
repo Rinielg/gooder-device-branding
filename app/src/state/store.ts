@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { applyTheme, readTheme, type Theme } from './theme'
 import {
   DEFAULT_BACKGROUND, DEFAULT_COMPOSITION, DEFAULT_FRAME, DEFAULT_LIGHTING, DEFAULT_SCREEN,
   DEFAULT_STAGE, DEFAULT_TRANSFORM,
@@ -8,7 +9,7 @@ import {
   type Sample, type Transform, type TrackValue, type VariantManifest,
 } from '../engine/types'
 import {
-  TRACKS, TRACK_ORDER, isRegistered, lastKeyTime, makeTrack, makeTrackKey,
+  TAB_FOR_GROUP, TRACKS, TRACK_ORDER, isRegistered, lastKeyTime, makeTrack, makeTrackKey,
   quantise, sortKeys, type TrackSource,
 } from '../engine/tracks'
 
@@ -209,6 +210,8 @@ export interface KeySelection {
   key: string
 }
 
+export type InspectorTab = 'Stage' | 'Look' | 'Light' | 'Control' | 'Views' | 'Export'
+
 /** How many steps of undo are kept. */
 export const HISTORY_LIMIT = 20
 /**
@@ -255,6 +258,17 @@ interface Store extends Project {
    * values.
    */
   sampled: Sample | null
+  /**
+   * Which panel the inspector is showing, and which light within it.
+   *
+   * In the store rather than in the component because selecting a keyframe
+   * moves them: the thing being animated and the thing being edited should
+   * never be in two different places.
+   */
+  inspectorTab: InspectorTab
+  inspectorLight: LightId
+  /** Light or dark. A workstation preference, so it lives beside the project rather than in it. */
+  theme: Theme
   /** Light gizmos are an editing aid, so they are never persisted. */
   showLightHelpers: boolean
   status: string | null
@@ -318,6 +332,9 @@ interface Store extends Project {
   silently(run: () => void): void
 
   setSampled(s: Sample | null): void
+  setInspectorTab(tab: InspectorTab): void
+  toggleTheme(): void
+  setInspectorLight(id: LightId): void
   setReady(r: boolean): void
   setExporting(e: boolean): void
   setShowLightHelpers(v: boolean): void
@@ -544,6 +561,9 @@ export const useStore = create<Store>((set, get) => {
     ready: false,
     exporting: false,
     sampled: null,
+    inspectorTab: 'Stage',
+    inspectorLight: 'key',
+    theme: readTheme(),
     showLightHelpers: false,
     status: null,
     error: null,
@@ -686,7 +706,18 @@ export const useStore = create<Store>((set, get) => {
       selection: null,
     }, 'Clear animation')),
 
-    selectKey: (selection) => set({ selection }),
+    // Selecting a key brings its own controls forward. Done here rather than in
+    // an effect watching the selection, so the tab moves as part of the click
+    // rather than as a second render caused by it.
+    selectKey: (selection) => {
+      if (!selection) { set({ selection }); return }
+      const def = TRACKS[selection.track]
+      set({
+        selection,
+        inspectorTab: def ? TAB_FOR_GROUP[def.group] : get().inspectorTab,
+        inspectorLight: def?.light ?? get().inspectorLight,
+      })
+    },
 
     saveView: (name, thumb) => set((s) => after({
       views: [
@@ -712,6 +743,13 @@ export const useStore = create<Store>((set, get) => {
       if (!sameSample(get().sampled, sampled)) set({ sampled })
     },
 
+    setInspectorTab: (inspectorTab) => set({ inspectorTab }),
+    toggleTheme: () => {
+      const theme = get().theme === 'dark' ? 'light' : 'dark'
+      applyTheme(theme)
+      set({ theme })
+    },
+    setInspectorLight: (inspectorLight) => set({ inspectorLight }),
     setReady: (ready) => set({ ready }),
     setExporting: (exporting) => set({ exporting }),
     setShowLightHelpers: (showLightHelpers) => set({ showLightHelpers }),

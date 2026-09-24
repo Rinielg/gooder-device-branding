@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Viewport } from './ui/Viewport'
 import { Dials } from './ui/Dials'
+import { Gizmo } from './ui/Gizmo'
 import { resetTransform } from './ui/resetTransform'
 import {
   BackgroundPanel, DevicePanel, FramePanel, ProjectPanel, ScreenPanel, ViewsPanel,
@@ -10,14 +11,18 @@ import {
 } from './ui/LightingPanel'
 import { TimelinePanel } from './ui/TimelinePanel'
 import { ExportPanel } from './ui/ExportPanel'
-import { useStore } from './state/store'
+import { useStore, type InspectorTab } from './state/store'
 import './styles.css'
 
-const TABS = ['Stage', 'Look', 'Light', 'Control', 'Views', 'Export'] as const
-type Tab = typeof TABS[number]
+const TABS: InspectorTab[] = ['Stage', 'Look', 'Light', 'Control', 'Views', 'Export']
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('Stage')
+  // The active tab lives in the store: selecting a keyframe moves it, so it is
+  // not this component's private business.
+  const tab = useStore((s) => s.inspectorTab)
+  const setTab = useStore((s) => s.setInspectorTab)
+  const theme = useStore((s) => s.theme)
+  const toggleTheme = useStore((s) => s.toggleTheme)
   const ready = useStore((s) => s.ready)
   const status = useStore((s) => s.status)
   const error = useStore((s) => s.error)
@@ -26,7 +31,6 @@ export default function App() {
   const future = useStore((s) => s.future)
   const undo = useStore((s) => s.undo)
   const redo = useStore((s) => s.redo)
-
   useEffect(() => {
     if (!error) return
     const id = setTimeout(() => setError(null), 8000)
@@ -35,9 +39,8 @@ export default function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey) || e.code !== 'KeyZ') {
-        if (!((e.metaKey || e.ctrlKey) && e.code === 'KeyY')) return
-      }
+      const undoish = (e.metaKey || e.ctrlKey) && (e.code === 'KeyZ' || e.code === 'KeyY')
+      if (!undoish) return
       // Text fields have their own undo, and taking it would be worse than
       // not offering one.
       const tag = (e.target as HTMLElement | null)?.tagName
@@ -58,6 +61,7 @@ export default function App() {
           <strong>Gooder Device Branding</strong>
           <em>iPhone 18 Pro · iPhone 18 Pro Max</em>
         </div>
+
         <div className="topbar-right">
           {status && <span className="status">{status}</span>}
           {!ready && !status && <span className="status">Loading model…</span>}
@@ -71,13 +75,25 @@ export default function App() {
               title={future.length ? `Redo ${future[0].label.toLowerCase()}` : 'Nothing to redo'}
             >↷</button>
           </div>
+          <button
+            type="button" className="btn icon" onClick={toggleTheme}
+            title={theme === 'dark' ? 'Switch to the light theme' : 'Switch to the dark theme'}
+          >{theme === 'dark' ? '☀' : '☾'}</button>
         </div>
       </header>
 
       <main className="main">
-        <Viewport />
+        {/* The stage column: what you are making, over the time it takes. */}
+        <div className="stage-col">
+          <Viewport>
+            <Gizmo />
+          </Viewport>
+          <TimelinePanel />
+        </div>
 
-        <aside className="sidebar">
+        {/* The inspector runs the full height, beside the timeline as well as
+            the viewport, so retiming and adjusting never trade places. */}
+        <aside className="inspector">
           <nav className="tabs">
             {TABS.map((t) => (
               <button key={t} type="button" className={t === tab ? 'on' : ''} onClick={() => setTab(t)}>
@@ -103,7 +119,7 @@ export default function App() {
                 </div>
                 <p className="note pad">
                   Drag the model in the frame to rotate it, shift-drag to pan, scroll to scale.
-                  These dials stay in step with whatever you do there.
+                  These dials stay in step with whatever you do there, and with the timeline.
                 </p>
               </section>
             )}
@@ -112,8 +128,6 @@ export default function App() {
           </div>
         </aside>
       </main>
-
-      <TimelinePanel />
 
       {error && (
         <div className="toast" role="alert">

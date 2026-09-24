@@ -87,6 +87,13 @@ export interface TrackDef {
   write?(out: Transform, v: TrackValue): void
   /** Drive the engine with a value. Everything that is not part of the pose. */
   apply?(target: TrackTarget, v: TrackValue): void
+  /** Set on the three light tracks, so selecting a key can bring that light forward. */
+  light?: LightId
+}
+
+/** Which inspector panel owns each group of properties. */
+export const TAB_FOR_GROUP: Record<TrackGroup, 'Control' | 'Light' | 'Look'> = {
+  Transform: 'Control', Camera: 'Control', Light: 'Light', Look: 'Look',
 }
 
 const AXIS = { x: 'var(--axis-x)', y: 'var(--axis-y)', z: 'var(--axis-z)' } as const
@@ -109,6 +116,7 @@ const light = (id: LightId, label: string): TrackDef => ({
     return { intensity: l.intensity, x: l.position[0], y: l.position[1], z: l.position[2] }
   },
   apply: (t, v) => t.setLightSample(id, v),
+  light: id,
 })
 
 export const TRACKS: Partial<Record<TrackId, TrackDef>> = {

@@ -118,7 +118,9 @@ const LIGHT_TYPES: { value: LightType; label: string }[] = [
 export function LightsPanel() {
   const lights = useStore((s) => s.lighting.lights)
   const setLight = useStore((s) => s.setLight)
-  const [selected, setSelected] = useState<LightId>('key')
+  // In the store so a selected keyframe can bring its own light forward.
+  const selected = useStore((s) => s.inspectorLight)
+  const setSelected = useStore((s) => s.setInspectorLight)
   const l = lights[selected]
 
   const track = `${selected}Light` as TrackId

@@ -174,6 +174,16 @@ all of them.
 **A GSAP tween of duration 0 is applied immediately, not at its position.** Two
 keys at the same instant need a sub-frame duration (`1e-4`) to step cleanly.
 
+**The theme lives in the store, not in a component.** Two components each
+holding their own `useState` copy drift the moment one toggles. It is applied to
+`<html>` at module import so the first paint is already right, and DialKit
+themes itself separately and has to be told which one it is in.
+
+**A tab change belongs to the action that causes it, not to an effect watching
+the selection.** Setting it inside `selectKey` moves it as part of the click;
+an effect makes it a second render caused by the first, which React warns about
+and which can cascade.
+
 **The panels read the sampled value, not the project's, while a property is
 animated.** `store.sampled` is a view of the project, never part of it: not
 persisted, not undoable, never written back. Editing a control still writes to
@@ -245,6 +255,15 @@ stroke uses `vector-effect: non-scaling-stroke`.
 ---
 
 ## Verifying in the browser
+
+**HMR keeps a stale component mounted after a failed update.** A store value
+can change, its subscribers fire, and the DOM not move — because the mounted
+component is the previous version of the module, still holding local state that
+the new version no longer has. Hard-reload before concluding a wiring bug.
+
+**Screenshots of a hidden browser pane are cached frames.** They can be several
+actions out of date and identical to each other. Assert against the DOM; take
+screenshots for looking, not for measuring.
 
 **The console buffer and dynamically imported modules survive HMR.** A stale
 `await import('/src/…')` in the console can return the *previous* version of a

@@ -1,22 +1,99 @@
+/*
+ * Two palettes, one set of names.
+ *
+ * Light is the default because the tool is for composing artwork that will sit
+ * on light surfaces, and a light shell stops the viewport reading as brighter
+ * than it is. Dark stays because a dark surround is better for judging a render,
+ * so it is a preference rather than a fallback — kept in its own storage key,
+ * since a theme belongs to the workstation and must not travel inside an
+ * exported project.
+ */
 :root {
+  --bg: #f2f2f5;
+  --panel: #ffffff;
+  --panel-2: #f6f6f9;
+  --panel-3: #ecedf1;
+  --line: #e0e0e7;
+  --line-soft: #ededf2;
+  --text: #17171c;
+  --muted: #6b6b79;
+  --accent: #4b62f0;
+  --accent-2: #9b6bf0;
+  --accent-ink: #ffffff;
+  --accent-wash: rgba(75, 98, 240, 0.16);
+  --danger: #d33a4f;
+  --danger-line: #f0c7cd;
+  --warn: #9a6100;
+  --ok: #0f8d68;
+
+  --hover-bg: #f0f0f4;
+  --hover-line: #cdcdd7;
+  --hairline: rgba(0, 0, 0, 0.08);
+  --pop-shadow: 0 14px 36px rgba(20, 20, 40, 0.14);
+  --canvas-shadow: 0 16px 50px rgba(20, 20, 40, 0.16);
+
+  /* Viewport surround: a transparency checker, plus a glow behind the frame. */
+  /* Darker than the panels on purpose: the artwork has to read as an object
+     sitting on the surround, not as part of it. */
+  --checker-a: #d9d9e1;
+  --checker-b: #e2e2e9;
+  --checker-glow: #eeeef3;
+
+  --playhead: #e8455f;
+  --toast-bg: #fdeaed;
+  --toast-line: #f0c2ca;
+  --toast-text: #7d1b28;
+
+  /* Per-channel colours for timeline rows and curves; X/Y/Z read as the axes. */
+  --axis-x: #dc4159;
+  --axis-y: #12946a;
+  --axis-z: #3a5ce8;
+  --axis-s: #8a4fe0;
+  --axis-v: #c97a10;
+
+  --radius: 10px;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
   --bg: #0b0b0e;
   --panel: #131318;
   --panel-2: #1a1a21;
+  --panel-3: #20202a;
   --line: #26262f;
   --line-soft: #1f1f27;
   --text: #e8e8ee;
   --muted: #8d8d9c;
   --accent: #6d8fff;
+  --accent-2: #b98bff;
   --accent-ink: #0b0b0e;
+  --accent-wash: rgba(109, 143, 255, 0.3);
   --danger: #ff6b6b;
+  --danger-line: #3a2630;
+  --warn: #ffcf6b;
   --ok: #57d9a3;
-  /* Per-channel colours for timeline rows and curves; X/Y/Z read as the axes. */
+
+  --hover-bg: #20202a;
+  --hover-line: #3a3a47;
+  --hairline: rgba(255, 255, 255, 0.08);
+  --pop-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+  --canvas-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+
+  --checker-a: #0f0f13;
+  --checker-b: #121217;
+  --checker-glow: #17171f;
+
+  --playhead: #ff5f7e;
+  --toast-bg: #2a1a1f;
+  --toast-line: #58303a;
+  --toast-text: #ffd9de;
+
   --axis-x: #ff6b81;
   --axis-y: #6ee7a8;
   --axis-z: #6d8fff;
   --axis-s: #c9a0ff;
   --axis-v: #ffc46b;
-  --radius: 10px;
+
   color-scheme: dark;
 }
 
@@ -34,7 +111,7 @@ body {
 
 .app {
   display: grid;
-  grid-template-rows: 48px 1fr auto;
+  grid-template-rows: 44px minmax(0, 1fr);
   height: 100%;
 }
 
@@ -48,7 +125,7 @@ body {
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand .dot {
   width: 9px; height: 9px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #b98bff);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
 }
 .brand strong { font-weight: 600; letter-spacing: -0.01em; }
 .brand em { color: var(--muted); font-style: normal; font-size: 12px; }
@@ -56,11 +133,20 @@ body {
 .topbar-right { display: flex; align-items: center; gap: 12px; }
 .history { display: flex; gap: 4px; }
 
-/* ---------- layout ---------- */
+/* ---------- layout ----------
+ * Three regions: the top bar, the stage column (what you are making over the
+ * time it takes), and an inspector that runs the full height beside both — so
+ * retiming and adjusting never trade places.
+ */
 .main {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: minmax(0, 1fr) 320px;
   min-height: 0;
+}
+.stage-col {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-width: 0; min-height: 0;
 }
 
 .viewport {
@@ -68,22 +154,34 @@ body {
   display: grid; place-items: center;
   min-width: 0;
   background:
-    radial-gradient(1200px 600px at 50% -10%, #17171f 0%, transparent 70%),
-    repeating-conic-gradient(#0f0f13 0% 25%, #121217 0% 50%) 0 0 / 22px 22px;
+    radial-gradient(1200px 600px at 50% -10%, var(--checker-glow) 0%, transparent 70%),
+    repeating-conic-gradient(var(--checker-a) 0% 25%, var(--checker-b) 0% 50%) 0 0 / 22px 22px;
 }
 .stage-canvas {
   display: block;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06);
+  box-shadow: var(--canvas-shadow), 0 0 0 1px var(--hairline);
   touch-action: none;
 }
+.gizmo {
+  position: absolute; right: 14px; top: 14px;
+  overflow: visible; cursor: pointer;
+}
+.gizmo-handle circle { transition: r 0.1s ease; }
+.gizmo-handle:hover circle { r: 10.5; }
+.gizmo text {
+  font-size: 9px; font-weight: 700; fill: var(--accent-ink);
+  pointer-events: none; letter-spacing: 0.02em;
+}
+:root[data-theme='dark'] .gizmo text { fill: var(--bg); }
+
 .viewport-hint {
   position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
   color: var(--muted); font-size: 11px; letter-spacing: 0.02em;
   pointer-events: none; opacity: 0.7;
 }
 
-/* ---------- sidebar ---------- */
-.sidebar {
+/* ---------- inspector ---------- */
+.inspector {
   display: grid; grid-template-rows: 40px 1fr;
   border-left: 1px solid var(--line);
   background: var(--panel);
@@ -92,8 +190,9 @@ body {
 .tabs { display: flex; border-bottom: 1px solid var(--line); }
 .tabs button {
   flex: 1; background: none; border: 0; color: var(--muted);
-  font: inherit; font-size: 12px; cursor: pointer; padding: 0;
+  font: inherit; font-size: 11px; cursor: pointer; padding: 0;
   border-bottom: 2px solid transparent;
+  letter-spacing: -0.01em;
 }
 .tabs button.on { color: var(--text); border-bottom-color: var(--accent); }
 .tabs button:hover { color: var(--text); }
@@ -171,13 +270,13 @@ input[type="color"] {
   font: inherit; font-size: 12px; padding: 6px 11px; border-radius: 8px; cursor: pointer;
   white-space: nowrap;
 }
-.btn:hover:not(:disabled) { border-color: #3a3a47; background: #20202a; }
+.btn:hover:not(:disabled) { border-color: var(--hover-line); background: var(--hover-bg); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
 .btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
 .btn.small { font-size: 11px; padding: 4px 8px; }
 .btn.ghost { background: none; }
-.btn.danger { color: var(--danger); border-color: #3a2630; }
+.btn.danger { color: var(--danger); border-color: var(--danger-line); }
 .btn.icon { padding: 5px 9px; min-width: 32px; }
 .btn.icon.on { color: var(--accent); border-color: var(--accent); }
 .btnrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
@@ -195,7 +294,7 @@ input[type="color"] {
 .note { margin: 2px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .note.pad { padding: 0 14px 14px; }
 .note.ok { color: var(--ok); }
-.note.warn { color: #ffcf6b; }
+.note.warn { color: var(--warn); }
 .note strong { color: var(--text); font-weight: 600; }
 .filename { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .filerow { display: flex; gap: 6px; align-items: center; min-width: 0; }
@@ -222,7 +321,7 @@ input[type="color"] {
 }
 .swatch span {
   width: 100%; aspect-ratio: 1; border-radius: 8px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 0 0 1px var(--hairline);
 }
 .swatch.on { color: var(--text); }
 .swatch.on span { box-shadow: 0 0 0 2px var(--accent); }
@@ -278,7 +377,7 @@ input[type="color"] {
   position: absolute; bottom: calc(100% + 6px); left: 0; z-index: 20;
   min-width: 190px; padding: 6px;
   background: var(--panel-2); border: 1px solid var(--line);
-  border-radius: 8px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  border-radius: 8px; box-shadow: var(--pop-shadow);
 }
 .tl-menu-group + .tl-menu-group { margin-top: 4px; border-top: 1px solid var(--line-soft); padding-top: 4px; }
 .tl-menu-title {
@@ -352,15 +451,15 @@ input[type="color"] {
   cursor: grab; z-index: 2;
 }
 .tl-key:hover { background: var(--accent); }
-.tl-key.on { background: var(--accent); box-shadow: 0 0 0 3px rgba(109, 143, 255, 0.3); }
+.tl-key.on { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-wash); }
 .tl-playhead {
   position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px;
-  background: #ff5f7e; pointer-events: none; z-index: 3;
+  background: var(--playhead); pointer-events: none; z-index: 3;
 }
 .tl-playhead::before {
   content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
   border-left: 5px solid transparent; border-right: 5px solid transparent;
-  border-top: 7px solid #ff5f7e;
+  border-top: 7px solid var(--playhead);
 }
 .tl-empty { margin: 0; min-height: 26px; }
 
@@ -368,7 +467,7 @@ input[type="color"] {
 .tl-ctx {
   position: fixed; z-index: 40; min-width: 180px; padding: 5px;
   background: var(--panel-2); border: 1px solid var(--line);
-  border-radius: 8px; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  border-radius: 8px; box-shadow: var(--pop-shadow);
 }
 .tl-ctx button {
   display: block; width: 100%; padding: 6px 9px;
@@ -404,7 +503,7 @@ input[type="color"] {
 /* ---------- toast ---------- */
 .toast {
   position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-  background: #2a1a1f; border: 1px solid #58303a; color: #ffd9de;
+  background: var(--toast-bg); border: 1px solid var(--toast-line); color: var(--toast-text);
   padding: 10px 14px; border-radius: 10px; font-size: 12px;
   display: flex; gap: 12px; align-items: center; z-index: 50; max-width: 70vw;
 }

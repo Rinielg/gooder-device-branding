@@ -201,8 +201,18 @@ Existing work is preserved and `STORAGE_KEY` is **not** bumped.
 5b. **Panels follow the timeline.** **Done** — every animatable control reads
    the sampled value while its property is animated, marked with a small
    diamond, and editing one keys it at the playhead.
-6. **Light theme:** tokens, then sweep every panel.
-7. **Spline shell:** three-region layout, top bar, contextual inspector, gizmo.
+6. ~~**Light theme:** tokens, then sweep every panel.~~ **Done** — two palettes
+   behind one set of names, light by default, toggled from the top bar and kept
+   in its own storage key so a theme never travels inside a project. Every
+   literal colour is now a token; secondary text clears AA in both (5.24:1
+   light, 5.66:1 dark).
+7. ~~**Spline shell:** three-region layout, top bar, contextual inspector,
+   gizmo.~~ **Done** — top bar, a stage column holding the viewport over the
+   timeline, and an inspector running the full height beside both. Selecting a
+   keyframe brings its own controls forward, driven by the registry's `group`
+   rather than a hand-kept map. The orientation gizmo is an SVG built from the
+   pose; clicking a handle snaps the device to that view, and keys itself when
+   rotation is animated.
 8. **Curve editor** — the *value* graph (per-channel curves over time), which
    is distinct from the easing curve already in the transition editor and wants
    the shell's vertical space.

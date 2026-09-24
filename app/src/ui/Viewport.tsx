@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Stage } from '../engine/Stage'
 import { CompositionTimeline } from '../engine/Timeline'
 import { engine } from '../engine/handle'
@@ -6,7 +6,7 @@ import { mergeTransform } from '../engine/tracks'
 import { useStore, compositionDuration } from '../state/store'
 import type { VariantManifest } from '../engine/types'
 
-export function Viewport() {
+export function Viewport({ children }: { children?: ReactNode }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const holderRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Stage | null>(null)
@@ -317,6 +317,7 @@ export function Viewport() {
       <div className="viewport-hint">
         drag to rotate · shift-drag to pan · scroll to scale
       </div>
+      {children}
     </div>
   )
 }
