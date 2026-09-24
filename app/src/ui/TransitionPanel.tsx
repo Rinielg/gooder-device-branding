@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
-import gsap from 'gsap'
 import { useStore } from '../state/store'
 import { trackDef } from '../engine/tracks'
-import { EASES, type EaseName, type TrackKey } from '../engine/types'
-
-/** Seeded when switching a transition to Custom: a plain symmetric ease. */
-const SEED_BEZIER: [number, number, number, number] = [0.42, 0, 0.58, 1]
+import { SEED_BEZIER, clamp, easeFn } from './ease'
+import { EASES, type EaseName } from '../engine/types'
 
 const CURVE_W = 104
 const CURVE_H = 104
@@ -242,31 +239,4 @@ function BezierCurve({
 
 /* ------------------------------------------------------------------ */
 
-const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi)
 const round = (n: number) => Math.round(n * 1000) / 1000
-
-/** The key's ease as a plain progress function, for the preview only. */
-function easeFn(key: TrackKey): (x: number) => number {
-  if (key.ease === 'custom') return cubicBezier(key.bezier ?? SEED_BEZIER)
-  const parsed = gsap.parseEase(key.ease)
-  return typeof parsed === 'function' ? parsed : (x: number) => x
-}
-
-function cubicBezier([x1, y1, x2, y2]: [number, number, number, number]) {
-  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx
-  const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by
-  const xAt = (t: number) => ((ax * t + bx) * t + cx) * t
-  const yAt = (t: number) => ((ay * t + by) * t + cy) * t
-  const dxAt = (t: number) => (3 * ax * t + 2 * bx) * t + cx
-  return (x: number) => {
-    // Newton-Raphson from x=t; eight passes is comfortably enough for a preview.
-    let t = x
-    for (let i = 0; i < 8; i++) {
-      const err = xAt(t) - x
-      const slope = dxAt(t)
-      if (Math.abs(err) < 1e-6 || slope === 0) break
-      t -= err / slope
-    }
-    return yAt(clamp(t, 0, 1))
-  }
-}

@@ -4,8 +4,11 @@ import { engine } from '../engine/handle'
 import { TRACKS, TRACK_ORDER, hasAnimation, quantise, trackDef } from '../engine/tracks'
 import type { Composition, Track, TrackId } from '../engine/types'
 import { TransitionPanel } from './TransitionPanel'
+import { CurveEditor } from './CurveEditor'
 
 const ROW_H = 30
+/** How tall the value graph stands when it replaces the lanes. */
+const CURVE_H = 168
 const MIN_PPS = 8
 const MAX_PPS = 800
 /** How close, in pixels, a dragged key has to get before it snaps. */
@@ -45,6 +48,20 @@ export function TimelinePanel() {
   const clearComposition = useStore((s) => s.clearComposition)
 
   const rows = useMemo(() => rowsOf(composition), [composition])
+
+  /**
+   * Curves replace the lanes rather than sitting beside them, so they inherit
+   * the ruler, the zoom, the scroll position and the playhead. A graph on its
+   * own time axis would be a second thing to keep in step.
+   */
+  const [curves, setCurves] = useState(false)
+  const [curveTrack, setCurveTrack] = useState<TrackId | null>(null)
+  const [hiddenChannels, setHiddenChannels] = useState<ReadonlySet<string>>(new Set())
+
+  // The graph always has something to draw: the selection, else what was picked,
+  // else the first row.
+  const shown = selection?.track ?? curveTrack ?? rows[0]?.id ?? null
+  const shownTrack = shown ? composition.tracks[shown] ?? null : null
 
   /** Right-click target: which key, and how many others share its instant. */
   const [menu, setMenu] = useState<
@@ -246,6 +263,13 @@ export function TimelinePanel() {
           <button type="button" className="btn small ghost" onClick={fit} title="Fit the whole composition">Fit</button>
         </div>
         {rows.length > 0 && (
+          <button
+            type="button" className={curves ? 'btn small on' : 'btn small'}
+            onClick={() => setCurves(!curves)}
+            title={curves ? 'Back to the keyframe lanes' : 'Show the value graph'}
+          >Curves</button>
+        )}
+        {rows.length > 0 && (
           <button type="button" className="btn ghost small" onClick={clearComposition}>Clear all</button>
         )}
       </div>
@@ -257,7 +281,12 @@ export function TimelinePanel() {
             const def = trackDef(track.id)
             if (!def) return null
             return (
-              <div key={track.id} className={`tl-head${track.enabled ? '' : ' off'}`} style={{ height: ROW_H }}>
+              <div
+                key={track.id}
+                className={`tl-head${track.enabled ? '' : ' off'}${curves && shown === track.id ? ' graphed' : ''}`}
+                style={{ height: ROW_H }}
+                onPointerDown={() => { if (curves) { setCurveTrack(track.id); setHiddenChannels(new Set()) } }}
+              >
                 <button
                   type="button"
                   className="tl-mute"
@@ -292,6 +321,30 @@ export function TimelinePanel() {
               </div>
             )
           })}
+
+          {curves && shownTrack && (
+            <div className="tl-channels">
+              {(trackDef(shownTrack.id)?.channels ?? []).map((ch) => {
+                const off = hiddenChannels.has(ch.key)
+                return (
+                  <button
+                    key={ch.key} type="button"
+                    className={off ? 'tl-chan off' : 'tl-chan'}
+                    onClick={() => setHiddenChannels((prev) => {
+                      const next = new Set(prev)
+                      if (next.has(ch.key)) next.delete(ch.key)
+                      // Hiding the last visible channel would leave an empty graph.
+                      else if (next.size < (trackDef(shownTrack.id)?.channels.length ?? 1) - 1) next.add(ch.key)
+                      return next
+                    })}
+                  >
+                    <i style={{ background: ch.colour }} />
+                    {ch.label}
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         <div className="tl-view" ref={viewRef}>
@@ -311,7 +364,7 @@ export function TimelinePanel() {
               ))}
             </div>
 
-            {rows.map((track) => {
+            {!curves && rows.map((track) => {
               const def = trackDef(track.id)
               if (!def) return null
               const colour = def.channels[0].colour
@@ -378,6 +431,15 @@ export function TimelinePanel() {
                 </div>
               )
             })}
+
+            {curves && shownTrack && (
+              <div className="tl-curve" style={{ height: CURVE_H }}>
+                <CurveEditor
+                  track={shownTrack} pxPerSec={pxPerSec} gutter={LANE_PAD}
+                  height={CURVE_H} hidden={hiddenChannels}
+                />
+              </div>
+            )}
 
             {/* Hoisted out of the rows so one playhead spans every track. */}
             <div className="tl-playhead" style={{ left: at(playhead) }} />

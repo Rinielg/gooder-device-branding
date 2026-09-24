@@ -14,7 +14,7 @@ Where the project stands, and what done looks like for the current phase.
 | Saved views | Named, with thumbnails |
 | Lighting | Environment (studio / HDRI / sky / none), key-fill-rim rig, shadow panel, ground modes, light gizmos |
 | Shadows | Real cast shadow on a backdrop or floor; frustum invariant swept across 1,728 combinations |
-| Timeline | Keyframes with easing — **single track, whole-transform** (the limitation this phase removes) |
+| Timeline | Per-property tracks with independent timing and easing; auto-key; undo/redo; transition editor; value curve editor |
 | Export | PNG at 1-3x including transparent; MP4/H.264 and WebM/VP9, encoded frame-by-frame |
 | Deploy | Public repo, MIT code with assets carved out, auto-deploy on push |
 
@@ -52,9 +52,17 @@ here — Path Extrusion, Cloner, Simulation, Events, Variables & Data.
 
 ## Known open items
 
-- `syncHelper` rebuilds light helpers on every `applyLighting` call. Harmless
-  today; must be fixed before lighting is sampled per frame.
-- Dragging a keyframe rebuilds the whole GSAP timeline on every `pointermove`.
-- `compositionDuration` takes a keyframe array, which makes its signature the
-  widest blast radius of any timeline change.
+- ~~`syncHelper` rebuilds light helpers on every `applyLighting` call.~~ Fixed:
+  rebuilt only when the light's type changes.
+- ~~Dragging a keyframe rebuilds the whole GSAP timeline on every
+  `pointermove`.~~ Fixed: track actions replace only the track they touch, and
+  the timeline reuses runners whose source `Track` is unchanged.
+- ~~`compositionDuration` takes a keyframe array.~~ Fixed: it takes a
+  `Composition`.
 - One deliberate `exhaustive-deps` warning in `Dials.tsx`, documented in place.
+- While a lighting or camera track is animating, editing its control writes the
+  sampled value into the project as well as keying it. Consistent with "the
+  panel shows what you set", but it means deleting the track later leaves the
+  property where the last edit put it rather than where it started.
+- The value graph draws easing accurately but does not let you drag bezier
+  handles on the curve itself; that stays in the transition editor.

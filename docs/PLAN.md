@@ -213,9 +213,12 @@ Existing work is preserved and `STORAGE_KEY` is **not** bumped.
    rather than a hand-kept map. The orientation gizmo is an SVG built from the
    pose; clicking a handle snaps the device to that view, and keys itself when
    rotation is animated.
-8. **Curve editor** — the *value* graph (per-channel curves over time), which
-   is distinct from the easing curve already in the transition editor and wants
-   the shell's vertical space.
+8. ~~**Curve editor** — the *value* graph (per-channel curves over time).~~
+   **Done** — a Curves mode that replaces the lanes rather than sitting beside
+   them, so it inherits the ruler, zoom, scroll position and playhead. Curves
+   are sampled through the same ease function playback uses, so an overshoot
+   reads as an overshoot. Points drag in both axes at once, alt holds the time,
+   and a row header picks which track is graphed.
 
 ---
 

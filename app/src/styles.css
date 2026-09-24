@@ -362,9 +362,12 @@ input[type="color"] {
   padding: 10px 16px 12px;
   display: grid; gap: 10px;
 }
-.tl-transport { display: flex; align-items: center; gap: 8px; }
+.tl-transport { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; row-gap: 6px; }
 .tl-transport .spacer { flex: 1; }
-.clock { font-variant-numeric: tabular-nums; font-size: 12px; margin-left: 4px; }
+.clock {
+  font-variant-numeric: tabular-nums; font-size: 12px; margin-left: 4px;
+  white-space: nowrap;
+}
 .clock em { font-style: normal; color: var(--muted); }
 
 .tl-length { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
@@ -418,6 +421,21 @@ input[type="color"] {
 .tl-head-btn.key { font-size: 12px; }
 .tl-head-btn.key.on { color: var(--accent); }
 .tl-chips { display: inline-flex; gap: 2px; flex: none; }
+.tl-head.graphed { background: var(--panel-3); box-shadow: inset 2px 0 0 var(--accent); }
+
+/* Channel toggles for the value graph, under the row list. */
+.tl-channels {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  padding: 8px; border-top: 1px solid var(--line-soft);
+}
+.tl-chan {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 7px; border: 1px solid var(--line); border-radius: 999px;
+  background: none; color: var(--text); font: inherit; font-size: 11px; cursor: pointer;
+}
+.tl-chan i { width: 6px; height: 6px; border-radius: 50%; }
+.tl-chan.off { opacity: 0.4; }
+.tl-chan:hover { border-color: var(--hover-line); }
 .tl-chips i { width: 5px; height: 5px; border-radius: 50%; }
 
 /* --- lanes --- */
@@ -452,6 +470,15 @@ input[type="color"] {
 }
 .tl-key:hover { background: var(--accent); }
 .tl-key.on { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-wash); }
+/* --- value graph --- */
+.tl-curve { position: relative; }
+.cv { display: block; overflow: visible; }
+.cv-grid { stroke: var(--line-soft); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.cv-label { fill: var(--muted); font-size: 9px; font-variant-numeric: tabular-nums; }
+.cv-line { fill: none; stroke-width: 1.75; vector-effect: non-scaling-stroke; }
+.cv-point { stroke: var(--panel-2); stroke-width: 1.5; cursor: grab; }
+.cv-point:hover { stroke: var(--text); }
+
 .tl-playhead {
   position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px;
   background: var(--playhead); pointer-events: none; z-index: 3;
