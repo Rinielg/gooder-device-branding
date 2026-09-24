@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { DialRoot, useDialKitController } from 'dialkit'
 import 'dialkit/styles.css'
 import { useStore } from '../state/store'
+import { useChannel } from './sampled'
 
 type Axis = [number, number, number, number]
 
@@ -39,6 +40,18 @@ export function Dials() {
   const transform = useStore((s) => s.transform)
   const stage = useStore((s) => s.stage)
   const suppress = useRef(false)
+  /**
+   * What the dials were last told to show, which is what an edit is measured
+   * against. Seeded from the values the dials were built with, so the very
+   * first pass cannot mistake initialisation for an edit.
+   */
+  const shown = useRef({ fov: config.Camera.FOV[0], distance: config.Camera.Distance[0] })
+
+  // The transform already follows the timeline — playback and scrubbing write
+  // the sampled pose back into the store. The camera does not, so it is read
+  // through the sample here.
+  const fov = useChannel('camera', 'fov', stage.fov)
+  const distance = useChannel('camera', 'distance', stage.distance)
 
   // dials -> store.
   // Deliberately keyed on `dial.values` alone: `dial` is a fresh object every
@@ -54,30 +67,36 @@ export function Dials() {
     }
     const nextS = { fov: v.Camera.FOV, distance: v.Camera.Distance }
     if (differs(nextT, st.transform)) st.setTransform(nextT)
-    if (differs(nextS, st.stage)) st.setStage(nextS)
+    // Compared against what the dials were last *set to*, not against the
+    // project: with the camera animated those differ every frame, and comparing
+    // against the project would write the sampled value back into it.
+    if (differs(nextS, { fov: shown.current.fov, distance: shown.current.distance })) st.setStage(nextS)
   }, [dial.values])
 
   // store -> dials
   useEffect(() => {
     const v = dial.getValues()
+    // Recorded whether or not the dials need setting: either way this is what
+    // they are showing, and an edit is anything that moves away from it.
+    shown.current = { fov, distance }
     const same =
       near(v.Position.X, transform.posX) && near(v.Position.Y, transform.posY) &&
       near(v.Position.Z, transform.posZ) && near(v.Rotation.X, transform.rotX) &&
       near(v.Rotation.Y, transform.rotY) && near(v.Rotation.Z, transform.rotZ) &&
       near(v.Scale, transform.scale) &&
-      near(v.Camera.FOV, stage.fov) && near(v.Camera.Distance, stage.distance)
+      near(v.Camera.FOV, fov) && near(v.Camera.Distance, distance)
     if (same) return
     suppress.current = true
     dial.setValues({
       Position: { X: transform.posX, Y: transform.posY, Z: transform.posZ },
       Rotation: { X: transform.rotX, Y: transform.rotY, Z: transform.rotZ },
       Scale: transform.scale,
-      Camera: { FOV: stage.fov, Distance: stage.distance },
+      Camera: { FOV: fov, Distance: distance },
     })
     // Release on the next tick, after DialKit has re-rendered with the new values.
     const id = setTimeout(() => { suppress.current = false }, 0)
     return () => clearTimeout(id)
-  }, [transform, stage])
+  }, [transform, fov, distance])
 
   return (
     <div className="dial-host">

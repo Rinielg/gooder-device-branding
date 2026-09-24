@@ -174,6 +174,28 @@ all of them.
 **A GSAP tween of duration 0 is applied immediately, not at its position.** Two
 keys at the same instant need a sub-frame duration (`1e-4`) to step cleanly.
 
+**The panels read the sampled value, not the project's, while a property is
+animated.** `store.sampled` is a view of the project, never part of it: not
+persisted, not undoable, never written back. Editing a control still writes to
+the project, and auto-key turns that into a key at the playhead — which is why
+a slider showing an interpolated value can be nudged and lands a key there.
+
+**`setSampled` compares before it writes,** because it is called every frame.
+An idle playhead costs 0.006ms; a tab with no animated controls, 0.023ms; the
+Light tab with nine animated controls on screen, 0.93ms. The selectors return
+numbers rather than objects so a control only re-renders when its own channel
+moves.
+
+**A control that reads a sampled value must edit from that value, not the
+project's.** A light's X/Y/Z share one setter: building the new position from
+the project's array would snap the other two axes back the moment one is
+nudged.
+
+**DialKit's write-back is measured against what the dials were last set to,**
+not against the project. With the camera animated those differ every frame, and
+comparing against the project would push the sampled value into it on every
+scrub — and record an undo step for each.
+
 **Everything a track drives is re-applied from the project every frame, then
 overridden by the sample.** That is what makes removing a track restore the
 value the panels show, without anything having to detect the removal. It costs

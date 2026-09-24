@@ -6,6 +6,7 @@ import {
   type BackgroundKind, type DeviceId,
 } from '../engine/types'
 import { ColorField, FileButton, Row, Section, Segmented, Slider, NumberInput } from './kit'
+import { useAnimated, useChannel } from './sampled'
 
 /* ------------------------------------------------------------------ */
 /* Frame                                                               */
@@ -116,6 +117,10 @@ export function BackgroundPanel() {
   const setBackground = useStore((s) => s.setBackground)
   const backgroundDuration = useStore((s) => s.backgroundDuration)
 
+  const bgAnimated = useAnimated('background')
+  const bgSpeed = useChannel('background', 'speed', bg.gradient.speed)
+  const bgVignette = useChannel('background', 'vignette', bg.vignette)
+
   return (
     <Section title="Background">
       <Row label="Type" stack>
@@ -185,8 +190,8 @@ export function BackgroundPanel() {
               Shuffle
             </button>
           </div>
-          <Row label="Speed" hint="0 freezes">
-            <Slider value={bg.gradient.speed} min={0} max={2} step={0.01}
+          <Row label="Speed" hint="0 freezes" animated={bgAnimated}>
+            <Slider value={bgSpeed} min={0} max={2} step={0.01}
               onChange={(speed) => setBackground({ gradient: { ...bg.gradient, speed } })} />
           </Row>
           <Row label="Scale">
@@ -255,8 +260,8 @@ export function BackgroundPanel() {
       )}
 
       {bg.kind !== 'transparent' && (
-        <Row label="Vignette">
-          <Slider value={bg.vignette} min={0} max={1} step={0.01} onChange={(vignette) => setBackground({ vignette })} />
+        <Row label="Vignette" animated={bgAnimated}>
+          <Slider value={bgVignette} min={0} max={1} step={0.01} onChange={(vignette) => setBackground({ vignette })} />
         </Row>
       )}
     </Section>
@@ -288,6 +293,9 @@ export function ScreenPanel() {
   const setScreen = useStore((s) => s.setScreen)
   const device = useStore((s) => s.device)
   const meta = DEVICES[device]
+
+  const screenAnimated = useAnimated('screen')
+  const screenBrightness = useChannel('screen', 'brightness', screen.brightness)
 
   const recommended = useMemo(() => {
     const w = 1206
@@ -322,8 +330,8 @@ export function ScreenPanel() {
         </span>
       </Row>
       <p className="note filename">{screen.name}</p>
-      <Row label="Brightness">
-        <Slider value={screen.brightness} min={0} max={4} step={0.01}
+      <Row label="Brightness" animated={screenAnimated}>
+        <Slider value={screenBrightness} min={0} max={4} step={0.01}
           onChange={(brightness) => setScreen({ brightness })} />
       </Row>
       <Row label="Zoom">

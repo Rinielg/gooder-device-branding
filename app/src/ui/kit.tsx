@@ -13,13 +13,16 @@ export function Section({ title, children, aside }: { title: string; children: R
   )
 }
 
-export function Row({ label, children, hint, stack }: {
+export function Row({ label, children, hint, stack, animated }: {
   label: string; children: ReactNode; hint?: string; stack?: boolean
+  /** Marks a control the timeline is driving, so a moving slider has a reason. */
+  animated?: boolean
 }) {
   return (
     <label className={stack ? 'row stack' : 'row'}>
       <span className="row-label">
         {label}
+        {animated && <i className="row-keyed" title="Animated on the timeline" />}
         {hint && <em>{hint}</em>}
       </span>
       <span className="row-control">{children}</span>

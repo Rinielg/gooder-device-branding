@@ -188,6 +188,10 @@ input[type="color"] {
 .link { background: none; border: 0; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; padding: 0; }
 .link.danger { color: var(--danger); }
 
+.row-keyed {
+  display: inline-block; width: 6px; height: 6px; margin-left: 6px;
+  background: var(--accent); border-radius: 1px; transform: rotate(45deg);
+}
 .note { margin: 2px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
 .note.pad { padding: 0 14px 14px; }
 .note.ok { color: var(--ok); }

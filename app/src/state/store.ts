@@ -5,7 +5,7 @@ import {
   type BackgroundState, type Composition, type DeviceId, type FrameState, type LegacyKeyframe,
   type LightId, type LightSettings, type LightingState, type SavedView,
   type ScreenState, type StageState, type Track, type TrackId, type TrackKey,
-  type Transform, type TrackValue, type VariantManifest,
+  type Sample, type Transform, type TrackValue, type VariantManifest,
 } from '../engine/types'
 import {
   TRACKS, TRACK_ORDER, isRegistered, lastKeyTime, makeTrack, makeTrackKey,
@@ -245,6 +245,16 @@ interface Store extends Project {
   ready: boolean
   /** True while an export is running; the preview loop stands down. */
   exporting: boolean
+  /**
+   * What the timeline evaluates to at the playhead, or null when nothing is
+   * animated.
+   *
+   * The panels read through this so their controls show what is actually on
+   * screen while scrubbing. It is a view of the project, never part of it: not
+   * persisted, not undoable, and never written back into the project's own
+   * values.
+   */
+  sampled: Sample | null
   /** Light gizmos are an editing aid, so they are never persisted. */
   showLightHelpers: boolean
   status: string | null
@@ -307,6 +317,7 @@ interface Store extends Project {
    */
   silently(run: () => void): void
 
+  setSampled(s: Sample | null): void
   setReady(r: boolean): void
   setExporting(e: boolean): void
   setShowLightHelpers(v: boolean): void
@@ -412,6 +423,19 @@ function autoKey(s: Store, next: TrackSource): { composition: Composition } | nu
 
 const sameValue = (a: TrackValue, b: TrackValue) =>
   Object.keys(a).every((k) => a[k] === b[k])
+
+function sameSample(a: Sample | null, b: Sample | null): boolean {
+  if (a === b) return true
+  if (!a || !b) return false
+  const keys = Object.keys(a)
+  if (keys.length !== Object.keys(b).length) return false
+  for (const k of keys) {
+    const av = a[k as TrackId]
+    const bv = b[k as TrackId]
+    if (!av || !bv || !sameValue(av, bv)) return false
+  }
+  return true
+}
 
 /**
  * Apply an edit, keying any animated property it moved.
@@ -519,6 +543,7 @@ export const useStore = create<Store>((set, get) => {
     loop: false,
     ready: false,
     exporting: false,
+    sampled: null,
     showLightHelpers: false,
     status: null,
     error: null,
@@ -679,6 +704,12 @@ export const useStore = create<Store>((set, get) => {
     silently: (run) => {
       restoring = true
       try { run() } finally { restoring = false }
+    },
+
+    // Called every frame, so it compares before it writes: an idle playhead
+    // must not wake every panel sixty times a second.
+    setSampled: (sampled) => {
+      if (!sameSample(get().sampled, sampled)) set({ sampled })
     },
 
     setReady: (ready) => set({ ready }),

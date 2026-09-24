@@ -198,6 +198,9 @@ Existing work is preserved and `STORAGE_KEY` is **not** bumped.
    having to notice. A fully animated frame costs 0.022ms; a 60-frame export
    with transform, environment, key light, shadow and background all animating
    runs at 7.6ms/frame, unchanged from before.
+5b. **Panels follow the timeline.** **Done** — every animatable control reads
+   the sampled value while its property is animated, marked with a small
+   diamond, and editing one keys it at the playhead.
 6. **Light theme:** tokens, then sweep every panel.
 7. **Spline shell:** three-region layout, top bar, contextual inspector, gizmo.
 8. **Curve editor** — the *value* graph (per-channel curves over time), which

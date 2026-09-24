@@ -228,6 +228,10 @@ export function Viewport() {
       // track that is removed simply stops overriding.
       const sample = tl.animated ? tl.sample(t) : null
       stage.applySample(st, sample)
+      // Publish it so the panels show what is on screen rather than the
+      // project's own values. It compares before writing, so an idle playhead
+      // costs nothing.
+      st.setSampled(sample)
 
       // While playing the timeline owns the pose and writes it back so the
       // dials animate too. Silent, because the timeline writing its own result

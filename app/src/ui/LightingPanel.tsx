@@ -3,9 +3,10 @@ import { useStore } from '../state/store'
 import {
   LIGHT_IDS, LIGHT_LABELS, TONE_MAPPINGS,
   type EnvMode, type GroundMode, type LightId, type LightType,
-  type ShadowQuality, type ToneMappingName,
+  type ShadowQuality, type ToneMappingName, type TrackId,
 } from '../engine/types'
 import { ColorField, FileButton, Row, Section, Segmented, Slider } from './kit'
+import { useAnimated, useChannel } from './sampled'
 
 const ENV_MODES: { value: EnvMode; label: string }[] = [
   { value: 'studio', label: 'Studio' },
@@ -18,6 +19,14 @@ export function EnvironmentPanel() {
   const env = useStore((s) => s.lighting.environment)
   const setLighting = useStore((s) => s.setLighting)
   const set = (v: Partial<typeof env>) => setLighting({ environment: v })
+
+  // While the timeline drives a property it owns it, so the control reads the
+  // sampled value. Editing still writes to the project, and auto-key turns that
+  // into a key at the playhead.
+  const envAnimated = useAnimated('environment')
+  const envIntensity = useChannel('environment', 'intensity', env.intensity)
+  const envRotationY = useChannel('environment', 'rotationY', env.rotationY)
+  const envExposure = useChannel('environment', 'exposure', env.exposure)
 
   return (
     <Section title="Environment">
@@ -58,12 +67,12 @@ export function EnvironmentPanel() {
 
       {env.mode !== 'none' && (
         <>
-          <Row label="Intensity">
-            <Slider value={env.intensity} min={0} max={4} step={0.01}
+          <Row label="Intensity" animated={envAnimated}>
+            <Slider value={envIntensity} min={0} max={4} step={0.01}
               onChange={(intensity) => set({ intensity })} />
           </Row>
-          <Row label="Rotation" hint="°">
-            <Slider value={env.rotationY} min={-180} max={180} step={1}
+          <Row label="Rotation" hint="°" animated={envAnimated}>
+            <Slider value={envRotationY} min={-180} max={180} step={1}
               onChange={(rotationY) => set({ rotationY })} />
           </Row>
         </>
@@ -79,8 +88,8 @@ export function EnvironmentPanel() {
 
       <hr className="rule" />
 
-      <Row label="Exposure">
-        <Slider value={env.exposure} min={0} max={3} step={0.01}
+      <Row label="Exposure" animated={envAnimated}>
+        <Slider value={envExposure} min={0} max={3} step={0.01}
           onChange={(exposure) => set({ exposure })} />
       </Row>
       <Row label="Tone map" stack>
@@ -112,8 +121,17 @@ export function LightsPanel() {
   const [selected, setSelected] = useState<LightId>('key')
   const l = lights[selected]
 
+  const track = `${selected}Light` as TrackId
+  const lightAnimated = useAnimated(track)
+  const lightIntensity = useChannel(track, 'intensity', l.intensity)
+  const lightX = useChannel(track, 'x', l.position[0])
+  const lightY = useChannel(track, 'y', l.position[1])
+  const lightZ = useChannel(track, 'z', l.position[2])
+
   const axis = (i: 0 | 1 | 2) => (v: number) => {
-    const position: [number, number, number] = [...l.position]
+    // Start from what is on screen: with the light animated, the other two axes
+    // are showing sampled values and must not snap back to the project's.
+    const position: [number, number, number] = [lightX, lightY, lightZ]
     position[i] = v
     setLight(selected, { position })
   }
@@ -144,14 +162,14 @@ export function LightsPanel() {
       <Row label="Colour">
         <ColorField value={l.color} onChange={(color) => setLight(selected, { color })} />
       </Row>
-      <Row label="Intensity">
-        <Slider value={l.intensity} min={0} max={8} step={0.01}
+      <Row label="Intensity" animated={lightAnimated}>
+        <Slider value={lightIntensity} min={0} max={8} step={0.01}
           onChange={(intensity) => setLight(selected, { intensity })} />
       </Row>
 
-      <Row label="X"><Slider value={l.position[0]} min={-4} max={4} step={0.01} onChange={axis(0)} /></Row>
-      <Row label="Y"><Slider value={l.position[1]} min={-4} max={4} step={0.01} onChange={axis(1)} /></Row>
-      <Row label="Z"><Slider value={l.position[2]} min={-4} max={4} step={0.01} onChange={axis(2)} /></Row>
+      <Row label="X" animated={lightAnimated}><Slider value={lightX} min={-4} max={4} step={0.01} onChange={axis(0)} /></Row>
+      <Row label="Y" animated={lightAnimated}><Slider value={lightY} min={-4} max={4} step={0.01} onChange={axis(1)} /></Row>
+      <Row label="Z" animated={lightAnimated}><Slider value={lightZ} min={-4} max={4} step={0.01} onChange={axis(2)} /></Row>
 
       {l.type === 'spot' && (
         <>
@@ -198,6 +216,10 @@ export function ShadowPanel() {
   const setLighting = useStore((s) => s.setLighting)
   const [advanced, setAdvanced] = useState(false)
 
+  const shadowAnimated = useAnimated('shadow')
+  const shadowOpacity = useChannel('shadow', 'opacity', shadows.opacity)
+  const shadowSoftness = useChannel('shadow', 'softness', shadows.softness)
+
   return (
     <Section title="Shadow">
       <label className="check">
@@ -217,13 +239,13 @@ export function ShadowPanel() {
           onChange={(quality) => setLighting({ shadows: { quality } })}
         />
       </Row>
-      <Row label="Opacity">
-        <Slider value={shadows.opacity} min={0} max={1} step={0.01}
+      <Row label="Opacity" animated={shadowAnimated}>
+        <Slider value={shadowOpacity} min={0} max={1} step={0.01}
           onChange={(opacity) => setLighting({ shadows: { opacity } })} />
       </Row>
       {shadows.quality === 'soft' && (
-        <Row label="Softness">
-          <Slider value={shadows.softness} min={0} max={2} step={0.01}
+        <Row label="Softness" animated={shadowAnimated}>
+          <Slider value={shadowSoftness} min={0} max={2} step={0.01}
             onChange={(softness) => setLighting({ shadows: { softness } })} />
         </Row>
       )}
