@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Stage } from '../engine/Stage'
-import { KeyframeTimeline } from '../engine/Timeline'
+import { CompositionTimeline } from '../engine/Timeline'
 import { engine } from '../engine/handle'
 import { useStore, compositionDuration } from '../state/store'
 import type { VariantManifest } from '../engine/types'
@@ -9,7 +9,7 @@ export function Viewport() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const holderRef = useRef<HTMLDivElement>(null)
   const stageRef = useRef<Stage | null>(null)
-  const timelineRef = useRef<KeyframeTimeline | null>(null)
+  const timelineRef = useRef<CompositionTimeline | null>(null)
   const [booted, setBooted] = useState(false)
 
   const device = useStore((s) => s.device)
@@ -22,7 +22,7 @@ export function Viewport() {
   const transform = useStore((s) => s.transform)
   const lighting = useStore((s) => s.lighting)
   const showLightHelpers = useStore((s) => s.showLightHelpers)
-  const keyframes = useStore((s) => s.keyframes)
+  const composition = useStore((s) => s.composition)
 
   /* ---------------- boot ---------------- */
   useEffect(() => {
@@ -31,7 +31,7 @@ export function Viewport() {
     let disposed = false
 
     const stage = new Stage(canvas, useStore.getState().device)
-    const timeline = new KeyframeTimeline()
+    const timeline = new CompositionTimeline()
     stageRef.current = stage
     timelineRef.current = timeline
     engine.stage = stage
@@ -182,8 +182,8 @@ export function Viewport() {
   }, [showLightHelpers, exporting, booted])
 
   useEffect(() => {
-    timelineRef.current?.build(keyframes)
-  }, [keyframes])
+    timelineRef.current?.build(composition)
+  }, [composition])
 
   /* ---------------- render loop ---------------- */
   useEffect(() => {
@@ -207,7 +207,7 @@ export function Viewport() {
 
       let t = st.playhead
       if (st.playing) {
-        const dur = compositionDuration(st.keyframes, st.backgroundDuration)
+        const dur = compositionDuration(st.composition, st.backgroundDuration)
         t = st.playhead + dt
         if (t > dur) {
           if (st.loop) {
@@ -223,9 +223,10 @@ export function Viewport() {
 
       // While playing, the timeline owns the pose and writes it back to the
       // store so the dials animate too. While paused the store owns it, so
-      // dragging and dialling still work with keyframes present.
-      if (st.playing && st.keyframes.length > 0) {
-        const sampled = tl.sample(t)
+      // dragging and dialling still work with keys present. Channels no track
+      // drives pass straight through from the store either way.
+      if (st.playing && tl.animated) {
+        const sampled = tl.sampleTransform(t, st.transform)
         stage.applyTransform(sampled)
         st.setTransform(sampled)
       } else {
@@ -242,7 +243,7 @@ export function Viewport() {
   useEffect(() => {
     const stage = stageRef.current
     if (!stage) return
-    if (useStore.getState().keyframes.length === 0) stage.applyTransform(transform)
+    if (!useStore.getState().playing) stage.applyTransform(transform)
   }, [transform])
 
   /* ---------------- pointer: drag to rotate, shift-drag to pan ------------- */

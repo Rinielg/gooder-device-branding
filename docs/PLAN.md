@@ -166,9 +166,15 @@ Existing work is preserved and `STORAGE_KEY` is **not** bumped.
 
 ## Sequencing
 
-1. **Docs** (step 0).
-2. **Model:** registry, `Composition`, `migrateKeyframes`, `Timeline` rewrite,
-   `hasAnimation`. Old UI kept working against the new model.
+1. ~~**Docs** (step 0).~~ **Done.**
+2. ~~**Model:** registry, `Composition`, `migrateKeyframes`, `Timeline` rewrite,
+   `hasAnimation`.~~ **Done** — `src/engine/tracks.ts` holds the registry,
+   `CompositionTimeline` runs one paused GSAP timeline per track, and the old
+   single-row panel still works by grouping keys that share a time. Verified:
+   position keyed at 0s/2s and rotation at 1s/3s animate independently with
+   different easing, untracked channels hold at the user's pose, a legacy
+   project migrates into three populated tracks with its timings and easing
+   intact, and two export passes at the same time are byte-identical.
 3. **Timeline UI:** rows, `+ Animate`, drag, zoomable ruler, hoisted playhead.
 4. **Transition editor.**
 5. **Extend tracks** to camera, lighting, screen and background — including the

@@ -10,6 +10,11 @@
   --accent-ink: #0b0b0e;
   --danger: #ff6b6b;
   --ok: #57d9a3;
+  /* Per-channel colours for timeline rows and curves; X/Y/Z read as the axes. */
+  --axis-x: #ff6b81;
+  --axis-y: #6ee7a8;
+  --axis-z: #6d8fff;
+  --axis-s: #c9a0ff;
   --radius: 10px;
   color-scheme: dark;
 }

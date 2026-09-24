@@ -1,12 +1,16 @@
 import { create } from 'zustand'
 import {
-  DEFAULT_BACKGROUND, DEFAULT_FRAME, DEFAULT_LIGHTING, DEFAULT_SCREEN, DEFAULT_STAGE,
-  DEFAULT_TRANSFORM,
-  type BackgroundState, type DeviceId, type FrameState, type Keyframe, type LightId,
-  type LightSettings, type LightingState, type SavedView,
-  type ScreenState, type StageState, type Transform, type VariantManifest,
+  DEFAULT_BACKGROUND, DEFAULT_COMPOSITION, DEFAULT_FRAME, DEFAULT_LIGHTING, DEFAULT_SCREEN,
+  DEFAULT_STAGE, DEFAULT_TRANSFORM,
+  type BackgroundState, type Composition, type DeviceId, type FrameState, type LegacyKeyframe,
+  type LightId, type LightSettings, type LightingState, type SavedView,
+  type ScreenState, type StageState, type Track, type TrackId, type TrackKey,
+  type Transform, type VariantManifest,
 } from '../engine/types'
-import { makeKeyframe } from '../engine/Timeline'
+import {
+  TRACKS, TRACK_ORDER, isRegistered, lastKeyTime, makeTrack, makeTrackKey,
+  quantise, sortKeys, type TrackSource,
+} from '../engine/tracks'
 
 const STORAGE_KEY = 'gooder-device-branding.v1'
 
@@ -19,14 +23,17 @@ export interface Project {
   transform: Transform
   background: BackgroundState
   screen: ScreenState
-  keyframes: Keyframe[]
+  composition: Composition
   views: SavedView[]
 }
+
+/** What `localStorage` may hold, including shapes this version no longer writes. */
+type PersistedProject = Partial<Project> & { keyframes?: LegacyKeyframe[] }
 
 /** One list, so persist / export / import cannot drift apart. */
 export const PROJECT_KEYS = [
   'device', 'variant', 'frame', 'stage', 'lighting',
-  'transform', 'background', 'screen', 'keyframes', 'views',
+  'transform', 'background', 'screen', 'composition', 'views',
 ] as const
 
 function pickProject(s: Project): Project {
@@ -92,6 +99,113 @@ function migrateLighting(persisted: Partial<Project>): LightingState {
   return l
 }
 
+/* ------------------------------------------------------------------ */
+/* Composition migration                                               */
+/* ------------------------------------------------------------------ */
+
+/** Everything a track may read, for keying and for migration. */
+const trackSource = (s: TrackSource): TrackSource => s
+
+/**
+ * Drop anything the registry does not recognise and put the rest in a known
+ * good shape.
+ *
+ * Saved projects are user data that may predate any given track, or come from
+ * a hand-edited JSON export, so nothing here may assume the file is correct.
+ */
+function sanitiseComposition(raw: unknown): Composition {
+  const out: Composition = { schemaVersion: 1, duration: 0, tracks: {} }
+  if (!isPlainObject(raw)) return out
+
+  const duration = Number(raw.duration)
+  out.duration = Number.isFinite(duration) && duration > 0 ? quantise(duration) : 0
+
+  const tracks = raw.tracks
+  if (!isPlainObject(tracks)) return out
+
+  for (const [id, saved] of Object.entries(tracks)) {
+    if (!isRegistered(id) || !isPlainObject(saved)) continue
+    const def = TRACKS[id]
+    if (!def) continue
+    const rawKeys = Array.isArray(saved.keys) ? saved.keys : []
+    const keys: TrackKey[] = []
+    for (const k of rawKeys) {
+      if (!isPlainObject(k) || !isPlainObject(k.value)) continue
+      const time = Number(k.time)
+      if (!Number.isFinite(time)) continue
+      // A key missing a channel would tween to undefined, so rebuild the value
+      // from the channel list and skip the key if a channel has no number.
+      const channels: Record<string, number> = {}
+      let complete = true
+      for (const ch of def.channels) {
+        const n = Number((k.value as Record<string, unknown>)[ch.key])
+        if (!Number.isFinite(n)) { complete = false; break }
+        channels[ch.key] = n
+      }
+      if (!complete) continue
+      keys.push({
+        id: typeof k.id === 'string' ? k.id : makeTrackKey(0, channels).id,
+        time: quantise(time),
+        ease: typeof k.ease === 'string' ? (k.ease as TrackKey['ease']) : 'power2.inOut',
+        ...(Array.isArray(k.bezier) && k.bezier.length === 4
+          ? { bezier: k.bezier.map(Number) as [number, number, number, number] }
+          : {}),
+        value: channels,
+      })
+    }
+    if (keys.length === 0) continue
+    out.tracks[id] = { id, enabled: saved.enabled !== false, keys: sortKeys(keys) }
+  }
+  return out
+}
+
+/**
+ * Read the animation out of a saved project.
+ *
+ * Before tracks existed a keyframe carried the whole transform, so each one
+ * fans out into three keys — position, rotation and scale — at the same time
+ * with the same easing. That is exactly equivalent: the old model could only
+ * ever move all three together. `STORAGE_KEY` is deliberately not bumped, so
+ * existing work survives the upgrade rather than being silently discarded.
+ */
+function migrateKeyframes(persisted: PersistedProject): Composition {
+  if (persisted.composition) return sanitiseComposition(persisted.composition)
+
+  const legacy = persisted.keyframes
+  if (!Array.isArray(legacy) || legacy.length === 0) return structuredClone(DEFAULT_COMPOSITION)
+
+  const out: Composition = { schemaVersion: 1, duration: 0, tracks: {} }
+  for (const kf of legacy) {
+    if (!kf?.transform || !Number.isFinite(kf.time)) continue
+    const source = trackSource({
+      transform: { ...DEFAULT_TRANSFORM, ...kf.transform },
+      stage: DEFAULT_STAGE,
+      lighting: DEFAULT_LIGHTING,
+      screen: DEFAULT_SCREEN,
+      background: DEFAULT_BACKGROUND,
+    })
+    for (const id of TRACK_ORDER) {
+      const def = TRACKS[id]
+      // Only the transform folds into a pose; nothing else was expressible.
+      if (!def?.write) continue
+      const key = makeTrackKey(kf.time, def.read(source))
+      key.ease = kf.ease ?? 'power2.inOut'
+      const track = out.tracks[id] ?? (out.tracks[id] = makeTrack(id))
+      track.keys.push(key)
+    }
+  }
+  for (const id of TRACK_ORDER) {
+    const t = out.tracks[id]
+    if (t) t.keys = sortKeys(t.keys)
+  }
+  return out
+}
+
+export interface KeySelection {
+  track: TrackId
+  key: string
+}
+
 interface Store extends Project {
   manifest: VariantManifest | null
   /** Blobs are kept out of the persisted project; object URLs do not survive reload. */
@@ -102,6 +216,11 @@ interface Store extends Project {
 
   playhead: number
   playing: boolean
+  /**
+   * Which key is being edited. Hoisted out of the timeline panel so the
+   * transition and curve editors can read it too.
+   */
+  selection: KeySelection | null
   loop: boolean
   ready: boolean
   /** True while an export is running; the preview loop stands down. */
@@ -128,12 +247,21 @@ interface Store extends Project {
   setPlaying(p: boolean): void
   setLoop(l: boolean): void
 
-  addKeyframe(): void
-  removeKeyframe(id: string): void
-  updateKeyframe(id: string, patch: Partial<Keyframe>): void
-  moveKeyframe(id: string, time: number): void
-  recaptureKeyframe(id: string): void
-  clearKeyframes(): void
+  /** Key every transform track at the playhead — the whole pose, as one gesture. */
+  keyPose(): void
+  /** Key one property at the playhead, creating its track if needed. */
+  keyTrack(id: TrackId): void
+  removeKey(track: TrackId, key: string): void
+  updateKey(track: TrackId, key: string, patch: Partial<TrackKey>): void
+  moveKey(track: TrackId, key: string, time: number): void
+  /** Set a key's value to whatever the property reads right now. */
+  recaptureKey(track: TrackId, key: string): void
+  removeTrack(id: TrackId): void
+  setTrackEnabled(id: TrackId, enabled: boolean): void
+  /** Explicit composition length; 0 returns it to deriving one from the content. */
+  setCompositionLength(seconds: number): void
+  clearComposition(): void
+  selectKey(sel: KeySelection | null): void
 
   saveView(name: string, thumb: string): void
   deleteView(id: string): void
@@ -146,14 +274,14 @@ interface Store extends Project {
   setError(e: string | null): void
 
   exportProject(): Project
-  importProject(p: Partial<Project>): void
+  importProject(p: PersistedProject): void
 }
 
-function loadPersisted(): Partial<Project> {
+function loadPersisted(): PersistedProject {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return {}
-    const parsed = JSON.parse(raw) as Partial<Project>
+    const parsed = JSON.parse(raw) as PersistedProject
     // Media lives behind object URLs that die with the page; drop those.
     if (parsed.background) {
       parsed.background = {
@@ -184,8 +312,24 @@ const initial: Project = {
   transform: { ...DEFAULT_TRANSFORM, ...persisted.transform },
   background: { ...DEFAULT_BACKGROUND, ...persisted.background },
   screen: { ...DEFAULT_SCREEN, ...persisted.screen },
-  keyframes: persisted.keyframes ?? [],
+  composition: migrateKeyframes(persisted),
   views: persisted.views ?? [],
+}
+
+/**
+ * Replace one track, leaving every other track object identical.
+ *
+ * The identity matters: the timeline reuses runners for tracks that did not
+ * change, so dragging a key rebuilds one GSAP timeline rather than all of them.
+ */
+function patchTrack(s: Project, id: TrackId, track: Track): { composition: Composition } {
+  return { composition: { ...s.composition, tracks: { ...s.composition.tracks, [id]: track } } }
+}
+
+function dropTrack(s: Project, id: TrackId): { composition: Composition } {
+  const tracks = { ...s.composition.tracks }
+  delete tracks[id]
+  return { composition: { ...s.composition, tracks } }
 }
 
 export const useStore = create<Store>((set, get) => {
@@ -211,6 +355,7 @@ export const useStore = create<Store>((set, get) => {
     backgroundDuration: 0,
     playhead: 0,
     playing: false,
+    selection: null,
     // The shipped mesh gradient runs once and holds, so the default is a single
     // pass rather than a loop.
     loop: false,
@@ -246,33 +391,84 @@ export const useStore = create<Store>((set, get) => {
     setPlaying: (playing) => set({ playing }),
     setLoop: (loop) => set({ loop }),
 
-    addKeyframe: () => set((s) => {
-      const time = s.keyframes.length === 0 ? 0 : s.playhead
-      const existing = s.keyframes.find((k) => Math.abs(k.time - time) < 1e-3)
-      const kf = makeKeyframe(time, s.transform)
-      const keyframes = existing
-        ? s.keyframes.map((k) => (k.id === existing.id ? { ...k, transform: { ...s.transform } } : k))
-        : [...s.keyframes, kf].sort((a, b) => a.time - b.time)
-      return after({ keyframes })
+    keyPose: () => {
+      // Every transform track together, which is what the old single keyframe
+      // did and still the common gesture: pose the device, mark it.
+      for (const id of TRACK_ORDER) if (TRACKS[id]?.write) get().keyTrack(id)
+    },
+
+    keyTrack: (id) => set((s) => {
+      const def = TRACKS[id]
+      if (!def) return {}
+      const time = quantise(s.playhead)
+      const value = def.read(s)
+      const track = s.composition.tracks[id] ?? makeTrack(id)
+      // Re-keying at a time that already has one replaces its value rather than
+      // stacking a second key nobody can select.
+      const existing = track.keys.find((k) => Math.abs(k.time - time) < 1e-3)
+      const keys = existing
+        ? track.keys.map((k) => (k.id === existing.id ? { ...k, value } : k))
+        : sortKeys([...track.keys, makeTrackKey(time, value)])
+      return after(patchTrack(s, id, { ...track, keys }))
     }),
 
-    removeKeyframe: (id) => set((s) => after({ keyframes: s.keyframes.filter((k) => k.id !== id) })),
+    removeKey: (id, key) => set((s) => {
+      const track = s.composition.tracks[id]
+      if (!track) return {}
+      const keys = track.keys.filter((k) => k.id !== key)
+      const next = keys.length === 0
+        ? dropTrack(s, id)
+        : patchTrack(s, id, { ...track, keys })
+      return after({
+        ...next,
+        selection: s.selection?.key === key ? null : s.selection,
+      })
+    }),
 
-    updateKeyframe: (id, patch) => set((s) => after({
-      keyframes: s.keyframes.map((k) => (k.id === id ? { ...k, ...patch } : k)).sort((a, b) => a.time - b.time),
+    updateKey: (id, key, patch) => set((s) => {
+      const track = s.composition.tracks[id]
+      if (!track) return {}
+      const keys = sortKeys(track.keys.map((k) => (k.id === key ? { ...k, ...patch } : k)))
+      return after(patchTrack(s, id, { ...track, keys }))
+    }),
+
+    moveKey: (id, key, time) => set((s) => {
+      const track = s.composition.tracks[id]
+      if (!track) return {}
+      const keys = sortKeys(track.keys.map((k) => (k.id === key ? { ...k, time: quantise(time) } : k)))
+      return after(patchTrack(s, id, { ...track, keys }))
+    }),
+
+    recaptureKey: (id, key) => set((s) => {
+      const track = s.composition.tracks[id]
+      const def = TRACKS[id]
+      if (!track || !def) return {}
+      const value = def.read(s)
+      const keys = track.keys.map((k) => (k.id === key ? { ...k, value } : k))
+      return after(patchTrack(s, id, { ...track, keys }))
+    }),
+
+    removeTrack: (id) => set((s) => after({
+      ...dropTrack(s, id),
+      selection: s.selection?.track === id ? null : s.selection,
     })),
 
-    moveKeyframe: (id, time) => set((s) => after({
-      keyframes: s.keyframes
-        .map((k) => (k.id === id ? { ...k, time: Math.max(0, Math.round(time * 1000) / 1000) } : k))
-        .sort((a, b) => a.time - b.time),
+    setTrackEnabled: (id, enabled) => set((s) => {
+      const track = s.composition.tracks[id]
+      if (!track) return {}
+      return after(patchTrack(s, id, { ...track, enabled }))
+    }),
+
+    setCompositionLength: (seconds) => set((s) => after({
+      composition: { ...s.composition, duration: seconds > 0 ? quantise(seconds) : 0 },
     })),
 
-    recaptureKeyframe: (id) => set((s) => after({
-      keyframes: s.keyframes.map((k) => (k.id === id ? { ...k, transform: { ...s.transform } } : k)),
+    clearComposition: () => set(after({
+      composition: structuredClone(DEFAULT_COMPOSITION),
+      selection: null,
     })),
 
-    clearKeyframes: () => set(after({ keyframes: [] })),
+    selectKey: (selection) => set({ selection }),
 
     saveView: (name, thumb) => set((s) => after({
       views: [
@@ -302,21 +498,24 @@ export const useStore = create<Store>((set, get) => {
       transform: { ...s.transform, ...p.transform },
       background: { ...s.background, ...p.background, videoUrl: null, kind: p.background?.kind === 'video' ? 'gradient' : (p.background?.kind ?? s.background.kind) },
       screen: { ...s.screen, ...p.screen },
-      keyframes: p.keyframes ?? s.keyframes,
+      // A file with no animation at all leaves the current one alone; only a
+      // file that actually carries one replaces it.
+      composition: p.composition || p.keyframes ? migrateKeyframes(p) : s.composition,
       views: p.views ?? s.views,
     })),
   }
 })
 
-export const timelineDuration = (keyframes: Keyframe[]) =>
-  keyframes.length ? Math.max(...keyframes.map((k) => k.time)) : 0
-
 /** Shortest composition offered when nothing else sets a length. */
 export const MIN_COMPOSITION = 4
 
 /**
- * How long the composition runs: long enough for every keyframe and for the
- * background animation to finish.
+ * How long the composition runs.
+ *
+ * An explicit `duration` wins, so a user can leave room at the end. Otherwise
+ * it is derived: long enough for every key and for the background animation to
+ * finish. Keys are included in the max either way, so dragging one past the end
+ * extends the composition rather than silently clipping it.
  */
-export const compositionDuration = (keyframes: Keyframe[], backgroundDuration: number) =>
-  Math.max(timelineDuration(keyframes), backgroundDuration, MIN_COMPOSITION)
+export const compositionDuration = (c: Composition, backgroundDuration: number) =>
+  Math.max(c.duration, lastKeyTime(c), backgroundDuration, MIN_COMPOSITION)

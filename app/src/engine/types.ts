@@ -340,11 +340,73 @@ export const EASES: EaseName[] = [
   'back.inOut(1.4)', 'back.out(1.7)',
 ]
 
-export interface Keyframe {
+/* ------------------------------------------------------------------ */
+/* Composition — per-property animation tracks                         */
+/* ------------------------------------------------------------------ */
+
+/**
+ * One animatable property family.
+ *
+ * A track owns its own keys, so position and rotation can be timed, eased and
+ * overlapped independently — which a single whole-transform keyframe list
+ * cannot express. Adding a member here is not enough on its own: a track only
+ * exists once it is registered in `tracks.ts`.
+ */
+export type TrackId =
+  | 'position' | 'rotation' | 'scale'
+  | 'camera' | 'environment' | 'keyLight' | 'fillLight' | 'rimLight' | 'shadow'
+  | 'screen' | 'background'
+
+/** Channel name -> value, e.g. `{ x, y, z }` or `{ fov, distance }`. */
+export type TrackValue = Record<string, number>
+
+export interface TrackKey {
   id: string
-  /** Seconds from the start of the timeline. */
+  /** Seconds from the start of the composition. */
   time: number
-  /** Ease used to arrive AT this keyframe from the previous one. */
+  /** Ease used to arrive AT this key. 'custom' reads `bezier`. */
+  ease: EaseName | 'custom'
+  /** Cubic bezier control points x1, y1, x2, y2 — only read when ease is 'custom'. */
+  bezier?: [number, number, number, number]
+  value: TrackValue
+}
+
+export interface Track {
+  id: TrackId
+  /** A disabled track keeps its keys but stops driving the scene. */
+  enabled: boolean
+  /** Always sorted by time. */
+  keys: TrackKey[]
+}
+
+export interface Composition {
+  schemaVersion: 1
+  /**
+   * Explicit length in seconds. 0 means "derive from the content" — the last
+   * key, the background animation, or the floor, whichever runs longest.
+   */
+  duration: number
+  tracks: Partial<Record<TrackId, Track>>
+}
+
+export const DEFAULT_COMPOSITION: Composition = {
+  schemaVersion: 1,
+  duration: 0,
+  tracks: {},
+}
+
+/** What the timeline evaluates to at an instant: one slice per live track. */
+export type Sample = Partial<Record<TrackId, TrackValue>>
+
+/**
+ * The pre-track keyframe: one key carrying the entire transform.
+ *
+ * Kept only so `migrateKeyframes` can read projects saved before tracks
+ * existed. Nothing new should ever produce one.
+ */
+export interface LegacyKeyframe {
+  id: string
+  time: number
   ease: EaseName
   transform: Transform
 }

@@ -140,6 +140,17 @@ Write a `migrate*` function beside the existing ones.
 
 **Strip `blob:` URLs on load.** Uploaded media dies with the page.
 
+**A persisted `Composition` is untrusted input.** It may name a `TrackId` that
+no longer exists, or carry a key missing a channel. An unknown track drives
+nothing; a missing channel tweens to `undefined` and puts NaN into the pose.
+`sanitiseComposition` rebuilds every key's value from the registry's channel
+list and drops anything that does not survive it.
+
+**A `TrackId` in the union is not a track.** The registry in `tracks.ts` is what
+makes one real. The union is deliberately ahead of it so later steps are
+additive, and everything else — the menu, the rows, the migration — filters
+through `isRegistered`.
+
 ---
 
 ## Performance
@@ -153,3 +164,12 @@ millisecond stall on each Hard↔Soft switch.
 **`syncHelper` rebuilds light helpers on every `applyLighting` call.** Harmless
 while lighting only changes on user input; fatal if lighting is sampled per
 frame. Rebuild only when the light *type* changes.
+
+**Every store edit returns a new `Composition`,** and the timeline rebuilds on
+it — once per `pointermove` while a key is dragged. Track actions replace only
+the track they touch, and `CompositionTimeline.build` reuses any runner whose
+source `Track` is identical, so a drag rebuilds one GSAP timeline rather than
+all of them.
+
+**A GSAP tween of duration 0 is applied immediately, not at its position.** Two
+keys at the same instant need a sub-frame duration (`1e-4`) to step cleanly.

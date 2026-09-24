@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { useStore, compositionDuration } from '../state/store'
+import { hasAnimation } from '../engine/tracks'
 import { engine } from '../engine/handle'
 import { evenSize } from '../engine/size'
 import { Row, Section, Segmented, Slider, NumberInput } from './kit'
@@ -8,7 +9,7 @@ type Busy = { kind: 'still' | 'video'; done: number; total: number } | null
 
 export function ExportPanel() {
   const frame = useStore((s) => s.frame)
-  const keyframes = useStore((s) => s.keyframes)
+  const composition = useStore((s) => s.composition)
   const playhead = useStore((s) => s.playhead)
   const transform = useStore((s) => s.transform)
   const bgBlob = useStore((s) => s.backgroundVideoBlob)
@@ -24,7 +25,7 @@ export function ExportPanel() {
   const [format, setFormat] = useState<'mp4' | 'webm'>('mp4')
   // Derived rather than stored: the export length follows the composition until
   // the user types one of their own, and then it is theirs.
-  const suggestedDuration = compositionDuration(keyframes, backgroundDuration)
+  const suggestedDuration = compositionDuration(composition, backgroundDuration)
   const [customDuration, setCustomDuration] = useState<number | null>(null)
   const duration = customDuration ?? suggestedDuration
   const [busy, setBusy] = useState<Busy>(null)
@@ -169,7 +170,7 @@ export function ExportPanel() {
         Every layer — background, device and screen content — is rendered into the same
         canvas, so the export is exactly what the frame shows. Video is encoded
         frame-by-frame rather than screen-recorded, so it never drops frames.
-        {keyframes.length === 0 && ' With no keyframes the pose holds still and only the background animates.'}
+        {!hasAnimation(composition) && ' With nothing keyed the pose holds still and only the background animates.'}
       </p>
     </Section>
   )

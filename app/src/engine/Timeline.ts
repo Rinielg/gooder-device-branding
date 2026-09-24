@@ -1,72 +1,129 @@
 import gsap from 'gsap'
-import { DEFAULT_TRANSFORM, TRANSFORM_KEYS, type Keyframe, type Transform } from './types'
+import { CustomEase } from 'gsap/CustomEase'
+import { mergeTransform } from './tracks'
+import type { Composition, Sample, Track, TrackId, TrackKey, TrackValue, Transform } from './types'
+
+gsap.registerPlugin(CustomEase)
 
 /**
- * A GSAP timeline built from an explicit keyframe list.
+ * One paused GSAP timeline per track, seeked rather than played.
  *
- * The timeline is always `paused` and is only ever moved with `.time()`. That
- * matters for export: playing the timeline would tie it to wall-clock time and
- * make frames non-reproducible, whereas seeking to `frame / fps` gives the same
- * result on a fast machine, a slow machine, and a background tab.
+ * Paused-and-seeked is what makes export reproducible: playing would tie the
+ * result to wall-clock time, whereas seeking to `frame / fps` gives the same
+ * pixels on a fast machine, a slow machine and a backgrounded tab.
+ *
+ * One timeline *per track* is what makes properties independent. A single
+ * timeline over a shared proxy would force every property to share a key
+ * schedule, which is the limitation this replaces.
  */
-export class KeyframeTimeline {
-  private tl: gsap.core.Timeline | null = null
-  private readonly proxy: Transform = { ...DEFAULT_TRANSFORM }
+interface TrackRunner {
+  tl: gsap.core.Timeline
+  proxy: TrackValue
+  enabled: boolean
+  /** Time of the last key; seeking past it holds. */
+  end: number
+  /**
+   * The Track this was built from. Store edits replace only the track they
+   * touch, so identity here lets a rebuild skip the untouched ones — which
+   * matters while a key is being dragged and the composition changes on every
+   * pointermove.
+   */
+  src: Track
+}
 
+export class CompositionTimeline {
+  private readonly runners = new Map<TrackId, TrackRunner>()
+
+  /** Longest track, in seconds. Not the composition length — that is the store's. */
   duration = 0
 
-  build(keyframes: Keyframe[]) {
-    this.tl?.kill()
-    this.tl = null
+  build(composition: Composition) {
+    const next = new Map<TrackId, TrackRunner>()
+    let longest = 0
 
-    const keys = [...keyframes].sort((a, b) => a.time - b.time)
-    if (keys.length === 0) {
-      this.duration = 0
-      return
+    for (const track of Object.values(composition.tracks)) {
+      if (!track || track.keys.length === 0) continue
+      const existing = this.runners.get(track.id)
+      const runner = existing?.src === track ? existing : buildTrack(track)
+      if (existing && existing !== runner) existing.tl.kill()
+      next.set(track.id, runner)
+      if (track.enabled) longest = Math.max(longest, runner.end)
     }
 
-    const tl = gsap.timeline({ paused: true })
-    Object.assign(this.proxy, keys[0].transform)
-    tl.set(this.proxy, { ...keys[0].transform }, 0)
-
-    for (let i = 1; i < keys.length; i++) {
-      const prev = keys[i - 1]
-      const cur = keys[i]
-      const duration = Math.max(cur.time - prev.time, 1e-4)
-      tl.to(
-        this.proxy,
-        { ...cur.transform, duration, ease: cur.ease === 'none' ? 'none' : cur.ease },
-        prev.time,
-      )
-    }
-
-    this.tl = tl
-    this.duration = keys[keys.length - 1].time
+    for (const [id, r] of this.runners) if (next.get(id) !== r) r.tl.kill()
+    this.runners.clear()
+    for (const [id, r] of next) this.runners.set(id, r)
+    this.duration = longest
   }
 
-  /** Evaluate the animated transform at `t` seconds. */
-  sample(t: number): Transform {
-    if (this.tl) {
-      const clamped = Math.min(Math.max(t, 0), this.duration)
-      // suppressEvents = true: a scrub should not fire callbacks.
-      this.tl.time(clamped, true)
+  /** True when at least one enabled track drives something. */
+  get animated() {
+    for (const r of this.runners.values()) if (r.enabled) return true
+    return false
+  }
+
+  has(id: TrackId) {
+    return this.runners.get(id)?.enabled === true
+  }
+
+  /** Evaluate every enabled track at `t` seconds. */
+  sample(t: number): Sample {
+    const out: Sample = {}
+    for (const [id, runner] of this.runners) {
+      if (!runner.enabled) continue
+      // suppressEvents = true: a scrub must not fire callbacks.
+      runner.tl.time(Math.min(Math.max(t, 0), runner.end), true)
+      out[id] = { ...runner.proxy }
     }
-    const out = {} as Transform
-    for (const k of TRANSFORM_KEYS) out[k] = this.proxy[k]
     return out
   }
 
+  /**
+   * The pose at `t`, with anything unanimated held at `base`.
+   *
+   * Holding rather than defaulting is the point: rotation can be keyed on its
+   * own while position stays wherever the user last put it.
+   */
+  sampleTransform(t: number, base: Transform): Transform {
+    return mergeTransform(base, this.sample(t))
+  }
+
   dispose() {
-    this.tl?.kill()
-    this.tl = null
+    this.disposeRunners()
+    this.duration = 0
+  }
+
+  private disposeRunners() {
+    for (const r of this.runners.values()) r.tl.kill()
+    this.runners.clear()
   }
 }
 
-export function makeKeyframe(time: number, transform: Transform): Keyframe {
-  return {
-    id: `kf_${Math.random().toString(36).slice(2, 10)}`,
-    time: Math.max(0, Math.round(time * 1000) / 1000),
-    ease: 'power2.inOut',
-    transform: { ...transform },
+function buildTrack(track: Track): TrackRunner {
+  const keys = [...track.keys].sort((a, b) => a.time - b.time)
+  const proxy: TrackValue = { ...keys[0].value }
+
+  const tl = gsap.timeline({ paused: true })
+  tl.set(proxy, { ...keys[0].value }, 0)
+
+  for (let i = 1; i < keys.length; i++) {
+    const prev = keys[i - 1]
+    const cur = keys[i]
+    // A zero-length tween is a step, but GSAP treats duration 0 as "set now",
+    // which would land it at the wrong time. A sub-frame duration steps cleanly.
+    const duration = Math.max(cur.time - prev.time, 1e-4)
+    tl.to(proxy, { ...cur.value, duration, ease: easeOf(cur) }, prev.time)
   }
+
+  return { tl, proxy, enabled: track.enabled, end: keys[keys.length - 1].time, src: track }
+}
+
+function easeOf(key: TrackKey): string | gsap.EaseFunction {
+  if (key.ease !== 'custom') return key.ease
+  const b = key.bezier
+  if (!b) return 'power2.inOut'
+  // CustomEase's path format IS a cubic bezier from (0,0) to (1,1); the id is
+  // derived from the control points so repeats reuse one registration.
+  const id = `cb_${b.map((n) => n.toFixed(4)).join('_')}`.replace(/[.-]/g, '')
+  return CustomEase.create(id, `M0,0 C${b[0]},${b[1]} ${b[2]},${b[3]} 1,1`)
 }

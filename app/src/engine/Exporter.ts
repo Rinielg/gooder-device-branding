@@ -5,7 +5,7 @@ import {
   type VideoCodec,
 } from 'mediabunny'
 import type { Stage } from './Stage'
-import type { KeyframeTimeline } from './Timeline'
+import type { CompositionTimeline } from './Timeline'
 import type { Transform } from './types'
 import { evenSize } from './size'
 
@@ -103,8 +103,12 @@ class DeterministicVideo {
 
 interface ExportContext {
   stage: Stage
-  timeline: KeyframeTimeline
-  /** Transform used when the timeline is empty. */
+  timeline: CompositionTimeline
+  /**
+   * The pose to start from. Channels no track drives hold here rather than
+   * snapping to a default, so a rotation-only animation keeps the user's
+   * position.
+   */
   staticTransform: Transform
   backgroundVideoBlob: Blob | null
   screenVideoBlob: Blob | null
@@ -120,7 +124,9 @@ async function renderFrame(
 ) {
   if (bg) await bg.seek(t)
   if (screen) await screen.seek(t)
-  const transform = animated ? ctx.timeline.sample(t) : ctx.staticTransform
+  const transform = animated
+    ? ctx.timeline.sampleTransform(t, ctx.staticTransform)
+    : ctx.staticTransform
   ctx.stage.applyTransform(transform)
   await ctx.stage.renderPrepared(t)
 }
@@ -154,7 +160,7 @@ export async function exportStill(ctx: ExportContext, opts: ExportSizeOpts, atTi
       if (screen) stage.device.overrideScreenTexture(screen.texture)
     }
 
-    await renderFrame(ctx, atTime, bg, screen, ctx.timeline.duration > 0)
+    await renderFrame(ctx, atTime, bg, screen, ctx.timeline.animated)
 
     // Captured in the same task as the render, so the drawing buffer is still
     // intact without paying for preserveDrawingBuffer all session.
@@ -238,7 +244,7 @@ export async function exportVideo(ctx: ExportContext, opts: VideoExportOpts): Pr
     await output.start()
 
     const total = Math.max(1, Math.round(opts.duration * opts.fps))
-    const animated = ctx.timeline.duration > 0
+    const animated = ctx.timeline.animated
     for (let i = 0; i < total; i++) {
       if (opts.signal?.aborted) throw new DOMException('Export cancelled', 'AbortError')
       const t = i / opts.fps
