@@ -175,13 +175,22 @@ Existing work is preserved and `STORAGE_KEY` is **not** bumped.
    different easing, untracked channels hold at the user's pose, a legacy
    project migrates into three populated tracks with its timings and easing
    intact, and two export passes at the same time are byte-identical.
-3. **Timeline UI:** rows, `+ Animate`, drag, zoomable ruler, hoisted playhead.
-4. **Transition editor.**
+3. ~~**Timeline UI:** rows, `+ Animate`, drag, zoomable ruler, hoisted playhead.~~
+   **Done** — one row per property with its own keys, mute and remove per row,
+   an Animate menu, drag-to-retime with cross-track snapping (alt to suspend),
+   a pixel-based zoomable ruler (modifier-scroll, ±, Fit) and one playhead
+   spanning every row. Composition length is now settable and authoritative.
+4. ~~**Transition editor.**~~ **Done** — `src/ui/TransitionPanel.tsx`: the
+   segment arriving at the selected key, with a sampled ease preview (accurate
+   for non-bezier eases like `back` and `expo`), draggable handles for custom
+   cubic-beziers, time, duration and per-channel value editing.
 5. **Extend tracks** to camera, lighting, screen and background — including the
    `Lighting` helper fix and `Stage.applySampled`.
 6. **Light theme:** tokens, then sweep every panel.
 7. **Spline shell:** three-region layout, top bar, contextual inspector, gizmo.
-8. **Curve editor.**
+8. **Curve editor** — the *value* graph (per-channel curves over time), which
+   is distinct from the easing curve already in the transition editor and wants
+   the shell's vertical space.
 
 ---
 

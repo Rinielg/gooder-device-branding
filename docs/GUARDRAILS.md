@@ -173,3 +173,25 @@ all of them.
 
 **A GSAP tween of duration 0 is applied immediately, not at its position.** Two
 keys at the same instant need a sub-frame duration (`1e-4`) to step cleanly.
+
+**Timeline positions are pixels, not percentages.** A percentage cannot zoom,
+which is why the old single row could never show less than the whole
+composition. The lanes are a scroll container of `duration * pxPerSec`.
+
+**An easing preview must sample the ease, not draw its parameters.** `back`,
+`expo` and `elastic` are not cubic beziers, so a bezier-shaped preview
+misrepresents them. Only a custom curve gets handles.
+
+**A non-square SVG viewBox turns circular drag handles into ellipses.** The
+easing graph folds its overshoot margin into a unit box instead, and every
+stroke uses `vector-effect: non-scaling-stroke`.
+
+---
+
+## Verifying in the browser
+
+**The console buffer and dynamically imported modules survive HMR.** A stale
+`await import('/src/…')` in the console can return the *previous* version of a
+module and quietly disagree with what the page is rendering. Hard-reload before
+trusting a console measurement, and read errors by their position in the log
+rather than their presence.

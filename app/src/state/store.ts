@@ -512,10 +512,15 @@ export const MIN_COMPOSITION = 4
 /**
  * How long the composition runs.
  *
- * An explicit `duration` wins, so a user can leave room at the end. Otherwise
- * it is derived: long enough for every key and for the background animation to
- * finish. Keys are included in the max either way, so dragging one past the end
- * extends the composition rather than silently clipping it.
+ * An explicit `duration` wins outright — a 20s background animation is a reason
+ * for the *default* to be long, not a reason to refuse a 5s clip. Only the keys
+ * still override it, so dragging one past the end extends the composition
+ * rather than silently clipping it.
+ *
+ * With no explicit length it is derived: long enough for every key and for the
+ * background animation to finish.
  */
 export const compositionDuration = (c: Composition, backgroundDuration: number) =>
-  Math.max(c.duration, lastKeyTime(c), backgroundDuration, MIN_COMPOSITION)
+  c.duration > 0
+    ? Math.max(c.duration, lastKeyTime(c))
+    : Math.max(lastKeyTime(c), backgroundDuration, MIN_COMPOSITION)
