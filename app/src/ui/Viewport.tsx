@@ -151,10 +151,12 @@ export function Viewport() {
     if (!file) return
     const url = `/textures/${file}`
     if (screen.url === url) return
-    useStore.getState().setScreen(
+    // Derived from the colourway, so it rides along with that undo step rather
+    // than becoming one of its own.
+    useStore.getState().silently(() => useStore.getState().setScreen(
       { kind: 'image', url, name: `${manifest[device].variants[variant].label} wallpaper`, followVariant: true },
       null,
-    )
+    ))
   }, [manifest, device, variant, screen.followVariant, screen.url])
 
   useEffect(() => {

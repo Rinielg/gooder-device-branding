@@ -38,12 +38,28 @@ export function TimelinePanel() {
   const keyTrack = useStore((s) => s.keyTrack)
   const moveKey = useStore((s) => s.moveKey)
   const removeKey = useStore((s) => s.removeKey)
+  const removeKeysAt = useStore((s) => s.removeKeysAt)
   const removeTrack = useStore((s) => s.removeTrack)
   const setTrackEnabled = useStore((s) => s.setTrackEnabled)
   const setCompositionLength = useStore((s) => s.setCompositionLength)
   const clearComposition = useStore((s) => s.clearComposition)
 
   const rows = useMemo(() => rowsOf(composition), [composition])
+
+  /** Right-click target: which key, and how many others share its instant. */
+  const [menu, setMenu] = useState<
+    { x: number; y: number; track: TrackId; key: string; time: number; atTime: number } | null
+  >(null)
+  useEffect(() => {
+    if (!menu) return
+    const away = () => setMenu(null)
+    window.addEventListener('pointerdown', away)
+    window.addEventListener('blur', away)
+    return () => {
+      window.removeEventListener('pointerdown', away)
+      window.removeEventListener('blur', away)
+    }
+  }, [menu])
   const duration = compositionDuration(composition, backgroundDuration)
 
   /* ---------------- zoom ---------------- */
@@ -338,10 +354,23 @@ export function TimelinePanel() {
                         title={`${def.label} · ${k.time.toFixed(2)}s · ${k.ease}`}
                         onPointerDown={(e) => {
                           e.stopPropagation()
+                          if (e.button === 2) return
+                          setMenu(null)
                           setPlaying(false)
                           selectKey({ track: track.id, key: k.id })
                           startKeyDrag(track.id, k.id)
                           scrubTo(k.time)
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          selectKey({ track: track.id, key: k.id })
+                          setMenu({
+                            x: e.clientX, y: e.clientY, track: track.id, key: k.id, time: k.time,
+                            atTime: rows.reduce(
+                              (n, r) => n + r.keys.filter((o) => Math.abs(o.time - k.time) < 1e-3).length, 0,
+                            ),
+                          })
                         }}
                       />
                     )
@@ -355,6 +384,26 @@ export function TimelinePanel() {
           </div>
         </div>
       </div>
+
+      {menu && (
+        <div
+          className="tl-ctx" role="menu"
+          style={{ left: menu.x, top: menu.y }}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          <button type="button" role="menuitem" onClick={() => { removeKey(menu.track, menu.key); setMenu(null) }}>
+            Delete this keyframe
+          </button>
+          {menu.atTime > 1 && (
+            <button type="button" role="menuitem" onClick={() => { removeKeysAt(menu.time); setMenu(null) }}>
+              Delete all {menu.atTime} at {menu.time.toFixed(2)}s
+            </button>
+          )}
+          <button type="button" role="menuitem" onClick={() => { removeTrack(menu.track); setMenu(null) }}>
+            Stop animating {trackDef(menu.track)?.label.toLowerCase()}
+          </button>
+        </div>
+      )}
 
       {rows.length === 0 ? (
         <p className="note tl-empty">

@@ -209,6 +209,23 @@ export interface KeySelection {
   key: string
 }
 
+/** How many steps of undo are kept. */
+export const HISTORY_LIMIT = 20
+/**
+ * A continuous edit — a drag, a slider, a bezier handle — should be one undo
+ * step rather than sixty, so edits sharing a coalesce key inside this window
+ * fold into the snapshot already on the stack.
+ */
+const COALESCE_MS = 600
+
+interface Snapshot {
+  label: string
+  project: Project
+  /** Blobs live outside the project but a background swap has to come back with it. */
+  backgroundVideoBlob: Blob | null
+  screenVideoBlob: Blob | null
+}
+
 interface Store extends Project {
   manifest: VariantManifest | null
   /** Blobs are kept out of the persisted project; object URLs do not survive reload. */
@@ -232,6 +249,9 @@ interface Store extends Project {
   showLightHelpers: boolean
   status: string | null
   error: string | null
+  /** Undo stack, oldest first. Never persisted — history is a session thing. */
+  past: Snapshot[]
+  future: Snapshot[]
 
   setManifest(m: VariantManifest): void
   setDevice(id: DeviceId): void
@@ -252,9 +272,15 @@ interface Store extends Project {
 
   /** Key every transform track at the playhead — the whole pose, as one gesture. */
   keyPose(): void
-  /** Key one property at the playhead, creating its track if needed. */
-  keyTrack(id: TrackId): void
+  /**
+   * Key one property at the playhead, creating its track if needed.
+   * `label` names the undo step; `keyPose` passes its own so three keys laid
+   * down together read as one action.
+   */
+  keyTrack(id: TrackId, label?: string): void
   removeKey(track: TrackId, key: string): void
+  /** Delete every key sitting at one instant, across every track. */
+  removeKeysAt(time: number): void
   updateKey(track: TrackId, key: string, patch: Partial<TrackKey>): void
   moveKey(track: TrackId, key: string, time: number): void
   /** Set a key's value to whatever the property reads right now. */
@@ -269,6 +295,17 @@ interface Store extends Project {
   saveView(name: string, thumb: string): void
   deleteView(id: string): void
   renameView(id: string, name: string): void
+
+  undo(): void
+  redo(): void
+  /**
+   * Run a derived sync without it becoming its own undo step.
+   *
+   * Some state follows other state — the wallpaper follows the colourway — and
+   * that is a consequence of an action, not an action. It is already inside the
+   * snapshot taken for the action that caused it.
+   */
+  silently(run: () => void): void
 
   setReady(r: boolean): void
   setExporting(e: boolean): void
@@ -349,17 +386,17 @@ function dropTrack(s: Project, id: TrackId): { composition: Composition } {
  * Which tracks are affected is derived by reading them before and after rather
  * than declared, so the registry stays the only description of a track.
  */
-function autoKey(s: Store, transform: Transform): { composition: Composition } | null {
+function autoKey(s: Store, next: TrackSource): { composition: Composition } | null {
   const time = quantise(s.playhead)
-  const before = trackSource({ ...s, transform: s.transform })
-  const after_ = trackSource({ ...s, transform })
+  const before = trackSource(s)
+  const after_ = trackSource(next)
   let tracks = s.composition.tracks
   let touched = false
 
   for (const id of TRACK_ORDER) {
     const def = TRACKS[id]
     const track = tracks[id]
-    if (!def?.write || !track) continue
+    if (!def || !track) continue
     const value = def.read(after_)
     if (sameValue(value, def.read(before))) continue
     const existing = track.keys.find((k) => Math.abs(k.time - time) < 1e-3)
@@ -376,6 +413,19 @@ function autoKey(s: Store, transform: Transform): { composition: Composition } |
 const sameValue = (a: TrackValue, b: TrackValue) =>
   Object.keys(a).every((k) => a[k] === b[k])
 
+/**
+ * Apply an edit, keying any animated property it moved.
+ *
+ * Every panel goes through here, so animating a light or the camera behaves
+ * exactly like posing the device: if the property already has a track, editing
+ * it at a new time puts a key there.
+ */
+function withAutoKey(s: Store, patch: Partial<Project>): Partial<Project> {
+  if (s.playing || s.exporting) return patch
+  const keyed = autoKey(s, trackSource({ ...s, ...patch }))
+  return keyed ? { ...patch, ...keyed } : patch
+}
+
 export const useStore = create<Store>((set, get) => {
   const persist = () => {
     const s = get()
@@ -385,10 +435,74 @@ export const useStore = create<Store>((set, get) => {
   // Playback writes the transform every frame; persisting on each one would
   // serialise the whole project 60 times a second.
   let persistTimer: ReturnType<typeof setTimeout> | undefined
-  const after = <T,>(v: T): T => {
+
+  // Coalescing state lives outside the store: it is bookkeeping about the last
+  // edit, not part of the project, and it must not be snapshotted.
+  let lastCoalesce: string | null = null
+  let lastAt = 0
+  let restoring = false
+
+  const snapshot = (s: Store, label: string): Snapshot => ({
+    label,
+    project: pickProject(s),
+    backgroundVideoBlob: s.backgroundVideoBlob,
+    screenVideoBlob: s.screenVideoBlob,
+  })
+
+  /**
+   * Record the state *before* an edit, and schedule the debounced save.
+   *
+   * `get()` is still the pre-edit state here in both call shapes — `after` runs
+   * before `set` merges, and inside a `set(fn)` updater zustand has not applied
+   * anything yet.
+   */
+  const after = <T extends object>(v: T, label = 'Edit', coalesce: string | null = null): T => {
     clearTimeout(persistTimer)
     persistTimer = setTimeout(persist, 400)
-    return v
+    if (restoring) return v
+
+    const now = Date.now()
+    if (coalesce && coalesce === lastCoalesce && now - lastAt < COALESCE_MS) {
+      // The entry already on the stack holds the state from before this run of
+      // edits started, which is exactly what undo should return to.
+      lastAt = now
+      return { ...v, future: [] } as T
+    }
+    lastCoalesce = coalesce
+    lastAt = now
+    const s = get()
+    return {
+      ...v,
+      past: [...s.past, snapshot(s, label)].slice(-HISTORY_LIMIT),
+      future: [],
+    } as T
+  }
+
+  /** Step through the history. Restoring is itself never recorded. */
+  const travel = (from: 'past' | 'future') => {
+    const s = get()
+    const stack = s[from]
+    const entry = from === 'past' ? stack[stack.length - 1] : stack[0]
+    if (!entry) return
+    const other = from === 'past' ? 'future' : 'past'
+    const keep = from === 'past' ? stack.slice(0, -1) : stack.slice(1)
+    const mirror = from === 'past'
+      ? [snapshot(s, entry.label), ...s.future].slice(0, HISTORY_LIMIT)
+      : [...s.past, snapshot(s, entry.label)].slice(-HISTORY_LIMIT)
+
+    restoring = true
+    set({
+      ...entry.project,
+      backgroundVideoBlob: entry.backgroundVideoBlob,
+      screenVideoBlob: entry.screenVideoBlob,
+      [from]: keep,
+      [other]: mirror,
+      // A key that no longer exists cannot stay selected.
+      selection: null,
+    })
+    restoring = false
+    lastCoalesce = null
+    persist()
   }
 
   return {
@@ -408,35 +522,36 @@ export const useStore = create<Store>((set, get) => {
     showLightHelpers: false,
     status: null,
     error: null,
+    past: [],
+    future: [],
 
     setManifest: (manifest) => set({ manifest }),
-    setDevice: (device) => set(after({ device })),
-    setVariant: (variant) => set(after({ variant })),
-    setFrame: (f) => set((s) => after({ frame: { ...s.frame, ...f } })),
-    setStage: (v) => set((s) => after({ stage: { ...s.stage, ...v } })),
-    setLighting: (v) => set((s) => after({ lighting: deepMerge(s.lighting, v) })),
-    setLight: (id, v) => set((s) => after({
+    setDevice: (device) => set(after({ device }, 'Change device')),
+    setVariant: (variant) => set(after({ variant }, 'Change colourway')),
+    setFrame: (f) => set((s) => after({ frame: { ...s.frame, ...f } }, 'Change frame', 'frame')),
+    setStage: (v) => set((s) => after(withAutoKey(s, { stage: { ...s.stage, ...v } }), 'Change camera', 'stage')),
+    setLighting: (v) => set((s) => after(withAutoKey(s, { lighting: deepMerge(s.lighting, v) }), 'Change lighting', 'lighting')),
+    setLight: (id, v) => set((s) => after(withAutoKey(s, {
       lighting: { ...s.lighting, lights: { ...s.lighting.lights, [id]: { ...s.lighting.lights[id], ...v } } },
-    })),
-    resetLighting: () => set(after({ lighting: structuredClone(DEFAULT_LIGHTING) })),
+    }), `Change ${id} light`, `light:${id}`)),
+    resetLighting: () => set(after({ lighting: structuredClone(DEFAULT_LIGHTING) }, 'Reset lighting')),
     setTransform: (t, opts) => set((s) => {
       const transform = { ...s.transform, ...t }
       // Playback and scrubbing write the sampled pose back so the dials follow
       // along. That is the timeline talking to itself, not an edit, and keying
       // it would lay down a key on every frame.
-      if (opts?.silent || s.playing || s.exporting) return after({ transform })
-      const keyed = autoKey(s, transform)
-      return after(keyed ? { transform, ...keyed } : { transform })
+      if (opts?.silent || s.playing || s.exporting) return { transform }
+      return after(withAutoKey(s, { transform }), 'Pose device', 'transform')
     }),
 
-    setBackground: (b, blob) => set((s) => after({
+    setBackground: (b, blob) => set((s) => after(withAutoKey(s, {
       background: { ...s.background, ...b },
       backgroundVideoBlob: blob === undefined ? s.backgroundVideoBlob : blob,
-    })),
-    setScreen: (v, blob) => set((s) => after({
+    } as Partial<Project>), 'Change background', 'background')),
+    setScreen: (v, blob) => set((s) => after(withAutoKey(s, {
       screen: { ...s.screen, ...v },
       screenVideoBlob: blob === undefined ? s.screenVideoBlob : blob,
-    })),
+    } as Partial<Project>), 'Change screen', 'screen')),
 
     setBackgroundDuration: (backgroundDuration) => set({ backgroundDuration }),
     setPlayhead: (playhead) => set({ playhead }),
@@ -446,10 +561,10 @@ export const useStore = create<Store>((set, get) => {
     keyPose: () => {
       // Every transform track together, which is what the old single keyframe
       // did and still the common gesture: pose the device, mark it.
-      for (const id of TRACK_ORDER) if (TRACKS[id]?.write) get().keyTrack(id)
+      for (const id of TRACK_ORDER) if (TRACKS[id]?.write) get().keyTrack(id, 'Key pose')
     },
 
-    keyTrack: (id) => set((s) => {
+    keyTrack: (id, label) => set((s) => {
       const def = TRACKS[id]
       if (!def) return {}
       const time = quantise(s.playhead)
@@ -461,7 +576,7 @@ export const useStore = create<Store>((set, get) => {
       const keys = existing
         ? track.keys.map((k) => (k.id === existing.id ? { ...k, value } : k))
         : sortKeys([...track.keys, makeTrackKey(time, value)])
-      return after(patchTrack(s, id, { ...track, keys }))
+      return after(patchTrack(s, id, { ...track, keys }), label ?? `Key ${def.label.toLowerCase()}`, `key@${time}`)
     }),
 
     removeKey: (id, key) => set((s) => {
@@ -474,21 +589,43 @@ export const useStore = create<Store>((set, get) => {
       return after({
         ...next,
         selection: s.selection?.key === key ? null : s.selection,
-      })
+      }, 'Delete keyframe')
+    }),
+
+    /** Every key sitting at one instant, across every track. */
+    removeKeysAt: (time) => set((s) => {
+      let tracks = s.composition.tracks
+      let removed = 0
+      for (const id of TRACK_ORDER) {
+        const track = tracks[id]
+        if (!track) continue
+        const keys = track.keys.filter((k) => Math.abs(k.time - time) >= 1e-3)
+        if (keys.length === track.keys.length) continue
+        removed += track.keys.length - keys.length
+        const next = { ...tracks }
+        if (keys.length === 0) delete next[id]
+        else next[id] = { ...track, keys }
+        tracks = next
+      }
+      if (removed === 0) return {}
+      return after({
+        composition: { ...s.composition, tracks },
+        selection: null,
+      }, removed === 1 ? 'Delete keyframe' : `Delete ${removed} keyframes`)
     }),
 
     updateKey: (id, key, patch) => set((s) => {
       const track = s.composition.tracks[id]
       if (!track) return {}
       const keys = sortKeys(track.keys.map((k) => (k.id === key ? { ...k, ...patch } : k)))
-      return after(patchTrack(s, id, { ...track, keys }))
+      return after(patchTrack(s, id, { ...track, keys }), 'Edit keyframe', `edit:${key}`)
     }),
 
     moveKey: (id, key, time) => set((s) => {
       const track = s.composition.tracks[id]
       if (!track) return {}
       const keys = sortKeys(track.keys.map((k) => (k.id === key ? { ...k, time: quantise(time) } : k)))
-      return after(patchTrack(s, id, { ...track, keys }))
+      return after(patchTrack(s, id, { ...track, keys }), 'Move keyframe', `move:${key}`)
     }),
 
     recaptureKey: (id, key) => set((s) => {
@@ -497,28 +634,28 @@ export const useStore = create<Store>((set, get) => {
       if (!track || !def) return {}
       const value = def.read(s)
       const keys = track.keys.map((k) => (k.id === key ? { ...k, value } : k))
-      return after(patchTrack(s, id, { ...track, keys }))
+      return after(patchTrack(s, id, { ...track, keys }), 'Capture keyframe')
     }),
 
     removeTrack: (id) => set((s) => after({
       ...dropTrack(s, id),
       selection: s.selection?.track === id ? null : s.selection,
-    })),
+    }, `Stop animating ${TRACKS[id]?.label.toLowerCase() ?? id}`)),
 
     setTrackEnabled: (id, enabled) => set((s) => {
       const track = s.composition.tracks[id]
       if (!track) return {}
-      return after(patchTrack(s, id, { ...track, enabled }))
+      return after(patchTrack(s, id, { ...track, enabled }), enabled ? 'Unmute track' : 'Mute track')
     }),
 
     setCompositionLength: (seconds) => set((s) => after({
       composition: { ...s.composition, duration: seconds > 0 ? quantise(seconds) : 0 },
-    })),
+    }, 'Change length', 'length')),
 
     clearComposition: () => set(after({
       composition: structuredClone(DEFAULT_COMPOSITION),
       selection: null,
-    })),
+    }, 'Clear animation')),
 
     selectKey: (selection) => set({ selection }),
 
@@ -527,11 +664,18 @@ export const useStore = create<Store>((set, get) => {
         { id: `vw_${Math.random().toString(36).slice(2, 10)}`, name, thumb, transform: { ...s.transform }, createdAt: Date.now() },
         ...s.views,
       ].slice(0, 40),
-    })),
-    deleteView: (id) => set((s) => after({ views: s.views.filter((v) => v.id !== id) })),
+    }, 'Save view')),
+    deleteView: (id) => set((s) => after({ views: s.views.filter((v) => v.id !== id) }, 'Delete view')),
     renameView: (id, name) => set((s) => after({
       views: s.views.map((v) => (v.id === id ? { ...v, name } : v)),
-    })),
+    }, 'Rename view', `view:${id}`)),
+
+    undo: () => travel('past'),
+    redo: () => travel('future'),
+    silently: (run) => {
+      restoring = true
+      try { run() } finally { restoring = false }
+    },
 
     setReady: (ready) => set({ ready }),
     setExporting: (exporting) => set({ exporting }),
@@ -554,7 +698,7 @@ export const useStore = create<Store>((set, get) => {
       // file that actually carries one replaces it.
       composition: p.composition || p.keyframes ? migrateKeyframes(p) : s.composition,
       views: p.views ?? s.views,
-    })),
+    }, 'Import project')),
   }
 })
 

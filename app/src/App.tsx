@@ -22,12 +22,33 @@ export default function App() {
   const status = useStore((s) => s.status)
   const error = useStore((s) => s.error)
   const setError = useStore((s) => s.setError)
+  const past = useStore((s) => s.past)
+  const future = useStore((s) => s.future)
+  const undo = useStore((s) => s.undo)
+  const redo = useStore((s) => s.redo)
 
   useEffect(() => {
     if (!error) return
     const id = setTimeout(() => setError(null), 8000)
     return () => clearTimeout(id)
   }, [error, setError])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.code !== 'KeyZ') {
+        if (!((e.metaKey || e.ctrlKey) && e.code === 'KeyY')) return
+      }
+      // Text fields have their own undo, and taking it would be worse than
+      // not offering one.
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      e.preventDefault()
+      if (e.code === 'KeyY' || e.shiftKey) redo()
+      else undo()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [redo, undo])
 
   return (
     <div className="app">
@@ -40,6 +61,16 @@ export default function App() {
         <div className="topbar-right">
           {status && <span className="status">{status}</span>}
           {!ready && !status && <span className="status">Loading model…</span>}
+          <div className="history">
+            <button
+              type="button" className="btn icon" onClick={undo} disabled={past.length === 0}
+              title={past.length ? `Undo ${past[past.length - 1].label.toLowerCase()} (${past.length} step${past.length === 1 ? '' : 's'})` : 'Nothing to undo'}
+            >↶</button>
+            <button
+              type="button" className="btn icon" onClick={redo} disabled={future.length === 0}
+              title={future.length ? `Redo ${future[0].label.toLowerCase()}` : 'Nothing to redo'}
+            >↷</button>
+          </div>
         </div>
       </header>
 
