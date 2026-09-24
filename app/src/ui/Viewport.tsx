@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Stage } from '../engine/Stage'
 import { CompositionTimeline } from '../engine/Timeline'
 import { engine } from '../engine/handle'
+import { mergeTransform } from '../engine/tracks'
 import { useStore, compositionDuration } from '../state/store'
 import type { VariantManifest } from '../engine/types'
 
@@ -19,7 +20,6 @@ export function Viewport() {
   const stageState = useStore((s) => s.stage)
   const background = useStore((s) => s.background)
   const screen = useStore((s) => s.screen)
-  const transform = useStore((s) => s.transform)
   const lighting = useStore((s) => s.lighting)
   const showLightHelpers = useStore((s) => s.showLightHelpers)
   const composition = useStore((s) => s.composition)
@@ -223,18 +223,17 @@ export function Viewport() {
         st.setPlayhead(t)
       }
 
-      // While playing, the timeline owns the pose and writes it back to the
-      // store so the dials animate too. While paused the store owns it, so
-      // dragging and dialling still work with keys present. Channels no track
-      // drives pass straight through from the store either way.
-      if (st.playing && tl.animated) {
-        const sampled = tl.sampleTransform(t, st.transform)
-        stage.applyTransform(sampled)
-        // silent: the timeline writing its own result back is not an edit, so
-        // it must not lay down a key on every frame.
-        st.setTransform(sampled, { silent: true })
-      } else {
-        stage.applyTransform(st.transform)
+      // The scene is the project's own values with any animated track over the
+      // top, every frame. Nothing a track does not drive is touched, and a
+      // track that is removed simply stops overriding.
+      const sample = tl.animated ? tl.sample(t) : null
+      stage.applySample(st, sample)
+
+      // While playing the timeline owns the pose and writes it back so the
+      // dials animate too. Silent, because the timeline writing its own result
+      // back is not an edit and must not key on every frame.
+      if (st.playing && sample) {
+        st.setTransform(mergeTransform(st.transform, sample), { silent: true })
       }
 
       stage.render(t)
@@ -242,13 +241,6 @@ export function Viewport() {
     raf = requestAnimationFrame(loop)
     return () => cancelAnimationFrame(raf)
   }, [])
-
-  /* apply transform immediately when edited while paused */
-  useEffect(() => {
-    const stage = stageRef.current
-    if (!stage) return
-    if (!useStore.getState().playing) stage.applyTransform(transform)
-  }, [transform])
 
   /* ---------------- pointer: drag to rotate, shift-drag to pan ------------- */
   useEffect(() => {

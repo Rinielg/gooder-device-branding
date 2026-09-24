@@ -534,7 +534,11 @@ export const useStore = create<Store>((set, get) => {
     setLight: (id, v) => set((s) => after(withAutoKey(s, {
       lighting: { ...s.lighting, lights: { ...s.lighting.lights, [id]: { ...s.lighting.lights[id], ...v } } },
     }), `Change ${id} light`, `light:${id}`)),
-    resetLighting: () => set(after({ lighting: structuredClone(DEFAULT_LIGHTING) }, 'Reset lighting')),
+    // Keyed like any other lighting edit: with a lighting track present the
+    // reset has to land at the playhead, or an animated rig would swallow it.
+    resetLighting: () => set((s) => after(
+      withAutoKey(s, { lighting: structuredClone(DEFAULT_LIGHTING) }), 'Reset lighting',
+    )),
     setTransform: (t, opts) => set((s) => {
       const transform = { ...s.transform, ...t }
       // Playback and scrubbing write the sampled pose back so the dials follow

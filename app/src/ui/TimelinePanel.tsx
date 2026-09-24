@@ -266,7 +266,7 @@ export function TimelinePanel() {
                 >
                   {track.enabled ? '◉' : '○'}
                 </button>
-                <span className="tl-head-label">{def.label}</span>
+                <span className="tl-head-label" title={def.label}>{def.label}</span>
                 <span className="tl-chips">
                   {def.channels.map((ch) => (
                     <i key={ch.key} style={{ background: ch.colour }} title={ch.label} />

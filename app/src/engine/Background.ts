@@ -205,6 +205,12 @@ export class Background {
   }
 
   /** Animation clock, in seconds. Driven explicitly so exports are deterministic. */
+  /** Per-frame setters for the animated background track. Two uniform writes. */
+  setLook(speed: number, vignette: number) {
+    this.material.uniforms.uSpeed.value = speed
+    this.material.uniforms.uVignette.value = vignette
+  }
+
   setTime(t: number) {
     this.material.uniforms.uTime.value = t
     this.meshGradient?.seek(t)

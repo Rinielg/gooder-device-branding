@@ -3,12 +3,14 @@ import { Background } from './Background'
 import { Device } from './Device'
 import { ShadowRig } from './ShadowRig'
 import { LightingController } from './Lighting'
+import { applySampled, type TrackSource, type TrackTarget } from './tracks'
 import {
   DEFAULT_LIGHTING, DEFAULT_STAGE,
-  type BackgroundState, type DeviceId, type LightingState, type StageState, type Transform,
+  type BackgroundState, type DeviceId, type LightId, type LightingState, type Sample,
+  type StageState, type Transform, type TrackValue,
 } from './types'
 
-export class Stage {
+export class Stage implements TrackTarget {
   readonly renderer: THREE.WebGLRenderer
   readonly scene = new THREE.Scene()
   readonly camera: THREE.PerspectiveCamera
@@ -23,6 +25,12 @@ export class Stage {
 
   /** Frame aspect currently being composed for. */
   frameAspect = 1
+
+  /**
+   * Shadow settings for this frame. The catcher is rebuilt in `relayout`, so
+   * an animated shadow has to leave its values here rather than apply them.
+   */
+  private shadowNow = { opacity: DEFAULT_LIGHTING.shadows.opacity, softness: DEFAULT_LIGHTING.shadows.softness }
 
   constructor(canvas: HTMLCanvasElement, deviceId: DeviceId) {
     this.renderer = new THREE.WebGLRenderer({
@@ -79,8 +87,57 @@ export class Stage {
   }
 
   applyTransform(t: Transform) {
+    this.setPose(t)
+    this.commit()
+  }
+
+  /* ---------------- TrackTarget ----------------
+   * Setters the registry drives, once per frame. Each is a property write;
+   * everything derived is recomputed once, in `commit`.
+   */
+
+  setPose(t: Transform) {
     this.device.applyTransform(t)
+  }
+
+  setCamera(fov: number, distance: number) {
+    this.camera.fov = fov
+    this.camera.position.set(0, 0, distance * this.device.heightUnits)
+    this.camera.lookAt(0, 0, 0)
+    this.camera.updateProjectionMatrix()
+  }
+
+  setLightSample(id: LightId, v: TrackValue) {
+    this.lighting.setLightSample(id, v.intensity, v.x, v.y, v.z, this.device.heightUnits)
+  }
+
+  setEnvironmentSample(v: TrackValue) {
+    this.lighting.setEnvironmentSample(v.intensity, v.rotationY, v.exposure)
+  }
+
+  setShadowSample(v: TrackValue) {
+    this.shadowNow = { opacity: v.opacity, softness: v.softness }
+  }
+
+  setScreenSample(v: TrackValue) {
+    this.device.setScreenBrightness(v.brightness)
+  }
+
+  setBackgroundSample(v: TrackValue) {
+    this.background.setLook(v.speed, v.vignette)
+  }
+
+  commit() {
+    this.lighting.refreshHelpers()
     this.relayout()
+  }
+
+  /**
+   * Put the whole scene at one instant: the project's values with any animated
+   * track over the top. One relayout for the lot.
+   */
+  applySample(source: TrackSource, sample: Sample | null) {
+    applySampled(this, source, sample)
   }
 
   /**
@@ -92,6 +149,7 @@ export class Stage {
   /** Apply the lighting rig. Async because an HDRI has to be fetched. */
   async applyLighting(l: LightingState) {
     this.lightingState = l
+    this.shadowNow = { opacity: l.shadows.opacity, softness: l.shadows.softness }
     await this.lighting.apply(l, this.device.heightUnits)
     this.relayout()
   }
@@ -105,12 +163,12 @@ export class Stage {
       ground.mode === 'none' || !shadows.enabled ? null : this.lighting.shadowCaster,
       {
         mode: ground.mode === 'floor' ? 'floor' : 'backdrop',
-        opacity: shadows.opacity,
+        opacity: this.shadowNow.opacity,
         // VSM's blur is measured in shadow-map TEXELS, not world units, and the
         // frustum is fitted tightly (~0.012 units per texel at 2048), so the
         // 0-2 UI range has to open out a long way before it reads as softness.
         // Single digits are indistinguishable from a hard shadow here.
-        radius: shadows.quality === 'soft' ? 4 + shadows.softness * 16 : 0,
+        radius: shadows.quality === 'soft' ? 4 + this.shadowNow.softness * 16 : 0,
         distance: shadows.distance,
         normalBias: shadows.normalBias,
       },

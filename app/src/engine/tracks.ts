@@ -1,7 +1,7 @@
 import {
   DEFAULT_TRANSFORM,
-  type BackgroundState, type Composition, type LightingState, type ScreenState,
-  type StageState, type Track, type TrackId, type TrackKey, type TrackValue,
+  type BackgroundState, type Composition, type LightId, type LightingState, type Sample,
+  type ScreenState, type StageState, type Track, type TrackId, type TrackKey, type TrackValue,
   type Transform,
 } from './types'
 
@@ -50,6 +50,26 @@ export interface TrackSource {
   background: BackgroundState
 }
 
+/**
+ * The engine surface a track may drive.
+ *
+ * Declared structurally so the registry never imports `Stage`, and so every
+ * setter is a plain property write — this runs once per frame during playback
+ * and per frame during export, so nothing here may allocate, load or stall.
+ * Anything derived is recomputed once, in `commit`.
+ */
+export interface TrackTarget {
+  setPose(t: Transform): void
+  setCamera(fov: number, distance: number): void
+  setLightSample(id: LightId, v: TrackValue): void
+  setEnvironmentSample(v: TrackValue): void
+  setShadowSample(v: TrackValue): void
+  setScreenSample(v: TrackValue): void
+  setBackgroundSample(v: TrackValue): void
+  /** Recompute everything derived, once, after a whole sample has been applied. */
+  commit(): void
+}
+
 export interface TrackDef {
   id: TrackId
   label: string
@@ -58,17 +78,38 @@ export interface TrackDef {
   /** Current value of every channel, for keying at the playhead. */
   read(s: TrackSource): TrackValue
   /**
-   * Fold a sampled value into a pose.
+   * Fold a value into a pose.
    *
    * Present only on the tracks that make up the transform. They cannot apply
    * themselves one at a time — the stage takes a whole `Transform` — so they
-   * are merged first and applied once. Independent tracks (camera, lights)
-   * gain their own applier when they are wired up.
+   * are merged first and set once.
    */
   write?(out: Transform, v: TrackValue): void
+  /** Drive the engine with a value. Everything that is not part of the pose. */
+  apply?(target: TrackTarget, v: TrackValue): void
 }
 
 const AXIS = { x: 'var(--axis-x)', y: 'var(--axis-y)', z: 'var(--axis-z)' } as const
+/** Scalars that are not an axis: an amount, and a secondary amount. */
+const VALUE = 'var(--axis-v)'
+const ALT = 'var(--axis-s)'
+
+const light = (id: LightId, label: string): TrackDef => ({
+  id: `${id}Light` as TrackId,
+  label,
+  group: 'Light',
+  channels: [
+    { key: 'intensity', label: 'Intensity', colour: VALUE, step: 0.05 },
+    { key: 'x', label: 'X', colour: AXIS.x, step: 0.05 },
+    { key: 'y', label: 'Y', colour: AXIS.y, step: 0.05 },
+    { key: 'z', label: 'Z', colour: AXIS.z, step: 0.05 },
+  ],
+  read: (s) => {
+    const l = s.lighting.lights[id]
+    return { intensity: l.intensity, x: l.position[0], y: l.position[1], z: l.position[2] }
+  },
+  apply: (t, v) => t.setLightSample(id, v),
+})
 
 export const TRACKS: Partial<Record<TrackId, TrackDef>> = {
   position: {
@@ -114,6 +155,74 @@ export const TRACKS: Partial<Record<TrackId, TrackDef>> = {
     ],
     read: (s) => ({ uniform: s.transform.scale }),
     write: (out, v) => { out.scale = v.uniform },
+  },
+
+  camera: {
+    id: 'camera',
+    label: 'Camera',
+    group: 'Camera',
+    channels: [
+      { key: 'fov', label: 'FOV', colour: VALUE, unit: '°', step: 0.5 },
+      { key: 'distance', label: 'Distance', colour: AXIS.z, step: 0.02 },
+    ],
+    read: (s) => ({ fov: s.stage.fov, distance: s.stage.distance }),
+    apply: (t, v) => t.setCamera(v.fov, v.distance),
+  },
+
+  environment: {
+    id: 'environment',
+    label: 'Environment',
+    group: 'Light',
+    channels: [
+      { key: 'intensity', label: 'Intensity', colour: VALUE, step: 0.02 },
+      { key: 'rotationY', label: 'Rotation', colour: AXIS.y, unit: '°', step: 1 },
+      { key: 'exposure', label: 'Exposure', colour: ALT, step: 0.02 },
+    ],
+    read: (s) => ({
+      intensity: s.lighting.environment.intensity,
+      rotationY: s.lighting.environment.rotationY,
+      exposure: s.lighting.environment.exposure,
+    }),
+    apply: (t, v) => t.setEnvironmentSample(v),
+  },
+
+  keyLight: light('key', 'Key light'),
+  fillLight: light('fill', 'Fill light'),
+  rimLight: light('rim', 'Rim light'),
+
+  shadow: {
+    id: 'shadow',
+    label: 'Shadow',
+    group: 'Light',
+    channels: [
+      { key: 'opacity', label: 'Opacity', colour: VALUE, step: 0.01 },
+      { key: 'softness', label: 'Softness', colour: ALT, step: 0.02 },
+    ],
+    read: (s) => ({ opacity: s.lighting.shadows.opacity, softness: s.lighting.shadows.softness }),
+    apply: (t, v) => t.setShadowSample(v),
+  },
+
+  screen: {
+    id: 'screen',
+    label: 'Screen',
+    group: 'Look',
+    channels: [
+      { key: 'brightness', label: 'Brightness', colour: VALUE, step: 0.02 },
+    ],
+    read: (s) => ({ brightness: s.screen.brightness }),
+    apply: (t, v) => t.setScreenSample(v),
+  },
+
+  background: {
+    id: 'background',
+    label: 'Background',
+    group: 'Look',
+    channels: [
+      { key: 'speed', label: 'Speed', colour: VALUE, step: 0.01 },
+      { key: 'vignette', label: 'Vignette', colour: ALT, step: 0.01 },
+    ],
+    read: (s) => ({ speed: s.background.gradient.speed, vignette: s.background.vignette }),
+    apply: (t, v) => t.setBackgroundSample(v),
   },
 }
 
@@ -179,6 +288,24 @@ export function lastKeyTime(c: Composition): number {
  * default, which is what makes it safe to animate rotation alone while
  * position stays wherever the user put it.
  */
+/**
+ * Drive the engine for one instant: the project's own values, with any animated
+ * track laid over the top.
+ *
+ * The base is re-applied every frame rather than only when it changes. That is
+ * what makes removing a track restore the dialled-in value without anything
+ * having to notice the removal, and it costs a handful of property writes.
+ */
+export function applySampled(target: TrackTarget, source: TrackSource, sample: Sample | null) {
+  target.setPose(sample ? mergeTransform(source.transform, sample) : source.transform)
+  for (const id of TRACK_ORDER) {
+    const def = TRACKS[id]
+    if (!def?.apply) continue
+    def.apply(target, sample?.[id] ?? def.read(source))
+  }
+  target.commit()
+}
+
 export function mergeTransform(base: Transform, sample: Record<string, TrackValue | undefined>): Transform {
   const out: Transform = { ...DEFAULT_TRANSFORM, ...base }
   for (const id of TRACK_ORDER) {

@@ -70,6 +70,12 @@ export class Device {
   get screenVideoElement() { return this.screenVideo }
   get screenMaterial() { return this.materials.get(SCREEN_MATERIAL) ?? null }
 
+  /** Per-frame setter for the animated screen track. A single property write. */
+  setScreenBrightness(brightness: number) {
+    const mat = this.screenMaterial
+    if (mat) mat.emissiveIntensity = brightness
+  }
+
   async load(id: DeviceId) {
     this.id = id
     const meta = DEVICES[id]

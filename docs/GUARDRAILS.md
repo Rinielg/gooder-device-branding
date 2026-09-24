@@ -174,6 +174,19 @@ all of them.
 **A GSAP tween of duration 0 is applied immediately, not at its position.** Two
 keys at the same instant need a sub-frame duration (`1e-4`) to step cleanly.
 
+**Everything a track drives is re-applied from the project every frame, then
+overridden by the sample.** That is what makes removing a track restore the
+value the panels show, without anything having to detect the removal. It costs
+a handful of property writes — a fully animated frame measures 0.022ms.
+
+**Nothing in a `TrackTarget` setter may allocate, load or stall.** They run once
+per frame during playback and once per frame during export. Anything derived —
+the shadow catcher, the light frustum — is recomputed once in `commit`.
+
+**An animated shadow cannot apply itself.** The catcher is rebuilt in
+`relayout`, so the sampled opacity and softness are left on the Stage for
+`relayout` to read rather than written to a material.
+
 **Anything that writes the sampled pose back to the store must pass
 `{ silent: true }`.** `setTransform` auto-keys, so the playback loop and the
 scrubber — which write the timeline's own output back so the dials follow —

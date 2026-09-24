@@ -11,7 +11,6 @@ export function ExportPanel() {
   const frame = useStore((s) => s.frame)
   const composition = useStore((s) => s.composition)
   const playhead = useStore((s) => s.playhead)
-  const transform = useStore((s) => s.transform)
   const bgBlob = useStore((s) => s.backgroundVideoBlob)
   const screenBlob = useStore((s) => s.screenVideoBlob)
   const background = useStore((s) => s.background)
@@ -40,7 +39,7 @@ export function ExportPanel() {
   const ctx = () => ({
     stage: engine.stage!,
     timeline: engine.timeline!,
-    staticTransform: transform,
+    source: useStore.getState(),
     backgroundVideoBlob: background.kind === 'video' ? bgBlob : null,
     screenVideoBlob: screenBlob,
   })

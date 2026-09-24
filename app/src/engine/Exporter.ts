@@ -6,7 +6,7 @@ import {
 } from 'mediabunny'
 import type { Stage } from './Stage'
 import type { CompositionTimeline } from './Timeline'
-import type { Transform } from './types'
+import type { TrackSource } from './tracks'
 import { evenSize } from './size'
 
 export { evenSize }
@@ -105,11 +105,12 @@ interface ExportContext {
   stage: Stage
   timeline: CompositionTimeline
   /**
-   * The pose to start from. Channels no track drives hold here rather than
+   * The project's own values. Anything no track drives holds here rather than
    * snapping to a default, so a rotation-only animation keeps the user's
-   * position.
+   * position — and the same is now true of the camera, the lights, the screen
+   * and the background.
    */
-  staticTransform: Transform
+  source: TrackSource
   backgroundVideoBlob: Blob | null
   screenVideoBlob: Blob | null
 }
@@ -124,10 +125,7 @@ async function renderFrame(
 ) {
   if (bg) await bg.seek(t)
   if (screen) await screen.seek(t)
-  const transform = animated
-    ? ctx.timeline.sampleTransform(t, ctx.staticTransform)
-    : ctx.staticTransform
-  ctx.stage.applyTransform(transform)
+  ctx.stage.applySample(ctx.source, animated ? ctx.timeline.sample(t) : null)
   await ctx.stage.renderPrepared(t)
 }
 

@@ -190,8 +190,14 @@ Existing work is preserved and `STORAGE_KEY` is **not** bumped.
    Raised by use: the five-step flow (pose, key, click the timeline, pose,
    play) did not work, because step four was discarded and step five played
    dead air.
-5. **Extend tracks** to camera, lighting, screen and background — including the
-   `Lighting` helper fix and `Stage.applySampled`.
+5. ~~**Extend tracks** to camera, lighting, screen and background — including
+   the `Lighting` helper fix and `Stage.applySampled`.~~ **Done** — eleven
+   tracks across four groups. `Stage` implements a `TrackTarget` of cheap
+   per-frame setters and the registry drives them, base first and the sample
+   over the top, so removing a track restores the dialled value with nothing
+   having to notice. A fully animated frame costs 0.022ms; a 60-frame export
+   with transform, environment, key light, shadow and background all animating
+   runs at 7.6ms/frame, unchanged from before.
 6. **Light theme:** tokens, then sweep every panel.
 7. **Spline shell:** three-region layout, top bar, contextual inspector, gizmo.
 8. **Curve editor** — the *value* graph (per-channel curves over time), which

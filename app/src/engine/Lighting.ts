@@ -31,6 +31,8 @@ export class LightingController {
   readonly ambient = new THREE.AmbientLight(0xffffff, 0)
   private readonly lights = new Map<LightId, AnyLight>()
   private readonly helpers = new Map<LightId, THREE.Object3D>()
+  /** Which light each helper was built for, so it is only rebuilt on a type change. */
+  private readonly helperFor = new Map<LightId, AnyLight>()
 
   private envRT: THREE.WebGLRenderTarget | null = null
   private envSourceTexture: THREE.Texture | null = null
@@ -199,18 +201,56 @@ export class LightingController {
     for (const h of this.helpers.values()) h.visible = visible
   }
 
+  /**
+   * Rebuild a light's gizmo only when the light it describes is a different
+   * object — which is to say, when its type changed.
+   *
+   * It used to dispose and recreate on every call. That was invisible while
+   * lighting only moved on user input, but lighting is now sampled per frame,
+   * and allocating three helpers sixty times a second is not.
+   */
   private syncHelper(id: LightId, light: AnyLight) {
     const existing = this.helpers.get(id)
+    if (existing && this.helperFor.get(id) === light) {
+      ;(existing as THREE.DirectionalLightHelper).update?.()
+      return
+    }
     if (existing) {
       this.scene.remove(existing)
       disposeHelper(existing)
       this.helpers.delete(id)
+      this.helperFor.delete(id)
     }
     const helper = makeHelper(light)
     if (!helper) return
     helper.visible = this.helpersVisible
     this.helpers.set(id, helper)
+    this.helperFor.set(id, light)
     this.scene.add(helper)
+  }
+
+  /* ---------------- per-frame setters ----------------
+   * Plain property writes, safe to call every frame. Nothing here rebuilds a
+   * PMREM, reallocates a shadow map or touches a helper.
+   */
+
+  setLightSample(id: LightId, intensity: number, x: number, y: number, z: number, heightUnits: number) {
+    const light = this.lights.get(id)
+    if (!light) return
+    light.intensity = intensity
+    light.position.set(x * heightUnits, y * heightUnits, z * heightUnits)
+  }
+
+  setEnvironmentSample(intensity: number, rotationY: number, exposure: number) {
+    this.scene.environmentIntensity = intensity
+    this.scene.environmentRotation.set(0, THREE.MathUtils.degToRad(rotationY), 0)
+    this.renderer.toneMappingExposure = exposure
+  }
+
+  /** Gizmos track the lights they describe, which the sampler may have moved. */
+  refreshHelpers() {
+    if (!this.helpersVisible) return
+    for (const h of this.helpers.values()) (h as THREE.DirectionalLightHelper).update?.()
   }
 
   private removeLight(id: LightId, light: AnyLight) {
