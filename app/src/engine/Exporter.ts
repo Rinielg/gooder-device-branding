@@ -17,6 +17,8 @@ export interface ExportSizeOpts {
   /** Multiplier on the frame size, e.g. 2 for a retina still. */
   scale: number
   transparent: boolean
+  /** Keep the cast shadow in the alpha channel of a transparent PNG. */
+  keepShadowInAlpha?: boolean
 }
 
 export interface VideoExportOpts extends ExportSizeOpts {
@@ -128,6 +130,8 @@ export async function exportStill(ctx: ExportContext, opts: ExportSizeOpts, atTi
   const { stage } = ctx
   const prev = stage.beginExportSize(width, height)
   const prevAlpha = stage.renderer.getClearAlpha()
+  const prevBackgroundEnabled = stage.background.enabled
+  const prevShadowSuppressed = stage.shadowSuppressed
 
   let bg: DeterministicVideo | null = null
   let screen: DeterministicVideo | null = null
@@ -135,6 +139,9 @@ export async function exportStill(ctx: ExportContext, opts: ExportSizeOpts, atTi
     if (opts.transparent) {
       stage.renderer.setClearAlpha(0)
       stage.background.enabled = false
+      // ShadowMaterial writes the shadow straight into alpha, which is usually
+      // what you want to composite — but it is unremovable downstream.
+      if (!opts.keepShadowInAlpha) stage.shadowSuppressed = true
     }
     stage.setFrame(width, height)
 
@@ -162,7 +169,8 @@ export async function exportStill(ctx: ExportContext, opts: ExportSizeOpts, atTi
     await bg?.dispose()
     await screen?.dispose()
     stage.renderer.setClearAlpha(prevAlpha)
-    stage.background.enabled = !opts.transparent ? stage.background.enabled : true
+    stage.background.enabled = prevBackgroundEnabled
+    stage.shadowSuppressed = prevShadowSuppressed
     stage.endExportSize(prev)
     stage.setFrame(opts.width, opts.height)
   }

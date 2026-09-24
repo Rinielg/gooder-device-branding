@@ -1,7 +1,9 @@
 import { create } from 'zustand'
 import {
-  DEFAULT_BACKGROUND, DEFAULT_FRAME, DEFAULT_SCREEN, DEFAULT_STAGE, DEFAULT_TRANSFORM,
-  type BackgroundState, type DeviceId, type FrameState, type Keyframe, type SavedView,
+  DEFAULT_BACKGROUND, DEFAULT_FRAME, DEFAULT_LIGHTING, DEFAULT_SCREEN, DEFAULT_STAGE,
+  DEFAULT_TRANSFORM,
+  type BackgroundState, type DeviceId, type FrameState, type Keyframe, type LightId,
+  type LightSettings, type LightingState, type SavedView,
   type ScreenState, type StageState, type Transform, type VariantManifest,
 } from '../engine/types'
 import { makeKeyframe } from '../engine/Timeline'
@@ -13,11 +15,81 @@ export interface Project {
   variant: string
   frame: FrameState
   stage: StageState
+  lighting: LightingState
   transform: Transform
   background: BackgroundState
   screen: ScreenState
   keyframes: Keyframe[]
   views: SavedView[]
+}
+
+/** One list, so persist / export / import cannot drift apart. */
+export const PROJECT_KEYS = [
+  'device', 'variant', 'frame', 'stage', 'lighting',
+  'transform', 'background', 'screen', 'keyframes', 'views',
+] as const
+
+function pickProject(s: Project): Project {
+  const out = {} as Record<string, unknown>
+  for (const k of PROJECT_KEYS) out[k] = s[k]
+  return out as unknown as Project
+}
+
+/** deepMerge accepts partial values at any depth, so the setter should too. */
+export type DeepPartial<T> = T extends unknown[] ? T
+  : T extends object ? { [K in keyof T]?: DeepPartial<T[K]> }
+  : T
+
+type Plain = Record<string, unknown>
+const isPlainObject = (v: unknown): v is Plain =>
+  typeof v === 'object' && v !== null && !Array.isArray(v)
+
+/**
+ * Merge saved settings over defaults at every depth.
+ *
+ * The per-slice spread used elsewhere is shallow, which is fine the first time
+ * a slice appears but silently drops any key added to a nested object later —
+ * arriving as `undefined`, which becomes a NaN uniform or throws on
+ * `color.set()` during module-scope hydration.
+ */
+function deepMerge<T>(base: T, override: unknown): T {
+  // A leaf value replaces; two objects merge. Returning `base` for a primitive
+  // override would silently discard every nested edit.
+  if (override === undefined) return base
+  if (!isPlainObject(override) || !isPlainObject(base)) return override as T
+  const out: Plain = { ...(base as unknown as Plain) }
+  for (const [k, v] of Object.entries(override)) {
+    if (v === undefined) continue
+    out[k] = k in out ? deepMerge((base as unknown as Plain)[k], v) : v
+  }
+  return out as T
+}
+
+/** Lighting used to live as five flat fields on `stage`. Carry them over. */
+function migrateLighting(persisted: Partial<Project>): LightingState {
+  const saved = persisted.lighting
+  if (saved) {
+    const merged = deepMerge(DEFAULT_LIGHTING, saved)
+    // An uploaded HDRI is a blob: URL that dies with the page.
+    if (merged.environment.hdriUrl?.startsWith('blob:')) {
+      merged.environment.hdriUrl = null
+      merged.environment.hdriName = null
+      if (merged.environment.mode === 'hdri') merged.environment.mode = 'studio'
+    }
+    return merged
+  }
+  const legacy = persisted.stage as (StageState & Partial<{
+    envIntensity: number; envRotation: number
+    keyIntensity: number; shadow: number; shadowBlur: number
+  }>) | undefined
+  if (!legacy || legacy.keyIntensity === undefined) return DEFAULT_LIGHTING
+  const l = structuredClone(DEFAULT_LIGHTING)
+  l.environment.intensity = legacy.envIntensity ?? l.environment.intensity
+  l.environment.rotationY = legacy.envRotation ?? l.environment.rotationY
+  l.lights.key.intensity = legacy.keyIntensity ?? l.lights.key.intensity
+  l.shadows.opacity = legacy.shadow ?? l.shadows.opacity
+  l.shadows.softness = legacy.shadowBlur ?? l.shadows.softness
+  return l
 }
 
 interface Store extends Project {
@@ -34,6 +106,8 @@ interface Store extends Project {
   ready: boolean
   /** True while an export is running; the preview loop stands down. */
   exporting: boolean
+  /** Light gizmos are an editing aid, so they are never persisted. */
+  showLightHelpers: boolean
   status: string | null
   error: string | null
 
@@ -42,6 +116,9 @@ interface Store extends Project {
   setVariant(id: string): void
   setFrame(f: Partial<FrameState>): void
   setStage(s: Partial<StageState>): void
+  setLighting(l: DeepPartial<LightingState>): void
+  setLight(id: LightId, l: Partial<LightSettings>): void
+  resetLighting(): void
   setTransform(t: Partial<Transform>, opts?: { silent?: boolean }): void
   setBackground(b: Partial<BackgroundState>, blob?: Blob | null): void
   setBackgroundDuration(d: number): void
@@ -64,6 +141,7 @@ interface Store extends Project {
 
   setReady(r: boolean): void
   setExporting(e: boolean): void
+  setShowLightHelpers(v: boolean): void
   setStatus(s: string | null): void
   setError(e: string | null): void
 
@@ -102,6 +180,7 @@ const initial: Project = {
   variant: persisted.variant ?? 'Black',
   frame: { ...DEFAULT_FRAME, ...persisted.frame },
   stage: { ...DEFAULT_STAGE, ...persisted.stage },
+  lighting: migrateLighting(persisted),
   transform: { ...DEFAULT_TRANSFORM, ...persisted.transform },
   background: { ...DEFAULT_BACKGROUND, ...persisted.background },
   screen: { ...DEFAULT_SCREEN, ...persisted.screen },
@@ -112,12 +191,7 @@ const initial: Project = {
 export const useStore = create<Store>((set, get) => {
   const persist = () => {
     const s = get()
-    const project: Project = {
-      device: s.device, variant: s.variant, frame: s.frame, stage: s.stage,
-      transform: s.transform, background: s.background, screen: s.screen,
-      keyframes: s.keyframes, views: s.views,
-    }
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(project)) } catch { /* quota */ }
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(pickProject(s))) } catch { /* quota */ }
   }
 
   // Playback writes the transform every frame; persisting on each one would
@@ -142,6 +216,7 @@ export const useStore = create<Store>((set, get) => {
     loop: false,
     ready: false,
     exporting: false,
+    showLightHelpers: false,
     status: null,
     error: null,
 
@@ -150,6 +225,11 @@ export const useStore = create<Store>((set, get) => {
     setVariant: (variant) => set(after({ variant })),
     setFrame: (f) => set((s) => after({ frame: { ...s.frame, ...f } })),
     setStage: (v) => set((s) => after({ stage: { ...s.stage, ...v } })),
+    setLighting: (v) => set((s) => after({ lighting: deepMerge(s.lighting, v) })),
+    setLight: (id, v) => set((s) => after({
+      lighting: { ...s.lighting, lights: { ...s.lighting.lights, [id]: { ...s.lighting.lights[id], ...v } } },
+    })),
+    resetLighting: () => set(after({ lighting: structuredClone(DEFAULT_LIGHTING) })),
     setTransform: (t) => set((s) => after({ transform: { ...s.transform, ...t } })),
 
     setBackground: (b, blob) => set((s) => after({
@@ -207,23 +287,18 @@ export const useStore = create<Store>((set, get) => {
 
     setReady: (ready) => set({ ready }),
     setExporting: (exporting) => set({ exporting }),
+    setShowLightHelpers: (showLightHelpers) => set({ showLightHelpers }),
     setStatus: (status) => set({ status }),
     setError: (error) => set({ error }),
 
-    exportProject: () => {
-      const s = get()
-      return {
-        device: s.device, variant: s.variant, frame: s.frame, stage: s.stage,
-        transform: s.transform, background: s.background, screen: s.screen,
-        keyframes: s.keyframes, views: s.views,
-      }
-    },
+    exportProject: () => pickProject(get()),
 
     importProject: (p) => set((s) => after({
       device: p.device ?? s.device,
       variant: p.variant ?? s.variant,
       frame: { ...s.frame, ...p.frame },
       stage: { ...s.stage, ...p.stage },
+      lighting: migrateLighting(p),
       transform: { ...s.transform, ...p.transform },
       background: { ...s.background, ...p.background, videoUrl: null, kind: p.background?.kind === 'video' ? 'gradient' : (p.background?.kind ?? s.background.kind) },
       screen: { ...s.screen, ...p.screen },

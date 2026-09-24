@@ -14,6 +14,7 @@ export function ExportPanel() {
   const bgBlob = useStore((s) => s.backgroundVideoBlob)
   const screenBlob = useStore((s) => s.screenVideoBlob)
   const background = useStore((s) => s.background)
+  const keepShadowInAlpha = useStore((s) => s.lighting.shadows.keepInTransparentExport)
   const backgroundDuration = useStore((s) => s.backgroundDuration)
 
   const [scale, setScale] = useState(1)
@@ -52,7 +53,11 @@ export function ExportPanel() {
       // Loaded on demand: the encoder and muxer are a large dependency that
       // nothing needs until the moment someone exports.
       const { exportStill, downloadBlob } = await import('../engine/Exporter')
-      const blob = await exportStill(ctx(), { ...frame, scale, transparent: transparent && canTransparent }, playhead)
+      const blob = await exportStill(
+        ctx(),
+        { ...frame, scale, transparent: transparent && canTransparent, keepShadowInAlpha },
+        playhead,
+      )
       downloadBlob(blob, `mockup-${out.width}x${out.height}.png`)
       setMsg(`Exported PNG at ${out.width} × ${out.height}`)
     } catch (e) {

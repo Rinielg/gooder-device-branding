@@ -5,12 +5,15 @@ import { resetTransform } from './ui/resetTransform'
 import {
   BackgroundPanel, DevicePanel, FramePanel, ProjectPanel, ScreenPanel, ViewsPanel,
 } from './ui/Panels'
+import {
+  EnvironmentPanel, LightingHelpersPanel, LightsPanel, ShadowPanel,
+} from './ui/LightingPanel'
 import { TimelinePanel } from './ui/TimelinePanel'
 import { ExportPanel } from './ui/ExportPanel'
 import { useStore } from './state/store'
 import './styles.css'
 
-const TABS = ['Stage', 'Look', 'Control', 'Views', 'Export'] as const
+const TABS = ['Stage', 'Look', 'Light', 'Control', 'Views', 'Export'] as const
 type Tab = typeof TABS[number]
 
 export default function App() {
@@ -55,6 +58,9 @@ export default function App() {
           <div className="panels">
             {tab === 'Stage' && (<><DevicePanel /><FramePanel /></>)}
             {tab === 'Look' && (<><BackgroundPanel /><ScreenPanel /></>)}
+            {tab === 'Light' && (
+              <><EnvironmentPanel /><LightsPanel /><ShadowPanel /><LightingHelpersPanel /></>
+            )}
             {tab === 'Control' && (
               <section className="section">
                 <header className="section-head">

@@ -1,29 +1,12 @@
 import * as THREE from 'three'
-import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js'
 import { Background } from './Background'
 import { Device } from './Device'
-import type { BackgroundState, DeviceId, StageState, Transform } from './types'
-
-const SHADOW_VERT = /* glsl */ `
-varying vec2 vUv;
-void main() {
-  vUv = uv;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-}
-`
-
-const SHADOW_FRAG = /* glsl */ `
-precision highp float;
-varying vec2 vUv;
-uniform float uOpacity;
-uniform float uSoftness;
-void main() {
-  vec2 d = (vUv - 0.5) * 2.0;
-  float r = length(d * vec2(1.0, 0.62));
-  float a = 1.0 - smoothstep(0.0, mix(0.7, 1.35, uSoftness), r);
-  gl_FragColor = vec4(0.0, 0.0, 0.0, a * a * uOpacity);
-}
-`
+import { ShadowRig } from './ShadowRig'
+import { LightingController } from './Lighting'
+import {
+  DEFAULT_LIGHTING, DEFAULT_STAGE,
+  type BackgroundState, type DeviceId, type LightingState, type StageState, type Transform,
+} from './types'
 
 export class Stage {
   readonly renderer: THREE.WebGLRenderer
@@ -32,10 +15,11 @@ export class Stage {
   readonly background = new Background()
   readonly device: Device
 
-  private shadow: THREE.Mesh
-  private shadowMat: THREE.ShaderMaterial
-  private key: THREE.DirectionalLight
-  private envRT: THREE.WebGLRenderTarget | null = null
+  private readonly shadowRig = new ShadowRig()
+  readonly lighting: LightingController
+  /** Last applied settings, so anything derived can be recomputed. */
+  private stageState: StageState = DEFAULT_STAGE
+  private lightingState: LightingState = DEFAULT_LIGHTING
 
   /** Frame aspect currently being composed for. */
   frameAspect = 1
@@ -63,34 +47,18 @@ export class Stage {
     this.device = new Device(deviceId)
     this.scene.add(this.device.group)
 
-    this.shadowMat = new THREE.ShaderMaterial({
-      vertexShader: SHADOW_VERT,
-      fragmentShader: SHADOW_FRAG,
-      transparent: true,
-      depthWrite: false,
-      uniforms: { uOpacity: { value: 0.35 }, uSoftness: { value: 1 } },
-    })
-    this.shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.shadowMat)
-    this.shadow.renderOrder = -1
-    this.scene.add(this.shadow)
+    this.scene.add(this.shadowRig.catcher)
 
-    this.key = new THREE.DirectionalLight(0xffffff, 1.6)
-    this.key.position.set(-18, 26, 30)
-    this.scene.add(this.key)
-    const fill = new THREE.DirectionalLight(0xbfd4ff, 0.35)
-    fill.position.set(24, -10, 14)
-    this.scene.add(fill)
-
-    const pmrem = new THREE.PMREMGenerator(this.renderer)
-    this.envRT = pmrem.fromScene(new RoomEnvironment(), 0.04)
-    this.scene.environment = this.envRT.texture
-    this.scene.background = null
-    pmrem.dispose()
+    this.lighting = new LightingController(this.renderer, this.scene)
+    this.renderer.shadowMap.autoUpdate = false
   }
 
   async loadDevice(id: DeviceId) {
     await this.device.load(id)
-    this.layoutShadow()
+    // Camera distance is a multiple of the device height, and the two models
+    // differ by 13mm, so the stage has to be re-applied or the framing keeps
+    // the previous device's distance.
+    this.applyStage(this.stageState)
   }
 
   setFrame(width: number, height: number) {
@@ -98,35 +66,56 @@ export class Stage {
     this.camera.aspect = this.frameAspect
     this.camera.updateProjectionMatrix()
     this.background.setFrameAspect(this.frameAspect)
+    this.relayout()
   }
 
   applyStage(s: StageState) {
+    this.stageState = s
     this.camera.fov = s.fov
     this.camera.position.set(0, 0, s.distance * this.device.heightUnits)
     this.camera.lookAt(0, 0, 0)
     this.camera.updateProjectionMatrix()
-    this.scene.environmentIntensity = s.envIntensity
-    this.scene.environmentRotation = new THREE.Euler(0, THREE.MathUtils.degToRad(s.envRotation), 0)
-    this.key.intensity = s.keyIntensity
-    this.shadowMat.uniforms.uOpacity.value = s.shadow
-    this.shadowMat.uniforms.uSoftness.value = s.shadowBlur
-    this.shadow.visible = s.shadow > 0.001
+    this.relayout()
   }
 
   applyTransform(t: Transform) {
     this.device.applyTransform(t)
-    this.layoutShadow(t)
+    this.relayout()
   }
 
-  private layoutShadow(t?: Transform) {
-    const h = this.device.heightUnits
-    const s = t?.scale ?? this.device.group.scale.x
-    this.shadow.scale.set(h * 0.95 * s, h * 0.95 * s, 1)
-    this.shadow.position.set(
-      (t?.posX ?? this.device.group.position.x) + h * 0.035 * s,
-      (t?.posY ?? this.device.group.position.y) - h * 0.06 * s,
-      (t?.posZ ?? this.device.group.position.z) - h * 0.35,
+  /**
+   * Recompute everything derived from the device transform, the camera and the
+   * frame. Called from applyStage, applyTransform, setFrame and loadDevice —
+   * export drives applyTransform per frame but never applyStage, so anything
+   * that lives only in applyStage goes stale during an animated export.
+   */
+  /** Apply the lighting rig. Async because an HDRI has to be fetched. */
+  async applyLighting(l: LightingState) {
+    this.lightingState = l
+    await this.lighting.apply(l, this.device.heightUnits)
+    this.relayout()
+  }
+
+  private relayout() {
+    const { shadows, ground } = this.lightingState
+    this.shadowRig.update(
+      this.device.group,
+      this.device.localBounds,
+      this.device.heightUnits,
+      ground.mode === 'none' || !shadows.enabled ? null : this.lighting.shadowCaster,
+      {
+        mode: ground.mode === 'floor' ? 'floor' : 'backdrop',
+        opacity: shadows.opacity,
+        // VSM's blur is measured in shadow-map TEXELS, not world units, and the
+        // frustum is fitted tightly (~0.012 units per texel at 2048), so the
+        // 0-2 UI range has to open out a long way before it reads as softness.
+        // Single digits are indistinguishable from a hard shadow here.
+        radius: shadows.quality === 'soft' ? 4 + shadows.softness * 16 : 0,
+        distance: shadows.distance,
+        normalBias: shadows.normalBias,
+      },
     )
+    this.renderer.shadowMap.needsUpdate = true
   }
 
   async applyBackground(b: BackgroundState) {
@@ -155,6 +144,13 @@ export class Stage {
   async renderPrepared(time: number) {
     await this.background.prepare(time)
     this.render(time)
+  }
+
+  /** Suppresses the shadow catcher for as long as it is set. */
+  get shadowSuppressed() { return this.shadowRig.suppressed }
+  set shadowSuppressed(v: boolean) {
+    this.shadowRig.suppressed = v
+    this.relayout()
   }
 
   /** Size the drawing buffer for on-screen preview. */
@@ -196,9 +192,8 @@ export class Stage {
   dispose() {
     this.background.dispose()
     this.device.dispose()
-    this.shadowMat.dispose()
-    this.shadow.geometry.dispose()
-    this.envRT?.dispose()
+    this.shadowRig.dispose()
+    this.lighting.dispose()
     this.renderer.dispose()
   }
 }

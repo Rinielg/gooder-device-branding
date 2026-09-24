@@ -48,9 +48,30 @@ runtime configuration, so any static host works the same way.
 | `app/public/textures/` | Colourway textures referenced by `variants.json` |
 | `app/public/backgrounds/` | The default mesh gradient (Lottie) |
 | `tools/` | The USDZ → GLB pipeline, so the assets can be rebuilt |
+| `docs/` | Brief, goals, outcome, guidelines, guardrails and context |
 | `iphone-18-pro.usdz` | Source model (unchanged) |
 | `iphone-18-pro-color-variants.lsd` | Source colourway data (unchanged) |
 | `Gradient BG 1 - Balanced Desktop.json` | Source background animation (unchanged) |
+
+---
+
+## Documentation
+
+Start here if you are picking this up fresh — `docs/` holds the durable context
+that would otherwise live only in a chat log.
+
+| File | Read it for |
+|---|---|
+| [BRIEF](docs/BRIEF.md) | What the tool is, the original ask, how it grew |
+| [GOALS](docs/GOALS.md) | What it is for, and what "good" means per capability |
+| [OUTCOME](docs/OUTCOME.md) | What is delivered, and what done looks like next |
+| [GUIDELINES](docs/GUIDELINES.md) | House patterns — boundaries, state, verification |
+| [GUARDRAILS](docs/GUARDRAILS.md) | **The traps.** Every entry has cost time once |
+| [CONTEXT](docs/CONTEXT.md) | Architecture, data flow, decisions and their reasons |
+| [PLAN](docs/PLAN.md) | The approved plan for the next phase |
+
+If you only read one, read **GUARDRAILS** — it is the difference between an
+afternoon and a week on several of the things in here.
 
 ---
 
@@ -158,6 +179,62 @@ before capturing, while the preview does not, so a scrub never blocks.
 The default frame is **Landscape 16:9**, matching this background's own aspect
 so none of it is cropped. Portrait presets cover-crop it to the middle; the Zoom
 and Offset controls reframe it.
+
+---
+
+## Lighting, shadows and environment
+
+The **Light** tab splits lighting the way Spline does: a scene-level environment
+that supplies image-based lighting and reflections, plus individually
+addressable light objects.
+
+| Panel | What it covers |
+|---|---|
+| Environment | Studio / HDRI upload / physical sky / none, intensity, rotation, ambient, exposure and tone-mapping operator |
+| Lights | A key, fill and rim light — type, colour, intensity, position, and which one casts |
+| Shadow | On/off, what it catches on, hard or soft, opacity, softness, distance, and resolution/bias under Advanced |
+| Rig | Light gizmos, and a reset |
+
+Light positions are stored in **device heights**, not world units, so the rig
+keeps its shape across both models and at any device scale.
+
+### The shadow
+
+It is a real cast shadow: the key light renders a shadow map, and an invisible
+`ShadowMaterial` plane catches it — behind the device by default, or beneath it
+in floor mode. The shadow is therefore the device's true silhouette and moves
+when you move the light.
+
+The thing that makes this hard is not the plane, it is the light's frustum.
+**Outside a directional light's orthographic shadow camera the shadow mask is
+exactly 1.0 with no falloff at all**, so an under-sized frustum produces a
+razor-straight cut across the image. The rig sizes the catcher to where the
+shadow can actually land — the device's bounds projected along the light
+direction — and then fits the frustum to the catcher, so the frustum is always
+the outer bound. That invariant is swept across fov, distance, scale, depth,
+rotation, softness, both ground modes and every frame preset.
+
+Two r186 details worth knowing if you change this:
+
+- **Soft means VSM.** `PCFSoftShadowMap` is deprecated and silently downgraded
+  to plain PCF, which has no adjustable softness. Only `VSMShadowMap` honours
+  `shadow.radius`.
+- **VSM's radius is in shadow-map texels, not world units.** The frustum is
+  fitted tightly (~0.012 units per texel at 2048), so single-digit radii are
+  indistinguishable from a hard shadow. The softness slider maps 0–2 onto 4–36.
+
+Not every mesh casts. Eight of the device's meshes are blended, down to 0.10
+opacity, and three's depth material ignores `opacity` and `transparent` — so
+casting is gated on opacity, or those coatings would throw fully solid shadows.
+The display is excluded too: it is coplanar with the cover glass and coplanar
+casters are a classic source of shadow acne.
+
+On a transparent export the shadow lands in the alpha channel, giving a cut-out
+device with its shadow attached. Turn that off under Shadow → Advanced for a
+clean silhouette.
+
+Shadows cost about 9ms a frame at 960×540, against 3.6ms without — roughly 4.4s
+for a 20-second export.
 
 ---
 

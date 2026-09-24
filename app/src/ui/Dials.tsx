@@ -32,13 +32,6 @@ export function Dials() {
         FOV: [s.fov, 10, 80, 0.5] as Axis,
         Distance: [s.distance, 1.2, 8, 0.01] as Axis,
       },
-      Light: {
-        Environment: [s.envIntensity, 0, 4, 0.01] as Axis,
-        Rotate: [s.envRotation, -180, 180, 1] as Axis,
-        Key: [s.keyIntensity, 0, 6, 0.01] as Axis,
-        Shadow: [s.shadow, 0, 1, 0.01] as Axis,
-        Softness: [s.shadowBlur, 0, 2, 0.01] as Axis,
-      },
     }
   })
 
@@ -59,11 +52,7 @@ export function Dials() {
       rotX: v.Rotation.X, rotY: v.Rotation.Y, rotZ: v.Rotation.Z,
       scale: v.Scale,
     }
-    const nextS = {
-      fov: v.Camera.FOV, distance: v.Camera.Distance,
-      envIntensity: v.Light.Environment, envRotation: v.Light.Rotate,
-      keyIntensity: v.Light.Key, shadow: v.Light.Shadow, shadowBlur: v.Light.Softness,
-    }
+    const nextS = { fov: v.Camera.FOV, distance: v.Camera.Distance }
     if (differs(nextT, st.transform)) st.setTransform(nextT)
     if (differs(nextS, st.stage)) st.setStage(nextS)
   }, [dial.values])
@@ -76,10 +65,7 @@ export function Dials() {
       near(v.Position.Z, transform.posZ) && near(v.Rotation.X, transform.rotX) &&
       near(v.Rotation.Y, transform.rotY) && near(v.Rotation.Z, transform.rotZ) &&
       near(v.Scale, transform.scale) &&
-      near(v.Camera.FOV, stage.fov) && near(v.Camera.Distance, stage.distance) &&
-      near(v.Light.Environment, stage.envIntensity) && near(v.Light.Rotate, stage.envRotation) &&
-      near(v.Light.Key, stage.keyIntensity) && near(v.Light.Shadow, stage.shadow) &&
-      near(v.Light.Softness, stage.shadowBlur)
+      near(v.Camera.FOV, stage.fov) && near(v.Camera.Distance, stage.distance)
     if (same) return
     suppress.current = true
     dial.setValues({
@@ -87,10 +73,6 @@ export function Dials() {
       Rotation: { X: transform.rotX, Y: transform.rotY, Z: transform.rotZ },
       Scale: transform.scale,
       Camera: { FOV: stage.fov, Distance: stage.distance },
-      Light: {
-        Environment: stage.envIntensity, Rotate: stage.envRotation,
-        Key: stage.keyIntensity, Shadow: stage.shadow, Softness: stage.shadowBlur,
-      },
     })
     // Release on the next tick, after DialKit has re-rendered with the new values.
     const id = setTimeout(() => { suppress.current = false }, 0)

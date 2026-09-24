@@ -59,6 +59,8 @@ export class Device {
 
   /** Height of the device in world units, used to place the camera. */
   heightUnits = 16.34
+  /** Untransformed bounds of the model, for fitting shadow frustums. */
+  localBounds = new THREE.Box3(new THREE.Vector3(-4, -8, -0.7), new THREE.Vector3(4, 8, 0.7))
 
   constructor(id: DeviceId) {
     this.id = id
@@ -83,15 +85,39 @@ export class Device {
     this.root = gltf.scene
     this.inner.add(this.root)
 
-    const box = new THREE.Box3().setFromObject(this.root)
-    this.heightUnits = box.max.y - box.min.y
+    // Measured with the user transform neutralised. Box3.setFromObject uses
+    // world matrices, so measuring in place makes the device's "height" grow
+    // with its rotation — which then feeds camera distance and the shadow fit.
+    this.localBounds = measureLocal(this.root, this.group)
+    this.heightUnits = this.localBounds.max.y - this.localBounds.min.y
 
     this.root.traverse((o) => {
       const mesh = o as THREE.Mesh
       if (!mesh.isMesh) return
-      mesh.castShadow = true
-      mesh.receiveShadow = true
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
+
+      // Shadow casting is opt-out, not blanket. three's depth material copies
+      // alphaMap/alphaTest/map but never `opacity` or `transparent`, so the
+      // eight blended coating meshes on these models (down to 0.10 opacity)
+      // would otherwise throw fully solid shadows. The display is excluded too:
+      // it is coplanar with the cover glass, adds nothing to the silhouette,
+      // and coplanar casters are a classic source of shadow acne.
+      const isSheer = mats.some((m) => {
+        const mat = m as StdMaterial | null
+        return !!mat && mat.transparent === true && mat.opacity < 0.95
+      })
+      const isDisplay = mats.some((m) => (m as StdMaterial | null)?.name === SCREEN_MATERIAL)
+      mesh.castShadow = !isSheer && !isDisplay
+      mesh.receiveShadow = true
+
+      // Pin the side used for the depth pass. VSM uses material.side as-is
+      // while PCF flips it, so without this the silhouette changes when the
+      // shadow quality is switched rather than just its softness.
+      for (const m of mats) {
+        const mat = m as StdMaterial | null
+        if (mat) mat.shadowSide = THREE.FrontSide
+      }
+
       for (const m of mats) {
         const mat = m as StdMaterial
         if (!mat || !mat.name) continue
@@ -279,6 +305,26 @@ export class Device {
     this.textureCache.clear()
     if (this.root) disposeTree(this.root)
   }
+}
+
+/**
+ * Bounding box of `root` with `carrier`'s transform temporarily reset, so the
+ * result describes the model rather than its current pose.
+ */
+function measureLocal(root: THREE.Object3D, carrier: THREE.Object3D): THREE.Box3 {
+  const position = carrier.position.clone()
+  const quaternion = carrier.quaternion.clone()
+  const scale = carrier.scale.clone()
+  carrier.position.set(0, 0, 0)
+  carrier.quaternion.identity()
+  carrier.scale.set(1, 1, 1)
+  carrier.updateMatrixWorld(true)
+  const box = new THREE.Box3().setFromObject(root)
+  carrier.position.copy(position)
+  carrier.quaternion.copy(quaternion)
+  carrier.scale.copy(scale)
+  carrier.updateMatrixWorld(true)
+  return box
 }
 
 function disposeTree(root: THREE.Object3D) {

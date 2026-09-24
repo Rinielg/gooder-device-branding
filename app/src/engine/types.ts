@@ -157,21 +157,153 @@ export interface StageState {
   fov: number
   /** Camera distance in device-height multiples. */
   distance: number
-  envIntensity: number
-  envRotation: number
-  keyIntensity: number
-  shadow: number
-  shadowBlur: number
 }
 
 export const DEFAULT_STAGE: StageState = {
   fov: 28,
   distance: 3.1,
-  envIntensity: 1.0,
-  envRotation: 0,
-  keyIntensity: 1.6,
-  shadow: 0.35,
-  shadowBlur: 1.0,
+}
+
+/* ------------------------------------------------------------------ */
+/* Lighting                                                            */
+/* ------------------------------------------------------------------ */
+
+export type EnvMode = 'studio' | 'hdri' | 'sky' | 'none'
+export type ToneMappingName = 'aces' | 'agx' | 'neutral' | 'cineon' | 'linear' | 'none'
+export type LightType = 'directional' | 'point' | 'spot'
+export type LightId = 'key' | 'fill' | 'rim'
+export type ShadowQuality = 'hard' | 'soft'
+export type GroundMode = 'backdrop' | 'floor' | 'none'
+
+export interface LightSettings {
+  enabled: boolean
+  type: LightType
+  color: string
+  intensity: number
+  /**
+   * Position in device-height multiples rather than world units, so the rig
+   * keeps its shape when the device changes size or scale.
+   */
+  position: [number, number, number]
+  castShadow: boolean
+  /** Point and spot only. 0 means no limit. */
+  distance: number
+  decay: number
+  /** Spot only. Cone half-angle in degrees, and 0-1 edge softness. */
+  angle: number
+  penumbra: number
+}
+
+export interface EnvironmentState {
+  mode: EnvMode
+  intensity: number
+  /** Degrees. */
+  rotationY: number
+  hdriUrl: string | null
+  hdriName: string | null
+  showAsBackground: boolean
+  backgroundBlur: number
+  ambientColor: string
+  ambientIntensity: number
+  exposure: number
+  toneMapping: ToneMappingName
+  /**
+   * The background is a 2D pass and skips tone mapping by default, so exposure
+   * moves the device without shifting artwork that has already been composed.
+   */
+  toneMapBackground: boolean
+  /** Sky mode. Degrees. */
+  sunElevation: number
+  sunAzimuth: number
+}
+
+export interface ShadowState {
+  enabled: boolean
+  quality: ShadowQuality
+  mapSize: 512 | 1024 | 2048 | 4096
+  /** 0-2 in the UI; widened a long way before it reaches VSM's texel radius. */
+  softness: number
+  opacity: number
+  /** Gap between the device and the catcher, in device heights. */
+  distance: number
+  normalBias: number
+  /** Keep the shadow in the alpha channel of a transparent export. */
+  keepInTransparentExport: boolean
+}
+
+export interface GroundState {
+  mode: GroundMode
+}
+
+export interface LightingState {
+  schemaVersion: 1
+  environment: EnvironmentState
+  lights: Record<LightId, LightSettings>
+  shadows: ShadowState
+  ground: GroundState
+}
+
+export const LIGHT_IDS: LightId[] = ['key', 'fill', 'rim']
+
+export const LIGHT_LABELS: Record<LightId, string> = {
+  key: 'Key', fill: 'Fill', rim: 'Rim',
+}
+
+export const TONE_MAPPINGS: { value: ToneMappingName; label: string }[] = [
+  { value: 'aces', label: 'ACES' },
+  { value: 'agx', label: 'AgX' },
+  { value: 'neutral', label: 'Neutral' },
+  { value: 'cineon', label: 'Cineon' },
+  { value: 'linear', label: 'Linear' },
+  { value: 'none', label: 'None' },
+]
+
+export const DEFAULT_LIGHTING: LightingState = {
+  schemaVersion: 1,
+  environment: {
+    mode: 'studio',
+    intensity: 1.0,
+    rotationY: 0,
+    hdriUrl: null,
+    hdriName: null,
+    showAsBackground: false,
+    backgroundBlur: 0.25,
+    ambientColor: '#ffffff',
+    ambientIntensity: 0,
+    exposure: 1.0,
+    toneMapping: 'aces',
+    toneMapBackground: false,
+    sunElevation: 35,
+    sunAzimuth: 160,
+  },
+  lights: {
+    key: {
+      enabled: true, type: 'directional', color: '#ffffff', intensity: 1.6,
+      position: [-1.1, 1.59, 1.84], castShadow: true,
+      distance: 0, decay: 2, angle: 30, penumbra: 0.4,
+    },
+    fill: {
+      enabled: true, type: 'directional', color: '#bfd4ff', intensity: 0.35,
+      position: [1.47, -0.61, 0.86], castShadow: false,
+      distance: 0, decay: 2, angle: 30, penumbra: 0.4,
+    },
+    rim: {
+      enabled: false, type: 'directional', color: '#ffffff', intensity: 0.8,
+      position: [0.9, 0.8, -1.6], castShadow: false,
+      distance: 0, decay: 2, angle: 30, penumbra: 0.4,
+    },
+  },
+  shadows: {
+    enabled: true,
+    quality: 'soft',
+    mapSize: 2048,
+    softness: 1.0,
+    opacity: 0.35,
+    distance: 0.85,
+    normalBias: 0.004,
+    keepInTransparentExport: true,
+  },
+  ground: { mode: 'backdrop' },
 }
 
 export interface FrameState {

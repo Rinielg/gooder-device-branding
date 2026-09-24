@@ -20,6 +20,8 @@ export function Viewport() {
   const background = useStore((s) => s.background)
   const screen = useStore((s) => s.screen)
   const transform = useStore((s) => s.transform)
+  const lighting = useStore((s) => s.lighting)
+  const showLightHelpers = useStore((s) => s.showLightHelpers)
   const keyframes = useStore((s) => s.keyframes)
 
   /* ---------------- boot ---------------- */
@@ -41,6 +43,9 @@ export function Viewport() {
       w.__store = useStore
     }
     engine.thumbnail = (t: number) => {
+      // Gizmos are an editing aid; a saved view should not be a picture of them.
+      const hadHelpers = useStore.getState().showLightHelpers
+      if (hadHelpers) stage.lighting.setHelpersVisible(false)
       stage.render(t)
       const src = stage.renderer.domElement
       const c = document.createElement('canvas')
@@ -48,6 +53,7 @@ export function Viewport() {
       c.width = w
       c.height = Math.round((w * src.height) / src.width)
       c.getContext('2d')?.drawImage(src, 0, 0, c.width, c.height)
+      if (hadHelpers) stage.lighting.setHelpersVisible(true)
       return c.toDataURL('image/jpeg', 0.7)
     }
 
@@ -58,6 +64,8 @@ export function Viewport() {
         if (disposed) return
         useStore.getState().setManifest(m)
         await stage.loadDevice(useStore.getState().device)
+        if (disposed) return
+        await stage.applyLighting(useStore.getState().lighting)
         if (disposed) return
         await stage.device.applyVariant(m, useStore.getState().variant)
         await stage.device.setScreen(useStore.getState().screen)
@@ -160,6 +168,18 @@ export function Viewport() {
   useEffect(() => {
     stageRef.current?.applyStage(stageState)
   }, [stageState, booted])
+
+  useEffect(() => {
+    const stage = stageRef.current
+    if (!stage || !booted) return
+    void stage.applyLighting(lighting).catch((e) =>
+      useStore.getState().setError(e instanceof Error ? e.message : String(e)))
+  }, [lighting, booted])
+
+  const exporting = useStore((s) => s.exporting)
+  useEffect(() => {
+    stageRef.current?.lighting.setHelpersVisible(showLightHelpers && !exporting)
+  }, [showLightHelpers, exporting, booted])
 
   useEffect(() => {
     timelineRef.current?.build(keyframes)
