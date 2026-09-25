@@ -83,16 +83,13 @@ export default function App() {
       </header>
 
       <main className="main">
-        {/* The stage column: what you are making, over the time it takes. */}
-        <div className="stage-col">
-          <Viewport>
-            <Gizmo />
-          </Viewport>
-          <TimelinePanel />
-        </div>
+        <Viewport>
+          <Gizmo />
+        </Viewport>
 
-        {/* The inspector runs the full height, beside the timeline as well as
-            the viewport, so retiming and adjusting never trade places. */}
+        {/* The inspector sits beside the viewport and stops above the timeline,
+            which spans the window. Time belongs to the whole scene, not to the
+            viewport, so the ruler gets the full width to spend on it. */}
         <aside className="inspector">
           <nav className="tabs">
             {TABS.map((t) => (
@@ -128,6 +125,8 @@ export default function App() {
           </div>
         </aside>
       </main>
+
+      <TimelinePanel />
 
       {error && (
         <div className="toast" role="alert">

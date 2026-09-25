@@ -111,7 +111,7 @@ body {
 
 .app {
   display: grid;
-  grid-template-rows: 44px minmax(0, 1fr);
+  grid-template-rows: 44px minmax(0, 1fr) auto;
   height: 100%;
 }
 
@@ -134,19 +134,15 @@ body {
 .history { display: flex; gap: 4px; }
 
 /* ---------- layout ----------
- * Three regions: the top bar, the stage column (what you are making over the
- * time it takes), and an inspector that runs the full height beside both — so
- * retiming and adjusting never trade places.
+ * Three regions: the top bar, a middle band of viewport plus inspector, and the
+ * timeline across the bottom. The timeline spans the window rather than sitting
+ * under the viewport, because time belongs to the whole scene — and the ruler
+ * has far more to spend the width on than the inspector does.
  */
 .main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   min-height: 0;
-}
-.stage-col {
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  min-width: 0; min-height: 0;
 }
 
 .viewport {
