@@ -19,6 +19,7 @@ import { ShortcutSheet } from './ui/ShortcutSheet'
 import { CloudSheet } from './ui/CloudSheet'
 import { HistorySheet } from './ui/HistorySheet'
 import { CloudBadge } from './ui/CloudBadge'
+import { useCloud } from './state/cloud'
 import { useStore, type InspectorTab } from './state/store'
 import './styles.css'
 
@@ -43,6 +44,7 @@ export default function App() {
   const [shortcuts, setShortcuts] = useState(false)
   const [projects, setProjects] = useState(false)
   const [history, setHistory] = useState(false)
+  const signedIn = useCloud((s) => s.email !== null)
   useEffect(() => {
     if (!error) return
     const id = setTimeout(() => setError(null), 8000)
@@ -57,6 +59,14 @@ export default function App() {
       if (tag === 'INPUT' || tag === 'TEXTAREA') return
 
       if (e.key === '?') { e.preventDefault(); setShortcuts((v) => !v); return }
+      // A bare letter, like K for the pose. ⌘H hides the application on a Mac
+      // and is not ours to take.
+      if ((e.key === 'h' || e.key === 'H') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        if (!signedIn) return
+        e.preventDefault()
+        setHistory((v) => !v)
+        return
+      }
 
       const undoish = (e.metaKey || e.ctrlKey) && (e.code === 'KeyZ' || e.code === 'KeyY')
       if (!undoish) return
@@ -66,7 +76,7 @@ export default function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [redo, undo])
+  }, [redo, undo, signedIn])
 
   return (
     <div className="app">
@@ -95,6 +105,14 @@ export default function App() {
               type="button" className="btn icon" onClick={redo} disabled={future.length === 0}
               title={future.length ? `Redo ${future[0].label.toLowerCase()}` : 'Nothing to redo'}
             >↷</button>
+            {/* The same history, seen from further away — so it sits with the
+                two buttons that walk it a step at a time. */}
+            {signedIn && (
+              <button
+                type="button" className="btn icon" onClick={() => setHistory(true)}
+                title="History of saved versions (H)" aria-label="History"
+              >◷</button>
+            )}
           </div>
           <button
             type="button" className="btn icon" onClick={() => setShortcuts(true)}
