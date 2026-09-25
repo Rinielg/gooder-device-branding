@@ -57,7 +57,12 @@ export function InspectorTiming() {
     <div className="insp-timing">
       <header className="insp-timing-head">
         <h3>{segment ? 'Edit Transition' : 'Edit Keyframe'}</h3>
-        <button type="button" className="tl-head-btn" title="Close" onClick={() => selectKey(null)}>×</button>
+        <button
+          type="button" className="insp-close"
+          title="Close and go back to the panels"
+          aria-label="Close"
+          onClick={() => selectKey(null)}
+        >×</button>
       </header>
       <p className="note">
         {def.label}
@@ -144,18 +149,24 @@ export function InspectorTiming() {
         <div className="tr-col grow">
           <span className="tr-title">Value</span>
           <div className="tr-values">
-            {def.channels.map((ch) => (
-              <ScrubField
-                key={ch.key}
-                value={round(key.value[ch.key])}
-                step={ch.step}
-                handle={ch.label}
-                colour={ch.colour}
-                suffix={ch.unit}
-                title={`Drag ${ch.label} to change it, or click to type`}
-                onChange={(n) => updateKey(selection.track, key.id, { value: { ...key.value, [ch.key]: n } })}
-              />
-            ))}
+            {def.channels.map((ch) => {
+              // An axis letter fits inside the field; a word does not, and one
+              // that does not fit draws straight over the number.
+              const inline = ch.label.length <= 2
+              return (
+                <ScrubField
+                  key={ch.key}
+                  value={round(key.value[ch.key])}
+                  step={ch.step}
+                  handle={inline ? ch.label : undefined}
+                  labelAbove={inline ? undefined : ch.label}
+                  colour={ch.colour}
+                  suffix={ch.unit}
+                  title={`Drag ${ch.label} to change it, or click to type`}
+                  onChange={(n) => updateKey(selection.track, key.id, { value: { ...key.value, [ch.key]: n } })}
+                />
+              )
+            })}
           </div>
         </div>
 

@@ -338,6 +338,12 @@ export const FRAME_PRESETS: { label: string; width: number; height: number }[] =
 /* Keyframes / views                                                   */
 /* ------------------------------------------------------------------ */
 
+/** One keyframe, named by the track it lives on. What a selection is made of. */
+export interface KeyRef {
+  track: TrackId
+  key: string
+}
+
 export type EaseName =
   | 'none' | 'power1.inOut' | 'power2.inOut' | 'power3.inOut' | 'power4.inOut'
   | 'power2.out' | 'power3.out' | 'expo.inOut' | 'expo.out'

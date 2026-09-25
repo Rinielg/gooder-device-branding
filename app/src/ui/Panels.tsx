@@ -6,6 +6,7 @@ import {
 } from '../engine/types'
 import { ColorField, FileButton, Row, Section, Segmented, Slider, NumberInput } from './kit'
 import { useAnimated, useChannel } from './sampled'
+import { loadProjectFile, saveProjectFile } from './projectFile'
 
 /* ------------------------------------------------------------------ */
 /* Frame                                                               */
@@ -354,8 +355,6 @@ export function ScreenPanel() {
 /* ------------------------------------------------------------------ */
 
 export function ProjectPanel() {
-  const exportProject = useStore((s) => s.exportProject)
-  const importProject = useStore((s) => s.importProject)
   const [msg, setMsg] = useState<string | null>(null)
 
   useEffect(() => {
@@ -369,27 +368,14 @@ export function ProjectPanel() {
       <div className="btnrow">
         <button
           type="button" className="btn"
-          onClick={() => {
-            const blob = new Blob([JSON.stringify(exportProject(), null, 2)], { type: 'application/json' })
-            const a = document.createElement('a')
-            a.href = URL.createObjectURL(blob)
-            a.download = 'mockup-project.json'
-            a.click()
-            setTimeout(() => URL.revokeObjectURL(a.href), 5000)
-            setMsg('Saved mockup-project.json')
-          }}
+          onClick={() => setMsg(`Saved ${saveProjectFile()}`)}
         >
           Save project
         </button>
         <FileButton
           accept="application/json" label="Load project"
           onFile={async (f) => {
-            try {
-              importProject(JSON.parse(await f.text()))
-              setMsg('Project loaded')
-            } catch {
-              setMsg('That file could not be read as a project')
-            }
+            setMsg(await loadProjectFile(f) ? 'Project loaded' : 'That file could not be read as a project')
           }}
         />
       </div>

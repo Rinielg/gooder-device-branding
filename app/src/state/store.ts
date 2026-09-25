@@ -1,17 +1,19 @@
 import { create } from 'zustand'
 import { applyTheme, readTheme, type Theme } from './theme'
 import { sanitiseProject, type ProjectShell } from './project'
+import { selectedRefs, toggleRef, type KeySelection } from './selection'
 import {
   DEFAULT_BACKGROUND, DEFAULT_COMPOSITION, DEFAULT_FRAME, DEFAULT_LIGHTING, DEFAULT_SCREEN,
   DEFAULT_STAGE, DEFAULT_TRANSFORM,
-  type BackgroundState, type Composition, type DeviceId, type FrameState, type LegacyKeyframe,
+  type BackgroundState, type Composition, type DeviceId, type FrameState, type KeyRef,
+  type LegacyKeyframe,
   type LightId, type LightSettings, type LightingState, type SavedView,
   type ScreenState, type StageState, type Track, type TrackId, type TrackKey,
   type Sample, type Transform, type TrackValue, type VariantManifest,
 } from '../engine/types'
 import {
-  TAB_FOR_GROUP, TRACKS, TRACK_ORDER, isRegistered, lastKeyTime, makeTrack, makeTrackKey,
-  quantise, shiftKeys, sortKeys, type TrackSource,
+  TAB_FOR_GROUP, TRACKS, TRACK_ORDER, dropKeys, isRegistered, lastKeyTime, makeTrack,
+  makeTrackKey, quantise, shiftKeys, shiftSelected, sortKeys, type TrackSource,
 } from '../engine/tracks'
 import {
   BUILT_INS, POSE_TRACKS, readPreset, sanitisePreset, shortestPath, tracksForScope,
@@ -216,26 +218,12 @@ function migrateKeyframes(persisted: PersistedProject): Composition {
   return out
 }
 
-export interface KeySelection {
-  track: TrackId
-  /**
-   * The key itself, or — for a segment — the key it *arrives at*, since that is
-   * where the easing lives.
-   */
-  key: string
-  /**
-   * What was clicked. Easing belongs to the segment between two keys, so
-   * selecting a segment is what opens the transition editor; selecting a key
-   * offers its time and values instead. Spline draws the same distinction and
-   * it is the right one: you select the thing you are editing.
-   */
-  kind: 'key' | 'segment'
-}
+export type { KeySelection } from './selection'
 
 export type InspectorTab = 'Stage' | 'Look' | 'Light' | 'Control' | 'Angles' | 'Export'
 
 /** How many steps of undo are kept. */
-export const HISTORY_LIMIT = 20
+export const HISTORY_LIMIT = 50
 /**
  * A continuous edit — a drag, a slider, a bezier handle — should be one undo
  * step rather than sixty, so edits sharing a coalesce key inside this window
@@ -372,6 +360,12 @@ interface Store extends Project {
   /** Fill an empty timeline from a ready-made starting animation. */
   applyStarter(id: string): void
   selectKey(sel: KeySelection | null): void
+  /** Shift-click: add a key to the selection, or take it back out. */
+  toggleKey(ref: KeyRef): void
+  /** Move every selected key by the same amount, clamped as a group. */
+  shiftSelection(delta: number): void
+  /** Delete every selected key. */
+  removeSelected(): void
 
   /** Capture the current scene at `scope` as a named preset. */
   savePreset(name: string, description: string, scope: PresetScope, thumb: string): void
@@ -907,6 +901,28 @@ export const useStore = create<Store>((set, get) => {
         inspectorLight: def?.light ?? get().inspectorLight,
       })
     },
+
+    toggleKey: (ref) => set((s) => ({ selection: toggleRef(s.selection, ref) })),
+
+    // One history entry per drag, coalesced like every other continuous edit.
+    shiftSelection: (delta) => set((s) => {
+      const refs = selectedRefs(s.selection)
+      if (refs.length === 0) return {}
+      return after(
+        { composition: shiftSelected(s.composition, refs, delta) },
+        refs.length > 1 ? `Move ${refs.length} keyframes` : 'Move keyframe',
+        'shift-selection',
+      )
+    }),
+
+    removeSelected: () => set((s) => {
+      const refs = selectedRefs(s.selection)
+      if (refs.length === 0) return {}
+      return after({
+        composition: dropKeys(s.composition, refs),
+        selection: null,
+      }, refs.length > 1 ? `Delete ${refs.length} keyframes` : 'Delete keyframe')
+    }),
 
     savePreset: (name, description, scope, thumb) => set((s) => {
       const tracks = tracksForScope(scope)

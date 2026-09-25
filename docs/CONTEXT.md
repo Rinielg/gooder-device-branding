@@ -144,6 +144,10 @@ established patterns, worth reusing:
 | `src/ui/ease.ts` | A key's ease as a plain function, the box to draw it in, and bezier handles in graph units |
 | `src/state/project.ts` | Coerces an untrusted project onto the shape of the defaults, at import and at boot |
 | `src/ui/Recover.tsx` | The error boundary: what a render failure shows instead of a blank page |
+| `src/state/selection.ts` | What is selected on the timeline, and what shift-click does to it |
+| `src/ui/SideMenu.tsx` | The top-left menu — only things the app can actually do |
+| `src/ui/ShortcutSheet.tsx` · `src/ui/shortcuts.ts` | The shortcut sheet and the one list behind it |
+| `src/ui/projectFile.ts` | Save and load a project file, shared by the panel and the menu |
 | `scripts/mutants.mjs` | Breaks each function on purpose to prove the tests notice |
 
 ### The two ideas worth keeping in mind

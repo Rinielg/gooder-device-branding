@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { hasAnimation, lastKeyTime, liveTracks, mergeTransform, shiftKeys } from './tracks'
+import { dropKeys, hasAnimation, lastKeyTime, liveTracks, mergeTransform, shiftKeys, shiftSelected } from './tracks'
 import { DEFAULT_TRANSFORM, type Composition, type Track, type TrackKey } from './types'
 
 const key = (id: string, time: number): TrackKey =>
@@ -124,5 +124,107 @@ describe('lastKeyTime', () => {
 
   test('counts a muted track, so muting cannot shorten the clip under its own keys', () => {
     expect(lastKeyTime(comp(track('rotation', [0, 5], false)))).toBe(5)
+  })
+})
+
+/* ------------------------------------------------------------------ */
+
+const withTracks = (tracks: Record<string, TrackKey[]>): Composition => ({
+  schemaVersion: 1,
+  duration: 0,
+  tracks: Object.fromEntries(
+    Object.entries(tracks).map(([id, keys]) => [id, { id, enabled: true, keys } as Track]),
+  ),
+})
+
+/**
+ * Moving a shift-selected group.
+ *
+ * Per-track shifting is not enough once a selection can cross tracks: the
+ * clamp has to be worked out over the whole group, or the earliest key pins at
+ * zero while the rest keep going and the spacing collapses.
+ */
+describe('shiftSelected', () => {
+  test('moves keys in different tracks by the same amount', () => {
+    const c = withTracks({ position: [key('a', 0), key('b', 1)], rotation: [key('c', 2)] })
+
+    const out = shiftSelected(c, [{ track: 'position', key: 'b' }, { track: 'rotation', key: 'c' }], 0.5)
+
+    expect(out.tracks.position!.keys.map((k) => k.time)).toEqual([0, 1.5])
+    expect(out.tracks.rotation!.keys.map((k) => k.time)).toEqual([2.5])
+  })
+
+  test('clamps on the earliest selected key across every track', () => {
+    const c = withTracks({ position: [key('a', 0.5)], rotation: [key('b', 2)] })
+
+    // 'a' would land at -1.5 alone; the group can only move back by 0.5.
+    const out = shiftSelected(c, [{ track: 'position', key: 'a' }, { track: 'rotation', key: 'b' }], -2)
+
+    expect(out.tracks.position!.keys[0].time).toBe(0)
+    expect(out.tracks.rotation!.keys[0].time).toBe(1.5)
+  })
+
+  test('leaves keys that are not selected alone', () => {
+    const c = withTracks({ position: [key('a', 0), key('b', 1)] })
+
+    const out = shiftSelected(c, [{ track: 'position', key: 'b' }], 1)
+
+    expect(out.tracks.position!.keys.map((k) => [k.id, k.time])).toEqual([['a', 0], ['b', 2]])
+  })
+
+  test('lands on the millisecond grid', () => {
+    const c = withTracks({ position: [key('a', 0.1)] })
+
+    expect(shiftSelected(c, [{ track: 'position', key: 'a' }], 0.2).tracks.position!.keys[0].time).toBe(0.3)
+  })
+
+  test('ignores a reference to something that is not there', () => {
+    const c = withTracks({ position: [key('a', 1)] })
+
+    const out = shiftSelected(c, [{ track: 'rotation', key: 'x' }, { track: 'position', key: 'ghost' }], 1)
+
+    expect(out.tracks.position!.keys[0].time).toBe(1)
+  })
+
+  test('keeps the keys of each track in time order', () => {
+    const c = withTracks({ position: [key('a', 0), key('b', 1)] })
+
+    // 'a' overtakes 'b'.
+    const out = shiftSelected(c, [{ track: 'position', key: 'a' }], 2)
+
+    expect(out.tracks.position!.keys.map((k) => [k.id, k.time])).toEqual([['b', 1], ['a', 2]])
+  })
+})
+
+describe('dropKeys', () => {
+  test('removes every named key', () => {
+    const c = withTracks({ position: [key('a', 0), key('b', 1), key('c', 2)] })
+
+    const out = dropKeys(c, [{ track: 'position', key: 'a' }, { track: 'position', key: 'c' }])
+
+    expect(out.tracks.position!.keys.map((k) => k.id)).toEqual(['b'])
+  })
+
+  test('drops a track whose last key goes, rather than leaving an empty row', () => {
+    const c = withTracks({ position: [key('a', 0)], rotation: [key('b', 0)] })
+
+    const out = dropKeys(c, [{ track: 'position', key: 'a' }])
+
+    expect(Object.keys(out.tracks)).toEqual(['rotation'])
+  })
+
+  test('removes across tracks in one pass', () => {
+    const c = withTracks({ position: [key('a', 0), key('b', 1)], rotation: [key('c', 0), key('d', 1)] })
+
+    const out = dropKeys(c, [{ track: 'position', key: 'b' }, { track: 'rotation', key: 'c' }])
+
+    expect(out.tracks.position!.keys.map((k) => k.id)).toEqual(['a'])
+    expect(out.tracks.rotation!.keys.map((k) => k.id)).toEqual(['d'])
+  })
+
+  test('leaves the composition alone when nothing matches', () => {
+    const c = withTracks({ position: [key('a', 0)] })
+
+    expect(dropKeys(c, [{ track: 'position', key: 'ghost' }])).toEqual(c)
   })
 })

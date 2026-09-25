@@ -19,7 +19,10 @@ Where the project stands, and what done looks like for the current phase.
 | Export | PNG at 1-3x including transparent; MP4/H.264 and WebM/VP9, encoded frame-by-frame |
 | Loading a project | Every value validated against the defaults on import and on boot; an unknown device or a collapsed frame can no longer get in |
 | Recovery | A render that throws shows what failed and offers a reload or a discard, instead of a blank page |
-| Tests | Vitest, 179 tests over the pure layer, plus a mutation harness (`npm run test:mutate`, 40/40) |
+| Selection | Shift-click builds a group of keyframes, across tracks; dragging any member moves them all as one undo step, Delete removes them all |
+| Clip length | A grip at the end of the ruler, which cannot be dragged in past the last key |
+| Menus | A side menu of the app's real capabilities, and a searchable shortcut sheet on `?` |
+| Tests | Vitest, 209 tests over the pure layer, plus a mutation harness (`npm run test:mutate`, 50/50) |
 | Deploy | Public repo, MIT code with assets carved out, auto-deploy on push |
 
 Measured: export is deterministic across independent passes; 3x matches 1x;
@@ -75,6 +78,11 @@ inspector sections, and four documented Spline bugs.
 - ~~`compositionDuration` takes a keyframe array.~~ Fixed: it takes a
   `Composition`.
 - One deliberate `exhaustive-deps` warning in `Dials.tsx`, documented in place.
+- ~~Undo keeps 20 steps.~~ Now 50, measured by filling the stack.
+- ~~A channel whose name is a word draws over its own value.~~ Fixed: the
+  name moves above the field and stays the drag handle.
+- Multi-select is shift-click only. There is no marquee, and no copy or
+  paste of keyframes.
 - ~~Deleting a track leaves the property where the last edit put it.~~ Fixed:
   deleting hands it back at its last sampled value.
 - ~~The value graph draws easing accurately but does not let you drag bezier

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Viewport } from './ui/Viewport'
 import { Dials } from './ui/Dials'
 import { Gizmo } from './ui/Gizmo'
@@ -14,6 +14,8 @@ import {
 import { TimelinePanel } from './ui/TimelinePanel'
 import { InspectorTiming } from './ui/InspectorTiming'
 import { ExportPanel } from './ui/ExportPanel'
+import { SideMenu } from './ui/SideMenu'
+import { ShortcutSheet } from './ui/ShortcutSheet'
 import { useStore, type InspectorTab } from './state/store'
 import './styles.css'
 
@@ -35,6 +37,7 @@ export default function App() {
   const undo = useStore((s) => s.undo)
   const redo = useStore((s) => s.redo)
   const selection = useStore((s) => s.selection)
+  const [shortcuts, setShortcuts] = useState(false)
   useEffect(() => {
     if (!error) return
     const id = setTimeout(() => setError(null), 8000)
@@ -43,12 +46,15 @@ export default function App() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const undoish = (e.metaKey || e.ctrlKey) && (e.code === 'KeyZ' || e.code === 'KeyY')
-      if (!undoish) return
-      // Text fields have their own undo, and taking it would be worse than
-      // not offering one.
+      // Text fields have their own undo and their own '?', and taking either
+      // would be worse than not offering it.
       const tag = (e.target as HTMLElement | null)?.tagName
       if (tag === 'INPUT' || tag === 'TEXTAREA') return
+
+      if (e.key === '?') { e.preventDefault(); setShortcuts((v) => !v); return }
+
+      const undoish = (e.metaKey || e.ctrlKey) && (e.code === 'KeyZ' || e.code === 'KeyY')
+      if (!undoish) return
       e.preventDefault()
       if (e.code === 'KeyY' || e.shiftKey) redo()
       else undo()
@@ -60,6 +66,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
+        <SideMenu onShortcuts={() => setShortcuts(true)} />
         <div className="brand">
           <span className="dot" />
           <strong>Gooder Device Branding</strong>
@@ -79,6 +86,10 @@ export default function App() {
               title={future.length ? `Redo ${future[0].label.toLowerCase()}` : 'Nothing to redo'}
             >↷</button>
           </div>
+          <button
+            type="button" className="btn icon" onClick={() => setShortcuts(true)}
+            title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts"
+          >⌨</button>
           <button
             type="button" className="btn icon" onClick={toggleTheme}
             title={theme === 'dark' ? 'Switch to the light theme' : 'Switch to the dark theme'}
@@ -141,6 +152,8 @@ export default function App() {
       </main>
 
       <TimelinePanel />
+
+      {shortcuts && <ShortcutSheet onClose={() => setShortcuts(false)} />}
 
       {error && (
         <div className="toast" role="alert">

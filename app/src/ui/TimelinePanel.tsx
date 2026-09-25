@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useStore, animationEnd, compositionDuration } from '../state/store'
 import { engine } from '../engine/handle'
-import { TRACKS, TRACK_ORDER, hasAnimation, quantise, trackDef } from '../engine/tracks'
+import { TRACKS, TRACK_ORDER, hasAnimation, lastKeyTime, quantise, trackDef } from '../engine/tracks'
+import { isSelected, selectedRefs } from '../state/selection'
 import type { Composition, Track, TrackId } from '../engine/types'
 import { CurveEditor } from './CurveEditor'
 import { ScrubField } from './ScrubField'
@@ -43,6 +44,9 @@ export function TimelinePanel() {
   const moveKey = useStore((s) => s.moveKey)
   const shiftTrackKeys = useStore((s) => s.shiftTrackKeys)
   const removeKey = useStore((s) => s.removeKey)
+  const removeSelected = useStore((s) => s.removeSelected)
+  const toggleKey = useStore((s) => s.toggleKey)
+  const shiftSelection = useStore((s) => s.shiftSelection)
   const removeKeysAt = useStore((s) => s.removeKeysAt)
   const removeTrack = useStore((s) => s.removeTrack)
   const setTrackEnabled = useStore((s) => s.setTrackEnabled)
@@ -178,6 +182,10 @@ export function TimelinePanel() {
     | { kind: 'key'; track: TrackId; key: string; snapTo: number[] }
     /** Dragging the bar between two keys carries both, keeping the gap. */
     | { kind: 'segment'; track: TrackId; keys: string[]; from: number }
+    /** Dragging any member of a shift-selected group carries all of them. */
+    | { kind: 'group'; from: number }
+    /** The grip at the end of the clip. */
+    | { kind: 'length' }
   const drag = useRef<Drag | null>(null)
 
   /**
@@ -205,6 +213,17 @@ export function TimelinePanel() {
       if (!d) return
       const t = timeAt(e.clientX)
       if (d.kind === 'playhead') { scrubTo(t); return }
+      if (d.kind === 'length') {
+        // The clip cannot end before its last key: that would hide animation
+        // rather than shorten it.
+        setCompositionLength(Math.max(t, lastKeyTime(useStore.getState().composition), 0.1))
+        return
+      }
+      if (d.kind === 'group') {
+        shiftSelection(t - d.from)
+        d.from = t
+        return
+      }
       if (d.kind === 'segment') {
         shiftTrackKeys(d.track, d.keys, t - d.from)
         // The pointer's own anchor moves with the drag, or every frame would
@@ -223,7 +242,7 @@ export function TimelinePanel() {
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', up)
     }
-  }, [moveKey, pxPerSec, scrubTo, shiftTrackKeys, timeAt])
+  }, [moveKey, pxPerSec, scrubTo, setCompositionLength, shiftSelection, shiftTrackKeys, timeAt])
 
   /* ---------------- keyboard ---------------- */
   useEffect(() => {
@@ -235,12 +254,12 @@ export function TimelinePanel() {
       else if (e.code === 'KeyK') { e.preventDefault(); keyPose() }
       else if ((e.code === 'Delete' || e.code === 'Backspace') && st.selection?.kind === 'key') {
         e.preventDefault()
-        removeKey(st.selection.track, st.selection.key)
+        removeSelected()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [keyPose, removeKey, togglePlay])
+  }, [keyPose, removeSelected, togglePlay])
 
   /**
    * The ruler runs past the clip so its end reads as a boundary rather than as
@@ -382,6 +401,20 @@ export function TimelinePanel() {
                   <em>{formatTick(t)}</em>
                 </span>
               ))}
+
+              {/* The clip's end, as something you can take hold of. The number
+                  field above says what it is; this says where it is. */}
+              <button
+                type="button"
+                className="tl-endgrip"
+                style={{ left: at(duration) }}
+                title={`Clip ends at ${duration.toFixed(2)}s — drag to change`}
+                onPointerDown={(e) => {
+                  e.stopPropagation()
+                  setPlaying(false)
+                  drag.current = { kind: 'length' }
+                }}
+              />
             </div>
 
             {!curves && rows.map((track) => {
@@ -435,20 +468,27 @@ export function TimelinePanel() {
                   })}
 
                   {track.keys.map((k) => {
-                    const on = selection?.kind === 'key'
-                      && selection.track === track.id && selection.key === k.id
+                    const on = selection?.kind === 'key' && isSelected(selection, track.id, k.id)
                     return (
                       <button
                         key={k.id}
                         type="button"
                         className={`tl-key${on ? ' on' : ''}`}
                         style={{ left: at(k.time) }}
-                        title={`${def.label} · ${k.time.toFixed(2)}s`}
+                        title={`${def.label} · ${k.time.toFixed(2)}s · shift-click to add to the selection`}
                         onPointerDown={(e) => {
                           e.stopPropagation()
                           if (e.button === 2) return
                           setMenu(null)
                           setPlaying(false)
+                          if (e.shiftKey) { toggleKey({ track: track.id, key: k.id }); return }
+                          // Dragging a key that is already part of a group moves
+                          // the group; re-selecting it first would throw the
+                          // group away on the way to moving it.
+                          if (on && selectedRefs(selection).length > 1) {
+                            drag.current = { kind: 'group', from: timeAt(e.clientX) }
+                            return
+                          }
                           selectKey({ track: track.id, key: k.id, kind: 'key' })
                           startKeyDrag(track.id, k.id)
                           scrubTo(k.time)

@@ -1,6 +1,6 @@
 import {
   DEFAULT_TRANSFORM,
-  type BackgroundState, type Composition, type LightId, type LightingState, type Sample,
+  type BackgroundState, type Composition, type KeyRef, type LightId, type LightingState, type Sample,
   type ScreenState, type StageState, type Track, type TrackId, type TrackKey, type TrackValue,
   type Transform,
 } from './types'
@@ -332,4 +332,72 @@ export function mergeTransform(base: Transform, sample: Record<string, TrackValu
     if (def?.write && v) def.write(out, v)
   }
   return out
+}
+
+/* ------------------------------------------------------------------ */
+
+/** Group the references that actually name a key, by track. */
+function byTrack(c: Composition, refs: readonly KeyRef[], mustExist: boolean) {
+  const out = new Map<TrackId, Set<string>>()
+  for (const r of refs) {
+    const track = c.tracks[r.track]
+    if (!track) continue
+    if (mustExist && !track.keys.some((k) => k.id === r.key)) continue
+    const set = out.get(r.track) ?? new Set<string>()
+    set.add(r.key)
+    out.set(r.track, set)
+  }
+  return out
+}
+
+/**
+ * Move a selection of keys, which may span tracks, by one delta.
+ *
+ * `shiftKeys` clamps within a track; once a selection can cross tracks the
+ * clamp has to be worked out over the whole group, or the earliest key pins at
+ * zero while the rest keep going and the spacing you were dragging collapses.
+ */
+export function shiftSelected(c: Composition, refs: readonly KeyRef[], delta: number): Composition {
+  const moving = byTrack(c, refs, true)
+  if (moving.size === 0) return c
+
+  let earliest = Infinity
+  for (const [id, ids] of moving) {
+    for (const k of c.tracks[id]!.keys) if (ids.has(k.id)) earliest = Math.min(earliest, k.time)
+  }
+  const shift = Math.max(delta, -earliest)
+
+  const tracks = { ...c.tracks }
+  for (const [id, ids] of moving) {
+    const track = c.tracks[id]!
+    // Sorted, because a moved key can overtake one that stayed put, and the
+    // timeline builder assumes keys arrive in time order.
+    const keys = track.keys
+      .map((k) => (ids.has(k.id) ? { ...k, time: quantise(k.time + shift) } : k))
+      .sort((a, b) => a.time - b.time)
+    tracks[id] = { ...track, keys }
+  }
+  return { ...c, tracks }
+}
+
+/**
+ * Remove a selection of keys.
+ *
+ * A track left with no keys is dropped rather than kept as an empty row —
+ * matching what deleting the last key one at a time already does.
+ */
+export function dropKeys(c: Composition, refs: readonly KeyRef[]): Composition {
+  const going = byTrack(c, refs, false)
+  const tracks = { ...c.tracks }
+  let changed = false
+
+  for (const [id, ids] of going) {
+    const track = c.tracks[id]!
+    const keys = track.keys.filter((k) => !ids.has(k.id))
+    if (keys.length === track.keys.length) continue
+    changed = true
+    if (keys.length === 0) delete tracks[id]
+    else tracks[id] = { ...track, keys }
+  }
+  return changed ? { ...c, tracks } : c
 }

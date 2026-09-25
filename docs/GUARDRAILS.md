@@ -190,10 +190,17 @@ persisted, not undoable, never written back. Editing a control still writes to
 the project, and auto-key turns that into a key at the playhead — which is why
 a slider showing an interpolated value can be nudged and lands a key there.
 
-**`.preset` and `.preset-grid` belong to the frame presets.** Reusing a class
-name for a second feature does not conflict loudly — the two rule sets
-interleave and the later one silently wins, which showed up as an angles grid
-that ignored its own column count. Angle presets use `.angle-*`.
+**Grep the stylesheet for a class name before you use it.** Reusing one does
+not conflict loudly: the two rule sets interleave and the later one silently
+wins, somewhere else in the app. It has happened twice. `.preset` on the angle
+grid made it ignore its own column count, and `.tl-length` — already the
+transport's Length field — turned that field into a 484px-tall absolutely
+positioned box while the timeline's new end grip appeared to do nothing,
+because the element being tested was the wrong one. The check is one command:
+
+    grep -n '^\.name' src/styles.css
+
+Angle presets use `.angle-*`; the clip's end grip is `.tl-endgrip`.
 
 **A zustand selector must never build its result.** `useStore(s => ({ a: s.a,
 b: s.b }))` returns a fresh object every call, never compares equal, and

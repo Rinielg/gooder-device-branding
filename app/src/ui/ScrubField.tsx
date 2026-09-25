@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { evaluate } from './expr'
 
 /**
@@ -15,12 +15,20 @@ import { evaluate } from './expr'
  * by ten. Those two are ours — the audit could not confirm what Spline uses.
  */
 export function ScrubField({
-  value, onChange, handle, colour, step = 1, min, max, suffix, title, width,
+  value, onChange, handle, labelAbove, colour, step = 1, min, max, suffix, title, width,
 }: {
   value: number
   onChange: (v: number) => void
   /** Text in the drag zone — an axis letter, or a unit. */
   handle?: string
+  /**
+   * A name too long to sit inside the field, put above it instead.
+   *
+   * The label is still the drag zone, so nothing is lost by moving it: an
+   * inline handle is 20px wide, and 'Intensity' in 20px runs straight under
+   * the number.
+   */
+  labelAbove?: string
   /** Tints the handle, so a channel's colour reaches its field. */
   colour?: string
   /** Units per pixel dragged. */
@@ -77,7 +85,13 @@ export function ScrubField({
 
   const shown = text ?? format(value)
 
-  return (
+  const startDrag = (e: ReactPointerEvent) => {
+    e.preventDefault()
+    drag.current = { x: e.clientX, from: value }
+    document.body.classList.add('scrubbing')
+  }
+
+  const field = (
     <span className="scrub" style={width ? { width } : undefined} title={title}>
       {handle && (
         <button
@@ -86,11 +100,7 @@ export function ScrubField({
           style={colour ? { color: colour } : undefined}
           tabIndex={-1}
           aria-label={`Drag to change ${handle}`}
-          onPointerDown={(e) => {
-            e.preventDefault()
-            drag.current = { x: e.clientX, from: value }
-            document.body.classList.add('scrubbing')
-          }}
+          onPointerDown={startDrag}
         >{handle}</button>
       )}
       <input
@@ -114,6 +124,22 @@ export function ScrubField({
         }}
       />
       {suffix && <em>{suffix}</em>}
+    </span>
+  )
+
+  if (!labelAbove) return field
+
+  return (
+    <span className="scrub-stack">
+      <button
+        type="button"
+        className="scrub-above"
+        style={colour ? { color: colour } : undefined}
+        tabIndex={-1}
+        aria-label={`Drag to change ${labelAbove}`}
+        onPointerDown={startDrag}
+      >{labelAbove}</button>
+      {field}
     </span>
   )
 }
