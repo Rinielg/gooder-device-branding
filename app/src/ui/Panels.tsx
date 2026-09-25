@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../state/store'
 import {
-  DEFAULT_MESH_NAME, DEFAULT_MESH_URL, DEVICES, FRAME_PRESETS,
+  DEFAULT_MESH_NAME, DEFAULT_MESH_URL, DEVICES, FRAME_LIMITS, FRAME_PRESETS,
   type BackgroundKind, type DeviceId,
 } from '../engine/types'
 import { ColorField, FileButton, Row, Section, Segmented, Slider, NumberInput } from './kit'
@@ -32,11 +32,11 @@ export function FramePanel() {
         ))}
       </div>
       <Row label="Width" hint="px">
-        <NumberInput value={frame.width} min={64} max={7680} step={2}
+        <NumberInput value={frame.width} min={FRAME_LIMITS.min} max={FRAME_LIMITS.max} step={2}
           onChange={(v) => setFrame({ width: Math.round(v) })} />
       </Row>
       <Row label="Height" hint="px">
-        <NumberInput value={frame.height} min={64} max={7680} step={2}
+        <NumberInput value={frame.height} min={FRAME_LIMITS.min} max={FRAME_LIMITS.max} step={2}
           onChange={(v) => setFrame({ height: Math.round(v) })} />
       </Row>
       <Row label="Corner radius" hint="px">

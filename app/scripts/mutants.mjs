@@ -97,6 +97,29 @@ const MUTANTS = [
   ['segmentPaths: draw a chord instead of the ease', 'src/ui/curvePaths.ts',
     'yFor(from + (to - from) * ease(p)).toFixed(2)', 'yFor(from + (to - from) * p).toFixed(2)'],
 
+  ['sanitiseProject: trust the device id in the file', 'src/state/project.ts',
+    "    device: typeof raw.device === 'string' && Object.hasOwn(DEVICES, raw.device)\n      ? (raw.device as DeviceId)\n      : base.device,",
+    "    device: typeof raw.device === 'string' ? (raw.device as DeviceId) : base.device,"],
+  ['sanitiseProject: drop the frame clamp', 'src/state/project.ts',
+    '      width: clampSize(out.frame.width),\n      height: clampSize(out.frame.height),',
+    '      width: out.frame.width,\n      height: out.frame.height,'],
+  ['acceptsLeaf: take any number, finite or not', 'src/state/project.ts',
+    "  if (typeof base === 'number') return typeof raw === 'number' && Number.isFinite(raw)",
+    "  if (typeof base === 'number') return typeof raw === 'number'"],
+  ['acceptsLeaf: stop checking the type at all', 'src/state/project.ts',
+    '  return typeof raw === typeof base', '  return true'],
+  ['coerceShape: take an array element by element', 'src/state/project.ts',
+    '    return ok ? (raw.map((v, i) => coerceShape(base[i], v)) as T) : base',
+    '    return raw.map((v, i) => coerceShape(base[i], v)) as T'],
+  ['coerceShape: keep keys the default does not have', 'src/state/project.ts',
+    '    const out: Plain = {}\n    for (const [k, v] of Object.entries(base)) out[k] = coerceShape(v, raw[k])',
+    '    const out: Plain = { ...raw }\n    for (const [k, v] of Object.entries(base)) out[k] = coerceShape(v, raw[k])'],
+  ['store: validate a loaded file against the defaults, not the current state', 'src/state/store.ts',
+    '      ...shell(p, pickShell(s)),', '      ...shell(p, DEFAULT_SHELL),'],
+  ['store: validate before migrating', 'src/state/store.ts',
+    '  sanitiseProject({ ...raw, lighting: migrateLighting(raw) }, base)',
+    '  sanitiseProject(raw, base)'],
+
 ]
 
 let caught = 0

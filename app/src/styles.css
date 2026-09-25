@@ -667,3 +667,16 @@ body.scrubbing, body.scrubbing * { cursor: ew-resize !important; user-select: no
 @media (max-width: 1100px) {
   .main { grid-template-columns: 1fr 300px; }
 }
+
+/* The recovery screen. Deliberately plain: it has to render when the app
+   cannot, so it leans on tokens and nothing else. */
+.recover { display: grid; place-items: center; min-height: 100vh; padding: 24px; background: var(--bg); }
+.recover-card { max-width: 46rem; display: flex; flex-direction: column; gap: 12px; }
+.recover-card h1 { font-size: 18px; font-weight: 600; margin: 0; color: var(--text); }
+.recover-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.recover-card pre {
+  margin: 0; padding: 10px 12px; border-radius: 8px; overflow-x: auto;
+  background: var(--panel-2); border: 1px solid var(--line-soft);
+  color: var(--text); font-size: 12px;
+}
+.recover-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }

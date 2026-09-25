@@ -113,6 +113,18 @@ describe('migration', () => {
     })
   })
 
+  test('a project from before the lighting rig migrates out of the stage', () => {
+    // Order matters: validating first would drop `keyIntensity` as a key the
+    // stage does not have, and the rig would quietly come back as defaults.
+    st().importProject({
+      stage: { fov: 28, distance: 3.1, keyIntensity: 2.4, shadow: 0.6, envIntensity: 0.8 },
+    } as never)
+
+    expect(st().lighting.lights.key.intensity).toBe(2.4)
+    expect(st().lighting.shadows.opacity).toBe(0.6)
+    expect(st().lighting.environment.intensity).toBe(0.8)
+  })
+
   test('a file carrying no animation leaves the current one alone', () => {
     st().setTransform({ rotY: 10 })
     st().keyTrack('rotation')
@@ -289,5 +301,37 @@ describe('removing a track', () => {
     st().removeTrack('keyLight')
 
     expect(st().lighting.lights.key.intensity).toBe(3.5)
+  })
+})
+
+describe('loading an untrusted project', () => {
+  test('a file naming a device we do not have leaves the device alone', () => {
+    // Measured before this guard: the id went into state, persisted, and the
+    // next render threw on `DEVICES[device].label` — a blank page that a
+    // reload could not fix, because the bad value was in localStorage.
+    const before = st().device
+    st().importProject({ device: 'Nokia 3310' } as never)
+    expect(st().device).toBe(before)
+  })
+
+  test('a file with a collapsed frame cannot collapse the canvas', () => {
+    st().importProject({ frame: { width: 0, height: 0, radius: 0 } })
+    expect(st().frame.width).toBeGreaterThanOrEqual(64)
+    expect(st().frame.height).toBeGreaterThanOrEqual(64)
+  })
+
+  test('a file with a string where a number belongs keeps the number', () => {
+    st().setTransform({ posY: 1.25 })
+    st().importProject({ transform: { posY: 'abc' } } as never)
+    expect(st().transform.posY).toBe(1.25)
+  })
+
+  test('a partial file patches rather than resets', () => {
+    st().setTransform({ rotY: 33 })
+    st().setFrame({ width: 1000, height: 1000 })
+    st().importProject({ variant: 'Plum' })
+    expect(st().variant).toBe('Plum')
+    expect(st().transform.rotY).toBe(33)
+    expect(st().frame.width).toBe(1000)
   })
 })

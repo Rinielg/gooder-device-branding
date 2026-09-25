@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { applyTheme, readTheme, type Theme } from './theme'
+import { sanitiseProject, type ProjectShell } from './project'
 import {
   DEFAULT_BACKGROUND, DEFAULT_COMPOSITION, DEFAULT_FRAME, DEFAULT_LIGHTING, DEFAULT_SCREEN,
   DEFAULT_STAGE, DEFAULT_TRANSFORM,
@@ -18,7 +19,7 @@ import {
 } from '../engine/presets'
 import { STARTERS, buildStarter } from '../engine/starters'
 
-const STORAGE_KEY = 'gooder-device-branding.v1'
+export const STORAGE_KEY = 'gooder-device-branding.v1'
 
 export interface Project {
   device: DeviceId
@@ -439,15 +440,39 @@ function loadPersisted(): PersistedProject {
 
 const persisted = loadPersisted()
 
+/** The project as it is before anything is loaded over it. */
+export const DEFAULT_SHELL: ProjectShell = {
+  device: 'iphone-18-pro-max',
+  variant: 'Black',
+  frame: DEFAULT_FRAME,
+  stage: DEFAULT_STAGE,
+  lighting: DEFAULT_LIGHTING,
+  transform: DEFAULT_TRANSFORM,
+  background: DEFAULT_BACKGROUND,
+  screen: DEFAULT_SCREEN,
+}
+
+/** The settings half of the state, for handing back as a validation base. */
+const pickShell = (s: ProjectShell): ProjectShell => ({
+  device: s.device, variant: s.variant, frame: s.frame, stage: s.stage,
+  lighting: s.lighting, transform: s.transform, background: s.background, screen: s.screen,
+})
+
+/**
+ * Migrate first, then validate.
+ *
+ * The other order would reject an old shape for not matching the current one,
+ * which is the whole job migration does.
+ *
+ * `base` is what a field falls back to when the file gets it wrong or leaves
+ * it out — the defaults at boot, and the current settings for a load, so a
+ * partial file still patches rather than resets.
+ */
+const shell = (raw: PersistedProject, base: ProjectShell) =>
+  sanitiseProject({ ...raw, lighting: migrateLighting(raw) }, base)
+
 const initial: Project = {
-  device: persisted.device ?? 'iphone-18-pro-max',
-  variant: persisted.variant ?? 'Black',
-  frame: { ...DEFAULT_FRAME, ...persisted.frame },
-  stage: { ...DEFAULT_STAGE, ...persisted.stage },
-  lighting: migrateLighting(persisted),
-  transform: { ...DEFAULT_TRANSFORM, ...persisted.transform },
-  background: { ...DEFAULT_BACKGROUND, ...persisted.background },
-  screen: { ...DEFAULT_SCREEN, ...persisted.screen },
+  ...shell(persisted, DEFAULT_SHELL),
   composition: migrateKeyframes(persisted),
   presets: migrateViews(persisted),
 }
@@ -968,14 +993,12 @@ export const useStore = create<Store>((set, get) => {
     exportProject: () => pickProject(get()),
 
     importProject: (p) => set((s) => after({
-      device: p.device ?? s.device,
-      variant: p.variant ?? s.variant,
-      frame: { ...s.frame, ...p.frame },
-      stage: { ...s.stage, ...p.stage },
-      lighting: migrateLighting(p),
-      transform: { ...s.transform, ...p.transform },
-      background: { ...s.background, ...p.background, videoUrl: null, kind: p.background?.kind === 'video' ? 'gradient' : (p.background?.kind ?? s.background.kind) },
-      screen: { ...s.screen, ...p.screen },
+      ...shell(p, pickShell(s)),
+      background: {
+        ...shell(p, pickShell(s)).background,
+        videoUrl: null,
+        kind: p.background?.kind === 'video' ? 'gradient' : (p.background?.kind ?? s.background.kind),
+      },
       // A file with no animation at all leaves the current one alone; only a
       // file that actually carries one replaces it.
       composition: p.composition || p.keyframes ? migrateKeyframes(p) : s.composition,

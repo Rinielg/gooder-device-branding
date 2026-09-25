@@ -279,6 +279,36 @@ stroke uses `vector-effect: non-scaling-stroke`.
 
 ---
 
+## Loading state
+
+**Persisted state turns a bad value into a permanent one.** A project file
+naming a device that does not exist went into the store, was saved to
+`localStorage`, threw on `DEVICES[device].label` at the next render, and left a
+blank page — which reloading reproduced, because the reload read the same
+value back. The only escape was clearing site data. Validate at the boundary,
+and keep a render-error boundary behind it so the failure is at worst
+temporary.
+
+**Validate against the defaults, not against a hand-written schema.** The
+defaults are the schema: a leaf takes the incoming value only if it has the
+same type, and a key the defaults do not have is dropped. Rules written out
+field by field drift the moment someone adds a setting and forgets one.
+
+**Migrate before validating.** The other order rejects an old shape for not
+matching the current one, which is the job migration exists to do. The legacy
+lighting rig lived under `stage`, so validating first would drop
+`stage.keyIntensity` as an unknown key and quietly reset the lights.
+
+**Take a fixed-length array whole or not at all.** A light's position and a
+gradient's colours are sized to what the shaders read. Coercing element by
+element yields a value that is part file and part default — one nobody chose.
+
+**A bound enforced only in the UI is not a bound.** The frame's number fields
+clamped to 64–7680 while a loaded file could set any size at all. One exported
+constant, used by both.
+
+---
+
 ## Verifying in the browser
 
 **HMR keeps a stale component mounted after a failed update.** A store value

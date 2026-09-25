@@ -17,7 +17,9 @@ Where the project stands, and what done looks like for the current phase.
 | Timeline | Per-property tracks with independent timing and easing; auto-key; undo/redo; transition editor; value curve editor |
 | Angles | Six built-in elevations plus saved presets, each carrying a description for later automation; shortest-path rotation; popover in the viewport and a full panel |
 | Export | PNG at 1-3x including transparent; MP4/H.264 and WebM/VP9, encoded frame-by-frame |
-| Tests | Vitest, 128 tests over the pure layer, plus a mutation harness (`npm run test:mutate`, 23/23) |
+| Loading a project | Every value validated against the defaults on import and on boot; an unknown device or a collapsed frame can no longer get in |
+| Recovery | A render that throws shows what failed and offers a reload or a discard, instead of a blank page |
+| Tests | Vitest, 179 tests over the pure layer, plus a mutation harness (`npm run test:mutate`, 40/40) |
 | Deploy | Public repo, MIT code with assets carved out, auto-deploy on push |
 
 Measured: export is deterministic across independent passes; 3x matches 1x;
@@ -90,3 +92,11 @@ inspector sections, and four documented Spline bugs.
   margin placed 6% of the graph's height above its top edge.
 - Coverage is the pure layer only. The three.js engine, the exporter and every
   pointer interaction are browser-verified.
+- ~~A project file goes into the store unvalidated.~~ Fixed. Measured before
+  the fix: a file naming an unknown device persisted, threw on the first render
+  and left a blank page that reloading could not clear; a zero-sized frame
+  collapsed the canvas. Both now fall back, and a reload recovers on its own
+  without discarding the project.
+- The store's own setters are typed, not guarded. `setDevice` will still take a
+  junk id if something calls it past the types; the recovery boundary is what
+  catches that, not validation.

@@ -315,6 +315,15 @@ export interface FrameState {
 
 export const DEFAULT_FRAME: FrameState = { width: 1920, height: 1080, radius: 0 }
 
+/**
+ * What a frame may be, in pixels.
+ *
+ * One constant because the number fields and the project validator have to
+ * agree: a bound enforced only in the UI is not a bound, it is a suggestion
+ * that a loaded file ignores.
+ */
+export const FRAME_LIMITS = { min: 64, max: 7680 } as const
+
 export const FRAME_PRESETS: { label: string; width: number; height: number }[] = [
   { label: 'Square 1:1', width: 1080, height: 1080 },
   { label: 'Portrait 4:5', width: 1080, height: 1350 },

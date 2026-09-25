@@ -142,6 +142,8 @@ established patterns, worth reusing:
 | `src/ui/CurveEditor.tsx` | The value graph, replacing the lanes on the same ruler |
 | `src/ui/curvePaths.ts` | A channel's curve cut into selectable segments, and the axis they are drawn on |
 | `src/ui/ease.ts` | A key's ease as a plain function, the box to draw it in, and bezier handles in graph units |
+| `src/state/project.ts` | Coerces an untrusted project onto the shape of the defaults, at import and at boot |
+| `src/ui/Recover.tsx` | The error boundary: what a render failure shows instead of a blank page |
 | `scripts/mutants.mjs` | Breaks each function on purpose to prove the tests notice |
 
 ### The two ideas worth keeping in mind
