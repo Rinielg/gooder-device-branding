@@ -574,6 +574,12 @@ body.scrubbing, body.scrubbing * { cursor: ew-resize !important; user-select: no
 .cv-line { fill: none; stroke-width: 1.75; vector-effect: non-scaling-stroke; }
 .cv-point { stroke: var(--panel-2); stroke-width: 1.5; cursor: grab; }
 .cv-point:hover { stroke: var(--text); }
+.cv-line.on { stroke-width: 2.75; }
+/* A fat invisible copy of each segment: a 1.75px line is not a click target. */
+.cv-hit { fill: none; stroke: transparent; stroke-width: 12; cursor: pointer; }
+.cv-arm { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+.cv-handle { fill: var(--panel-2); stroke: var(--accent); stroke-width: 2; cursor: grab; }
+.cv-handle:hover { fill: var(--accent); }
 
 .tl-beyond {
   position: absolute; top: 0; bottom: 0; right: 0;

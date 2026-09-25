@@ -1,15 +1,25 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useStore } from '../state/store'
 import { trackDef } from '../engine/tracks'
-import { SEED_BEZIER, clamp, easeFn } from './ease'
+import { SEED_BEZIER, clamp, curveBox, easeFn } from './ease'
 import { DEFAULT_SPRING } from './spring'
 import { ScrubField } from './ScrubField'
 import { EASES, type EaseName } from '../engine/types'
 
 const CURVE_W = 104
 const CURVE_H = 104
-/** Room above and below the unit square for eases that overshoot, like back. */
+/**
+ * Room above and below the unit square while a custom curve is being dragged.
+ *
+ * Fixed on purpose here: the handles are a drag surface, and a box that grew
+ * with the curve would move the handle away from the pointer as it was
+ * dragged. Every other ease measures its box instead — see `curveBox`.
+ */
 const OVERSHOOT = 0.28
+/** Breathing room around a measured curve, as a fraction of its range. */
+const MARGIN = 0.12
+/** The drag handle's radius, in the preview's own viewBox units. */
+const HANDLE_R = 0.05
 
 /**
  * What the inspector shows while something on the timeline is selected.
@@ -195,7 +205,30 @@ function BezierCurve({
    * than stretching the viewBox — a non-square viewBox would turn the drag
    * handles into ellipses.
    */
-  const Y = useCallback((y: number) => (1 + OVERSHOOT - y) / (1 + OVERSHOOT * 2), [])
+  const box = useMemo(() => {
+    // A custom curve keeps the fixed box, because that box is also what the
+    // drag clamps to — measuring it would stretch the axis under the pointer
+    // as the handle moved, and the drag would fight itself. It still grows to
+    // hold a handle pushed further from the value graph, where the axis does
+    // re-fit; otherwise the preview would crop a curve it is meant to explain.
+    if (bezier) {
+      const lo = Math.min(-OVERSHOOT, bezier[1], bezier[3])
+      const hi = Math.max(1 + OVERSHOOT, bezier[1], bezier[3])
+      // A handle centred on the edge is a half-drawn circle. When the box has
+      // grown to reach one, grow it by the handle's own radius as well.
+      const grew = hi - lo > 1 + OVERSHOOT * 2
+      const room = grew ? ((hi - lo) * HANDLE_R) / (1 - 2 * HANDLE_R) : 0
+      return { lo: lo - room, hi: hi + room }
+    }
+    // Anything else is measured, so a spring's overshoot is drawn rather than
+    // cropped at a margin chosen before anyone saw the curve.
+    if (!ease) return { lo: -OVERSHOOT, hi: 1 + OVERSHOOT }
+    const { lo, hi } = curveBox(ease)
+    const m = (hi - lo) * MARGIN
+    return { lo: lo - m, hi: hi + m }
+  }, [bezier, ease])
+
+  const Y = useCallback((y: number) => (box.hi - y) / (box.hi - box.lo), [box])
 
   const path = useMemo(() => {
     if (!ease) return ''
@@ -216,9 +249,11 @@ function BezierCurve({
       // x stays inside the segment; y may overshoot, which is how an
       // anticipation or an overshoot gets drawn by hand.
       x: clamp((e.clientX - r.left) / r.width, 0, 1),
-      y: clamp(raw * (1 + OVERSHOOT * 2) - OVERSHOOT, -OVERSHOOT, 1 + OVERSHOOT),
+      // Mapped through the visible box, but clamped to the fixed drag range:
+      // the pointer stays honest whatever the box has grown to hold.
+      y: clamp(raw * (box.hi - box.lo) + box.lo, -OVERSHOOT, 1 + OVERSHOOT),
     }
-  }, [])
+  }, [box])
 
   useEffect(() => {
     const move = (e: PointerEvent) => {
@@ -254,7 +289,7 @@ function BezierCurve({
       <path d={path} className="tr-curve-line" />
       {bezier && ([0, 1] as const).map((i) => (
         <circle
-          key={i} cx={bezier[i * 2]} cy={Y(bezier[i * 2 + 1])} r={0.05}
+          key={i} cx={bezier[i * 2]} cy={Y(bezier[i * 2 + 1])} r={HANDLE_R}
           className="tr-curve-handle"
           onPointerDown={(e) => { e.stopPropagation(); dragging.current = i }}
         />

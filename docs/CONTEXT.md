@@ -140,6 +140,8 @@ established patterns, worth reusing:
 | `src/ui/ScrubField.tsx` · `src/ui/expr.ts` | Number fields whose handle scrubs and whose body types, with arithmetic |
 | `src/ui/InspectorTiming.tsx` | Edit Keyframe / Edit Transition, in the inspector |
 | `src/ui/CurveEditor.tsx` | The value graph, replacing the lanes on the same ruler |
+| `src/ui/curvePaths.ts` | A channel's curve cut into selectable segments, and the axis they are drawn on |
+| `src/ui/ease.ts` | A key's ease as a plain function, the box to draw it in, and bezier handles in graph units |
 | `scripts/mutants.mjs` | Breaks each function on purpose to prove the tests notice |
 
 ### The two ideas worth keeping in mind

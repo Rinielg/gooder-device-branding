@@ -262,6 +262,10 @@ Every step above landed, and a second pass on top of it, driven by
 | Angle presets | Spec in `docs/PLAN-PRESETS.md`, built in full |
 | Tests | Vitest and a mutation harness, adopted late; see `docs/GUIDELINES.md` |
 
+Since then: bezier handles landed on the value graph itself, reached by
+clicking the curve between two points, and every easing preview now measures
+the box it draws in instead of assuming one.
+
 Next candidates, none started: a left object panel if a second object ever
-exists, bezier handles draggable on the value graph itself, and the Figma
-plugin that the preset descriptions were designed to serve.
+exists, and the Figma plugin that the preset descriptions were designed to
+serve.

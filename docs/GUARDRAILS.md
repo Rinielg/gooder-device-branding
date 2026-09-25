@@ -258,6 +258,21 @@ composition. The lanes are a scroll container of `duration * pxPerSec`.
 `expo` and `elastic` are not cubic beziers, so a bezier-shaped preview
 misrepresents them. Only a custom curve gets handles.
 
+**A margin chosen in advance crops whatever it was not sized for.** The easing
+preview reserved ±0.28 for overshoot, which is fine for `back` and wrong for a
+spring: one at stiffness 180 and damping 8 peaks at 1.375, six per cent of the
+graph's height above the top edge, and `overflow: hidden` did the rest. The
+number was right and the picture was a lie. Measure the box from what will be
+drawn — `curveBox` and `valueScale` — and include the drag handles, since a
+handle outside the axis is a control that cannot be reached.
+
+**A measured axis must hold still for the length of a drag.** If the box is
+derived from what is drawn, dragging a handle upward stretches the axis that
+handle is measured against, so the handle moves less than the pointer and the
+drag fights itself. The value graph freezes its axis at pointer-down and
+re-fits on release; the small preview keeps a fixed box instead, because that
+box is also what its drag clamps to.
+
 **A non-square SVG viewBox turns circular drag handles into ellipses.** The
 easing graph folds its overshoot margin into a unit box instead, and every
 stroke uses `vector-effect: non-scaling-stroke`.

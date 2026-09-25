@@ -75,12 +75,18 @@ inspector sections, and four documented Spline bugs.
 - One deliberate `exhaustive-deps` warning in `Dials.tsx`, documented in place.
 - ~~Deleting a track leaves the property where the last edit put it.~~ Fixed:
   deleting hands it back at its last sampled value.
-- The value graph draws easing accurately but does not let you drag bezier
-  handles on the curve itself; that stays in the transition editor.
+- ~~The value graph draws easing accurately but does not let you drag bezier
+  handles on the curve itself.~~ Fixed: clicking a curve between two points
+  selects that transition, and a custom one is then shaped by handles on the
+  graph. The axis holds still for the length of a drag, or a handle dragged
+  upward would stretch the axis it is measured against and drift away from the
+  pointer.
 - **Commit-on-blur in a number field is unverified.** A hidden browser pane
   never has window focus, so no focus event fires at all and it cannot be
   exercised there. Enter commits, which does not depend on focus.
-- **A spring's curve preview clips** when the overshoot exceeds the graph's
-  margin. The value is right; the picture is cropped.
+- ~~**A spring's curve preview clips** when the overshoot exceeds the graph's
+  margin.~~ Fixed: the box is measured from the curve rather than fixed in
+  advance. The spring that prompted it peaks at 1.375, which the old ±0.28
+  margin placed 6% of the graph's height above its top edge.
 - Coverage is the pure layer only. The three.js engine, the exporter and every
   pointer interaction are browser-verified.
