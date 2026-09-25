@@ -10,7 +10,12 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:mutate": "node scripts/mutants.mjs"
+    "test:mutate": "node scripts/mutants.mjs",
+    "db:start": "supabase start --workdir ..",
+    "db:stop": "supabase stop --workdir ..",
+    "db:reset": "supabase db reset --workdir ..",
+    "db:types": "supabase gen types typescript --local --workdir .. > src/state/database.types.ts",
+    "db:test": "node ../supabase/tests/rls.mjs"
   },
   "dependencies": {
     "dialkit": "^2.0.2",
@@ -31,6 +36,7 @@
     "@types/three": "^0.186.0",
     "@vitejs/plugin-react": "^6.1.1",
     "oxlint": "^1.81.0",
+    "supabase": "^2.117.0",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
     "vitest": "^4.1.11"

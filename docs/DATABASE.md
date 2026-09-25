@@ -3,7 +3,14 @@
 The schema for putting Gooder Device Branding behind Supabase: accounts,
 projects, drafts, media, saved angles, exports and billing.
 
-Nothing here is built yet. This is the design and the DDL to build it from.
+**Built.** The migrations are in [`supabase/migrations/`](../supabase/migrations),
+applied against a real database, with an RLS suite in
+[`supabase/tests/rls.mjs`](../supabase/tests/rls.mjs) — 23 assertions, all
+passing. Nothing in the app talks to them yet; that is the next job, and the
+order is at the end of this file.
+
+Where the migrations differ from what is written below, they are right and a
+note says why.
 
 ---
 
@@ -75,7 +82,11 @@ One row per account, created by a trigger so it can never be missing.
 create table public.profiles (
   id                     uuid primary key references auth.users (id) on delete cascade,
   display_name           text,
-  avatar_path            text,                    -- storage path, not a URL
+  -- An uploaded avatar is a storage path; one from an OAuth provider is
+  -- somebody else's URL. Different things, so different columns rather than
+  -- one column with a rule nobody remembers.
+  avatar_path            text,
+  avatar_url             text,
   company                text,
   locale                 text default 'en',
   theme                  text check (theme in ('light','dark','system')) default 'system',
@@ -490,39 +501,39 @@ insert into public.plan_limits values
   ('studio', 'video_export', 1);
 ```
 
+Two corrections the migration makes to this, both found by building it:
+
+- **A function that takes a uid must not be callable by users.**
+  `current_plan(someone_else)` would read a stranger's billing state. The
+  uid-taking pair — `plan_for(uuid)` and `plan_allows(text, numeric, uuid)` —
+  have `execute` revoked, so only triggers and the service role reach them.
+  Users get `current_plan()` and `may_i(feature, wanted)`, which can only ever
+  ask about themselves. The RLS suite asserts the leak is closed.
+- **Parameters are prefixed `p_`.** `where l.feature = feature` is ambiguous
+  against the column of the same name, and Postgres says so.
+
 ```sql
-create function public.current_plan(uid uuid default auth.uid())
-returns text
-language sql
-stable
-security definer
-set search_path = ''
+-- Takes a uid, so a trigger can ask about the row's owner. NOT granted.
+create function public.plan_for(p_uid uuid)
+returns text language sql stable security definer set search_path = ''
 as $$
   select coalesce(
-    (select p.metadata ->> 'plan_key'
+    (select coalesce(pl.key, pd.metadata ->> 'plan_key')
        from public.subscriptions s
        join public.prices pr on pr.id = s.price_id
-       join public.products p on p.id = pr.product_id
-      where s.user_id = uid
-        and s.status in ('trialing', 'active')
+       join public.products pd on pd.id = pr.product_id
+       left join public.plans pl on pl.stripe_product_id = pd.id
+      where s.user_id = p_uid and s.status in ('trialing', 'active')
       order by s.current_period_end desc
       limit 1),
     'free');
 $$;
+revoke execute on function public.plan_for(uuid) from public, anon, authenticated;
 
-create function public.plan_allows(feature text, wanted numeric default 1, uid uuid default auth.uid())
-returns boolean
-language sql
-stable
-security definer
-set search_path = ''
-as $$
-  select coalesce(
-    (select l.limit_value is null or wanted <= l.limit_value
-       from public.plan_limits l
-      where l.plan_key = public.current_plan(uid) and l.feature = feature),
-    false);
-$$;
+-- The public door: it can only ask about you.
+create function public.may_i(p_feature text, p_wanted numeric default 1)
+returns boolean language sql stable security definer set search_path = ''
+as $$ select public.plan_allows(p_feature, p_wanted, (select auth.uid())); $$;
 ```
 
 Then a limit is enforced where it cannot be argued with:
@@ -740,9 +751,12 @@ Each step is usable on its own, which is the point of the order.
 | 7 | `exports` + limit triggers | Enforcement needs both of the above |
 
 Step 2 is where the risk is: RLS wrong is a data breach, and RLS is the one
-part of this that cannot be verified by looking at it. Test it the way the rest
-of this project tests things — sign in as two users and assert that each sees
-exactly their own rows, as an automated test, not as a click-through.
+part of this that cannot be verified by looking at it. That test exists —
+`npm run db:test` creates two users and asserts they stay apart, including that
+a project cannot be created in someone else's name, that a stale save changes
+nothing, that the project limit is refused by the database rather than the
+interface, and that nobody can ask what somebody else is paying for. Run it
+after any change to a policy.
 
 ---
 
