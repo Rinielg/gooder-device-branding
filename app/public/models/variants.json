@@ -52,7 +52,7 @@
       "clearcoat": 0.0,
       "clearcoatRoughness": 0.001,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "NeAIKPqoNOObBNI.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -116,7 +116,7 @@
       "roughness": 0.1,
       "clearcoat": 0.0,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "NeAIKPqoNOObBNI.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -157,7 +157,7 @@
       "metalness": 0.5,
       "maps": {
        "map": "xVmnUVjeBQbcboE.png",
-       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "roughnessMap": "koOAKHwUPGdNOGN.png",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
      },
@@ -242,7 +242,7 @@
       ],
       "metalness": 0.87,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "NeAIKPqoNOObBNI.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -280,7 +280,7 @@
       "clearcoat": 0.0,
       "clearcoatRoughness": 0.001,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "NeAIKPqoNOObBNI.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -344,7 +344,7 @@
       "roughness": 0.1,
       "clearcoat": 0.0,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "NeAIKPqoNOObBNI.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -385,7 +385,7 @@
       "metalness": 0.5,
       "maps": {
        "map": "TmzVuvAAiiUepdl.png",
-       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "roughnessMap": "koOAKHwUPGdNOGN.png",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
      },
@@ -470,7 +470,7 @@
       ],
       "metalness": 0.87,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "NeAIKPqoNOObBNI.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -508,7 +508,7 @@
       "clearcoat": 0.0,
       "clearcoatRoughness": 0.001,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "NeAIKPqoNOObBNI.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -572,7 +572,7 @@
       "roughness": 0.1,
       "clearcoat": 0.0,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "NeAIKPqoNOObBNI.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -613,7 +613,7 @@
       "metalness": 0.5,
       "maps": {
        "map": "cdDgSjDGIojYKog.png",
-       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "roughnessMap": "koOAKHwUPGdNOGN.png",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
      },
@@ -698,7 +698,7 @@
       ],
       "metalness": 0.77,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "NeAIKPqoNOObBNI.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -736,7 +736,7 @@
       "clearcoat": 0.0,
       "clearcoatRoughness": 0.001,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "NeAIKPqoNOObBNI.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -800,7 +800,7 @@
       "roughness": 0.1,
       "clearcoat": 0.0,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "NeAIKPqoNOObBNI.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -841,7 +841,7 @@
       "metalness": 0.5,
       "maps": {
        "map": "zVBODeQZzUJSryr.png",
-       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "roughnessMap": "koOAKHwUPGdNOGN.png",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
      },
@@ -926,7 +926,7 @@
       ],
       "metalness": 0.67,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "NeAIKPqoNOObBNI.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -988,7 +988,7 @@
       "clearcoat": 0.0,
       "clearcoatRoughness": 0.001,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "LXEfDmVsceZRJUH.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -1052,7 +1052,7 @@
       "roughness": 0.1,
       "clearcoat": 0.0,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "LXEfDmVsceZRJUH.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -1093,7 +1093,7 @@
       "metalness": 0.5,
       "maps": {
        "map": "xVmnUVjeBQbcboE.png",
-       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "roughnessMap": "koOAKHwUPGdNOGN.png",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
      },
@@ -1177,7 +1177,7 @@
       ],
       "metalness": 0.87,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "LXEfDmVsceZRJUH.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -1215,7 +1215,7 @@
       "clearcoat": 0.0,
       "clearcoatRoughness": 0.001,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "LXEfDmVsceZRJUH.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -1279,7 +1279,7 @@
       "roughness": 0.1,
       "clearcoat": 0.0,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "LXEfDmVsceZRJUH.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -1320,7 +1320,7 @@
       "metalness": 0.5,
       "maps": {
        "map": "TmzVuvAAiiUepdl.png",
-       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "roughnessMap": "koOAKHwUPGdNOGN.png",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
      },
@@ -1404,7 +1404,7 @@
       ],
       "metalness": 0.87,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "LXEfDmVsceZRJUH.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -1442,7 +1442,7 @@
       "clearcoat": 0.0,
       "clearcoatRoughness": 0.001,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "LXEfDmVsceZRJUH.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -1506,7 +1506,7 @@
       "roughness": 0.1,
       "clearcoat": 0.0,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "LXEfDmVsceZRJUH.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -1547,7 +1547,7 @@
       "metalness": 0.5,
       "maps": {
        "map": "cdDgSjDGIojYKog.png",
-       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "roughnessMap": "koOAKHwUPGdNOGN.png",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
      },
@@ -1631,7 +1631,7 @@
       ],
       "metalness": 0.77,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "LXEfDmVsceZRJUH.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -1669,7 +1669,7 @@
       "clearcoat": 0.0,
       "clearcoatRoughness": 0.001,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "LXEfDmVsceZRJUH.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -1733,7 +1733,7 @@
       "roughness": 0.1,
       "clearcoat": 0.0,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "LXEfDmVsceZRJUH.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
@@ -1774,7 +1774,7 @@
       "metalness": 0.5,
       "maps": {
        "map": "zVBODeQZzUJSryr.png",
-       "roughnessMap": "koOAKHwUPGdNOGN.jpg",
+       "roughnessMap": "koOAKHwUPGdNOGN.png",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }
      },
@@ -1858,7 +1858,7 @@
       ],
       "metalness": 0.67,
       "maps": {
-       "roughnessMap": "AdesCnZMSQKQaTi.jpg",
+       "roughnessMap": "AdesCnZMSQKQaTi.png",
        "aoMap": "LXEfDmVsceZRJUH.jpg",
        "normalMap": "RrbeEmIUUhCQiSw.png"
       }

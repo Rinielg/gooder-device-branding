@@ -25,6 +25,23 @@ size the catcher to the shadow footprint. Getting that order backwards moves the
 clip rather than removing it.
 *Symptom: a hard straight edge across the image that moves when you orbit.*
 
+**A roughness map is data, not a picture — never ship one as JPEG.** JPEG
+quantises in 8x8 blocks, and roughness drives the width of the specular
+highlight, so a step invisible in a photograph becomes a hard-edged band across
+a polished surface. Two of the device's roughness maps came out of the source
+USDZ as JPEG and measured 1.30x and 1.36x more difference across the block seam
+than inside it; the lossless ones in the same model measure 1.01x. It showed
+worst on Silver, which is why it was reported there first.
+
+The test is cheap and worth repeating on any data map:
+
+    seam = mean |dx| where x % 8 == 7;  inside = mean |dx| elsewhere
+    ratio = seam / inside      # ~1.0 is clean, >1.2 is JPEG
+
+`scripts/deblock-roughness.py` repairs them, solving for the gentlest
+correction that brings the ratio to 1.0 rather than using a fixed strength —
+over-correcting flattens real detail and measures as a ratio *below* one.
+
 **An emissive map on a standard material is still a lit surface.** The
 display was `emissive` white, `emissiveMap` the upload, `color` black — which
 looks unlit and is not. Measured on a flat `#3366cc`: it rendered `#4e7bcf`.
