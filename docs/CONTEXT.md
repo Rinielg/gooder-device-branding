@@ -149,6 +149,7 @@ established patterns, worth reusing:
 | `src/ui/ShortcutSheet.tsx` · `src/ui/shortcuts.ts` | The shortcut sheet and the one list behind it |
 | `src/ui/projectFile.ts` | Save and load a project file, shared by the panel and the menu |
 | `scripts/mutants.mjs` | Breaks each function on purpose to prove the tests notice |
+| `src/ui/ruler.ts` | Pointer position to seconds, with the limit as an argument |
 
 ### The two ideas worth keeping in mind
 

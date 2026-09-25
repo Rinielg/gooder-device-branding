@@ -83,6 +83,12 @@ inspector sections, and four documented Spline bugs.
   name moves above the field and stays the drag handle.
 - Multi-select is shift-click only. There is no marquee, and no copy or
   paste of keyframes.
+- ~~The clip's length grip could not extend the clip, and fought itself when
+  shortening it.~~ Fixed: the mapping takes its limit as an argument and the
+  grip passes none, and the zoom is frozen for the length of the drag.
+- **There is no backend.** Projects live in `localStorage` and in exported
+  files; uploaded media does not survive a reload. `docs/DATABASE.md` is the
+  schema for putting this behind Supabase; none of it is built.
 - ~~Deleting a track leaves the property where the last edit put it.~~ Fixed:
   deleting hands it back at its last sampled value.
 - ~~The value graph draws easing accurately but does not let you drag bezier
