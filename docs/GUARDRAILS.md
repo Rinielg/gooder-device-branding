@@ -314,9 +314,29 @@ element yields a value that is part file and part default — one nobody chose.
 clamped to 64–7680 while a loaded file could set any size at all. One exported
 constant, used by both.
 
+**A control that sets a limit must not be clamped by it.** `timeAt` clamps to
+the clip, which is right for the playhead and wrong for the grip that sets the
+clip's length: drag it right and the time you ask for is the time you already
+had, so the clip could only ever be shortened. `rulerTime` takes the limit as
+an argument and the grip passes none.
+
+**The zoom is fitted to the duration, so the grip that changes the duration
+moves its own axis.** Without freezing the fit for the length of the drag, the
+grip snaps back under the pointer on every move and the drag converges on the
+length it started with. Third time this shape of bug has appeared — see also
+the value graph's axis and the easing preview's box.
+
 ---
 
 ## Verifying in the browser
+
+**A handful of synthetic pointer events is not a drag.** The length grip passed
+a synthetic test and failed the moment a person used it. Two reasons, and each
+one needs a real drag to show: a feedback loop needs many moves before it
+converges, and a clamp at the boundary only bites when you cross it. Dispatching
+`pointermove` yourself proves the handler is wired; it does not prove the
+gesture works. Drive the browser's own mouse for anything that depends on how
+many moves there are, or on going past an edge.
 
 **HMR keeps a stale component mounted after a failed update.** A store value
 can change, its subscribers fire, and the DOM not move — because the mounted

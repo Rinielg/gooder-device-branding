@@ -149,6 +149,18 @@ const MUTANTS = [
   ['matchShortcuts: keep groups that matched nothing', 'src/ui/shortcuts.ts',
     '    .filter((g) => g.items.length > 0)', '    .filter(() => true)'],
 
+  ['rulerTime: clamp even when no limit was asked for', 'src/ui/ruler.ts',
+    '  return limit === undefined ? t : Math.min(t, limit)',
+    '  return Math.min(t, limit ?? 4)'],
+  ['rulerTime: ignore the limit', 'src/ui/ruler.ts',
+    '  return limit === undefined ? t : Math.min(t, limit)', '  return t'],
+  ['rulerTime: forget the gutter', 'src/ui/ruler.ts',
+    '  const t = quantise((offsetX - gutter) / pxPerSec)',
+    '  const t = quantise(offsetX / pxPerSec)'],
+  ['rulerTime: drop quantise', 'src/ui/ruler.ts',
+    '  const t = quantise((offsetX - gutter) / pxPerSec)',
+    '  const t = Math.max(0, (offsetX - gutter) / pxPerSec)'],
+
 ]
 
 let caught = 0

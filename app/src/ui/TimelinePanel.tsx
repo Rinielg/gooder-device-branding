@@ -6,6 +6,7 @@ import { isSelected, selectedRefs } from '../state/selection'
 import type { Composition, Track, TrackId } from '../engine/types'
 import { CurveEditor } from './CurveEditor'
 import { ScrubField } from './ScrubField'
+import { rulerTime } from './ruler'
 import { STARTERS } from '../engine/starters'
 
 const ROW_H = 28
@@ -91,6 +92,16 @@ export function TimelinePanel() {
   // why the old single row could never show more than the whole composition.
   const [pxPerSec, setPxPerSec] = useState(120)
   const [userZoomed, setUserZoomed] = useState(false)
+  /**
+   * Set while the clip's end grip is being dragged.
+   *
+   * The zoom is fitted to the duration, and the grip *changes* the duration —
+   * so without this the axis rescales on every pointermove, the grip snaps
+   * back under the pointer, and the drag converges on the length it started
+   * with. Same rule as the value graph: an axis derived from what is drawn has
+   * to hold still for the length of a drag.
+   */
+  const [draggingLength, setDraggingLength] = useState(false)
   const viewRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -105,11 +116,12 @@ export function TimelinePanel() {
   useLayoutEffect(() => {
     const el = viewRef.current
     if (!el) return
-    const ro = new ResizeObserver(() => { if (!userZoomed) fit() })
+    const refit = () => { if (!userZoomed && !draggingLength) fit() }
+    const ro = new ResizeObserver(refit)
     ro.observe(el)
-    if (!userZoomed) fit()
+    refit()
     return () => ro.disconnect()
-  }, [fit, userZoomed])
+  }, [fit, userZoomed, draggingLength])
 
   /** Zoom about the pointer, so the frame under the cursor stays put. */
   const zoomAt = useCallback((factor: number, clientX?: number) => {
@@ -141,13 +153,20 @@ export function TimelinePanel() {
   }, [zoomAt])
 
   /* ---------------- time <-> pixels ---------------- */
-  const timeAt = useCallback((clientX: number) => {
-    const el = scrollRef.current
-    if (!el) return 0
-    const x = clientX - el.getBoundingClientRect().left - LANE_PAD
-    // Clamped to the clip: the ruler runs past it, the playhead does not.
-    return clamp(quantise(x / pxPerSec), 0, duration)
-  }, [pxPerSec, duration])
+  const offsetOf = useCallback(
+    (clientX: number) => clientX - (scrollRef.current?.getBoundingClientRect().left ?? 0),
+    [],
+  )
+  /** Clamped to the clip: the ruler runs past it, the playhead does not. */
+  const timeAt = useCallback(
+    (clientX: number) => rulerTime(offsetOf(clientX), pxPerSec, LANE_PAD, duration),
+    [offsetOf, pxPerSec, duration],
+  )
+  /** Unclamped, for the one control whose job is to move the clip's end. */
+  const timeBeyond = useCallback(
+    (clientX: number) => rulerTime(offsetOf(clientX), pxPerSec, LANE_PAD),
+    [offsetOf, pxPerSec],
+  )
 
   /** Move the playhead and bring the pose with it. */
   const scrubTo = useCallback((t: number) => {
@@ -216,7 +235,11 @@ export function TimelinePanel() {
       if (d.kind === 'length') {
         // The clip cannot end before its last key: that would hide animation
         // rather than shorten it.
-        setCompositionLength(Math.max(t, lastKeyTime(useStore.getState().composition), 0.1))
+        setCompositionLength(Math.max(
+          timeBeyond(e.clientX),
+          lastKeyTime(useStore.getState().composition),
+          0.1,
+        ))
         return
       }
       if (d.kind === 'group') {
@@ -235,14 +258,17 @@ export function TimelinePanel() {
       const snapped = e.altKey ? t : snap(t, d.snapTo, SNAP_PX / pxPerSec)
       moveKey(d.track, d.key, snapped)
     }
-    const up = () => { drag.current = null }
+    const up = () => {
+      if (drag.current?.kind === 'length') setDraggingLength(false)
+      drag.current = null
+    }
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', up)
     return () => {
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', up)
     }
-  }, [moveKey, pxPerSec, scrubTo, setCompositionLength, shiftSelection, shiftTrackKeys, timeAt])
+  }, [moveKey, pxPerSec, scrubTo, setCompositionLength, shiftSelection, shiftTrackKeys, timeAt, timeBeyond])
 
   /* ---------------- keyboard ---------------- */
   useEffect(() => {
@@ -411,7 +437,9 @@ export function TimelinePanel() {
                 title={`Clip ends at ${duration.toFixed(2)}s — drag to change`}
                 onPointerDown={(e) => {
                   e.stopPropagation()
+                  e.preventDefault()
                   setPlaying(false)
+                  setDraggingLength(true)
                   drag.current = { kind: 'length' }
                 }}
               />
