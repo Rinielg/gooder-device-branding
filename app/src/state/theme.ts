@@ -21,5 +21,14 @@ export function applyTheme(theme: Theme) {
   try { localStorage.setItem(KEY, theme) } catch { /* quota */ }
 }
 
-// Applied at import, before React renders, so the first paint is already right.
-applyTheme(readTheme())
+/**
+ * Called from the entry point, before React renders, so the first paint is
+ * already right.
+ *
+ * Deliberately not run at module scope: a side effect there reaches `document`
+ * the moment anything imports the store, which put the whole state layer out of
+ * reach of a test that is not running in a browser.
+ */
+export function initTheme() {
+  applyTheme(readTheme())
+}

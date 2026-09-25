@@ -10,7 +10,7 @@ import {
 } from '../engine/types'
 import {
   TAB_FOR_GROUP, TRACKS, TRACK_ORDER, isRegistered, lastKeyTime, makeTrack, makeTrackKey,
-  quantise, sortKeys, type TrackSource,
+  quantise, shiftKeys, sortKeys, type TrackSource,
 } from '../engine/tracks'
 import {
   BUILT_INS, POSE_TRACKS, readPreset, sanitisePreset, shortestPath, tracksForScope,
@@ -358,6 +358,8 @@ interface Store extends Project {
   removeKeysAt(time: number): void
   updateKey(track: TrackId, key: string, patch: Partial<TrackKey>): void
   moveKey(track: TrackId, key: string, time: number): void
+  /** Retime several keys of one track together, keeping their spacing. */
+  shiftTrackKeys(track: TrackId, keys: string[], delta: number): void
   /** Set a key's value to whatever the property reads right now. */
   recaptureKey(track: TrackId, key: string): void
   removeTrack(id: TrackId): void
@@ -801,6 +803,13 @@ export const useStore = create<Store>((set, get) => {
       if (!track) return {}
       const keys = sortKeys(track.keys.map((k) => (k.id === key ? { ...k, time: quantise(time) } : k)))
       return after(patchTrack(s, id, { ...track, keys }), 'Move keyframe', `move:${key}`)
+    }),
+
+    shiftTrackKeys: (id, ids, delta) => set((s) => {
+      const track = s.composition.tracks[id]
+      if (!track) return {}
+      const keys = sortKeys(shiftKeys(track.keys, ids, delta))
+      return after(patchTrack(s, id, { ...track, keys }), 'Move keyframes', `shift:${ids.join()}`)
     }),
 
     recaptureKey: (id, key) => set((s) => {

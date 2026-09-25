@@ -40,6 +40,7 @@ export function TimelinePanel() {
   const keyPose = useStore((s) => s.keyPose)
   const keyTrack = useStore((s) => s.keyTrack)
   const moveKey = useStore((s) => s.moveKey)
+  const shiftTrackKeys = useStore((s) => s.shiftTrackKeys)
   const removeKey = useStore((s) => s.removeKey)
   const removeKeysAt = useStore((s) => s.removeKeysAt)
   const removeTrack = useStore((s) => s.removeTrack)
@@ -173,6 +174,8 @@ export function TimelinePanel() {
   type Drag =
     | { kind: 'playhead' }
     | { kind: 'key'; track: TrackId; key: string; snapTo: number[] }
+    /** Dragging the bar between two keys carries both, keeping the gap. */
+    | { kind: 'segment'; track: TrackId; keys: string[]; from: number }
   const drag = useRef<Drag | null>(null)
 
   /**
@@ -200,6 +203,13 @@ export function TimelinePanel() {
       if (!d) return
       const t = timeAt(e.clientX)
       if (d.kind === 'playhead') { scrubTo(t); return }
+      if (d.kind === 'segment') {
+        shiftTrackKeys(d.track, d.keys, t - d.from)
+        // The pointer's own anchor moves with the drag, or every frame would
+        // re-apply the whole delta from where the drag began.
+        d.from = t
+        return
+      }
       // Alt suspends snapping, for when a key genuinely belongs off the grid.
       const snapped = e.altKey ? t : snap(t, d.snapTo, SNAP_PX / pxPerSec)
       moveKey(d.track, d.key, snapped)
@@ -211,7 +221,7 @@ export function TimelinePanel() {
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', up)
     }
-  }, [moveKey, pxPerSec, scrubTo, timeAt])
+  }, [moveKey, pxPerSec, scrubTo, shiftTrackKeys, timeAt])
 
   /* ---------------- keyboard ---------------- */
   useEffect(() => {
@@ -413,6 +423,10 @@ export function TimelinePanel() {
                           e.stopPropagation()
                           setPlaying(false)
                           selectKey({ track: track.id, key: k.id, kind: 'segment' })
+                          drag.current = {
+                            kind: 'segment', track: track.id,
+                            keys: [prev.id, k.id], from: timeAt(e.clientX),
+                          }
                         }}
                       />
                     )

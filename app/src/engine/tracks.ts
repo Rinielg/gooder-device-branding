@@ -259,6 +259,16 @@ export const quantise = (t: number) => Math.max(0, Math.round(t * 1000) / 1000)
 
 export const sortKeys = (keys: TrackKey[]) => [...keys].sort((a, b) => a.time - b.time)
 
+export function shiftKeys(keys: TrackKey[], ids: string[], delta: number): TrackKey[] {
+  const moving = new Set(ids)
+  // The delta is clamped, not each key: clamping per key would let the earliest
+  // one pin at zero while the rest kept moving, squashing the spacing you were
+  // dragging.
+  const earliest = Math.min(...keys.filter((k) => moving.has(k.id)).map((k) => k.time))
+  const shift = Math.max(delta, -earliest)
+  return keys.map((k) => (moving.has(k.id) ? { ...k, time: quantise(k.time + shift) } : k))
+}
+
 /* ------------------------------------------------------------------ */
 /* Derived reads                                                       */
 /* ------------------------------------------------------------------ */

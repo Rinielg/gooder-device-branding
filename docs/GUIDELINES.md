@@ -88,3 +88,27 @@ background is a WebGL pass, why the timeline is seeked rather than played, why
 
 The default branch is `main` and Vercel deploys from it automatically — a push
 is a deploy. Commit only when asked.
+
+## Tests
+
+Vitest, `npm test` in `app/`. Adopted late — most of the codebase predates it
+and is covered only by browser verification. That is the honest state, not a
+target to defend.
+
+**From here, new behaviour is test-first.** Write the failing test, watch it
+fail for the right reason, then write the smallest thing that passes it. A test
+that passes the moment you write it has proved nothing: it may be asserting the
+arithmetic rather than the code. One was caught doing exactly that —
+`1 + 0.30000000000000004` lands on exactly `1.3`, so a quantisation test built
+on it passed without quantisation existing. `0.1 + 0.2` does drift, and the
+rewritten test failed properly.
+
+**A module that cannot be imported outside a browser cannot be tested.** The
+theme was applied at module scope in `state/theme.ts`, which reached `document`
+the moment anything imported the store and put the whole state layer out of
+reach. It is now `initTheme()`, called from `main.tsx`. Keep side effects out of
+module scope for the same reason.
+
+Pure logic belongs in `engine/` where it can be tested directly; the thin
+adapter that wires it to a pointer event is browser-verified. Say which is
+which when reporting.
