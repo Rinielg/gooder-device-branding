@@ -155,11 +155,19 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:3000"
+# The dev server, so a sign-in link opens the editor rather than a default
+# that does not exist. `npm run dev` serves on 5199.
+site_url = "http://localhost:5199"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+# Every origin a sign-in link may return to. An origin missing here is
+# silently rewritten to site_url, which looks like a broken link.
+additional_redirect_urls = [
+  "http://localhost:5199",
+  "http://127.0.0.1:5199",
+  "https://gooder-device-branding.vercel.app",
+]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.

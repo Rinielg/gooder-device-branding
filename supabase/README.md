@@ -2,8 +2,33 @@
 
 The schema from [`docs/DATABASE.md`](../docs/DATABASE.md), as migrations.
 
-Nothing in the app talks to it yet. These build the database; wiring the editor
-to it is the next job, and `docs/DATABASE.md` has the order to do it in.
+The editor is wired to it: sign in by email link, save a project to your
+account, open one from the list, and autosave with conflict detection. Media is
+not — uploads are still `blob:` URLs, and the `assets` table is waiting for the
+document to carry asset ids instead.
+
+## Pointing the editor at it
+
+Two variables, in `app/.env.local` for development and in the Vercel project's
+environment for the deployed build:
+
+    VITE_SUPABASE_URL=...
+    VITE_SUPABASE_ANON_KEY=...
+
+`npm run db:start` prints both for the local stack. **Without them the editor
+runs exactly as it did before any of this existed** — one project, in the
+browser — and the client is not even bundled, because Vite inlines the missing
+variables and the branch that builds it is provably dead. That is 218 KB a
+build with no database does not carry, and it is why the deployed site is
+unaffected until you choose otherwise.
+
+The anon key is meant to be public. The service role key is not, and must never
+appear in anything `VITE_` prefixed — that prefix is what puts a value in the
+browser bundle.
+
+Sign-in links go to `site_url` unless the origin is in
+`additional_redirect_urls`. Both are set in `config.toml`; add any new origin
+there or the link will look broken.
 
 ## Running it
 

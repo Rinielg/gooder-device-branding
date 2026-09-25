@@ -16,6 +16,8 @@ import { InspectorTiming } from './ui/InspectorTiming'
 import { ExportPanel } from './ui/ExportPanel'
 import { SideMenu } from './ui/SideMenu'
 import { ShortcutSheet } from './ui/ShortcutSheet'
+import { CloudSheet } from './ui/CloudSheet'
+import { CloudBadge } from './ui/CloudBadge'
 import { useStore, type InspectorTab } from './state/store'
 import './styles.css'
 
@@ -38,6 +40,7 @@ export default function App() {
   const redo = useStore((s) => s.redo)
   const selection = useStore((s) => s.selection)
   const [shortcuts, setShortcuts] = useState(false)
+  const [projects, setProjects] = useState(false)
   useEffect(() => {
     if (!error) return
     const id = setTimeout(() => setError(null), 8000)
@@ -66,7 +69,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <SideMenu onShortcuts={() => setShortcuts(true)} />
+        <SideMenu onShortcuts={() => setShortcuts(true)} onProjects={() => setProjects(true)} />
         <div className="brand">
           <span className="dot" />
           <strong>Gooder Device Branding</strong>
@@ -74,6 +77,7 @@ export default function App() {
         </div>
 
         <div className="topbar-right">
+          <CloudBadge onOpen={() => setProjects(true)} />
           {status && <span className="status">{status}</span>}
           {!ready && !status && <span className="status">Loading model…</span>}
           <div className="history">
@@ -154,6 +158,7 @@ export default function App() {
       <TimelinePanel />
 
       {shortcuts && <ShortcutSheet onClose={() => setShortcuts(false)} />}
+      {projects && <CloudSheet onClose={() => setProjects(false)} />}
 
       {error && (
         <div className="toast" role="alert">

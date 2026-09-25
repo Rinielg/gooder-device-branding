@@ -211,6 +211,11 @@ persisted, not undoable, never written back. Editing a control still writes to
 the project, and auto-key turns that into a key at the playhead — which is why
 a slider showing an interpolated value can be nudged and lands a key there.
 
+**An origin missing from `additional_redirect_urls` is silently rewritten.**
+A sign-in link then arrives pointing at `site_url` — a port nothing is serving
+— and reads as a broken link rather than as a config gap. Both the dev server's
+origin and the deployed one belong in `supabase/config.toml`.
+
 **Grep the stylesheet for a class name before you use it.** Reusing one does
 not conflict loudly: the two rule sets interleave and the later one silently
 wins, somewhere else in the app. It has happened twice. `.preset` on the angle

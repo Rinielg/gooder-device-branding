@@ -18,6 +18,7 @@
     "db:test": "node ../supabase/tests/rls.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.2",
     "dialkit": "^2.0.2",
     "gsap": "^3.15.0",
     "lottie-web": "^5.13.0",

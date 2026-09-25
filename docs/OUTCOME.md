@@ -87,9 +87,15 @@ inspector sections, and four documented Spline bugs.
 - ~~The clip's length grip could not extend the clip, and fought itself when
   shortening it.~~ Fixed: the mapping takes its limit as an argument and the
   grip passes none, and the zoom is frozen for the length of the drag.
-- **There is no backend.** Projects live in `localStorage` and in exported
-  files; uploaded media does not survive a reload. `docs/DATABASE.md` is the
-  schema for putting this behind Supabase; none of it is built.
+- ~~**There is no backend.**~~ Auth and projects are wired: sign in by email
+  link, save to an account, open from a list, autosave with conflict
+  detection. `supabase/` holds the migrations and an RLS suite.
+- **Media still does not survive a reload.** Uploaded images and video are
+  `blob:` URLs. The `assets` table exists for it; the document has to start
+  carrying asset ids instead of URLs, which needs a `migrateAssets`.
+- **Nothing is deployed against a database yet.** Without
+  `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` the editor behaves exactly
+  as before, and the client is not even bundled.
 - ~~Deleting a track leaves the property where the last edit put it.~~ Fixed:
   deleting hands it back at its last sampled value.
 - ~~The value graph draws easing accurately but does not let you drag bezier

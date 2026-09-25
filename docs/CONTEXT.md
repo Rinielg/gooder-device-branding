@@ -151,6 +151,10 @@ established patterns, worth reusing:
 | `scripts/mutants.mjs` | Breaks each function on purpose to prove the tests notice |
 | `src/ui/ruler.ts` | Pointer position to seconds, with the limit as an argument |
 | `src/engine/screen.ts` | How an upload sits on the display: width edge to edge, top aligned, padded if short |
+| `src/state/supabase.ts` | The client, or null when this build has no database |
+| `src/state/cloud.ts` | Session, project list, autosave and conflict handling |
+| `src/state/projectRow.ts` | The columns lifted out of the document, and the fingerprint that decides whether to save |
+| `src/ui/CloudSheet.tsx` · `src/ui/CloudBadge.tsx` | Signing in, the project list, and whether the work is safe |
 
 ### The two ideas worth keeping in mind
 

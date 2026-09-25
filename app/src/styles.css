@@ -780,3 +780,39 @@ body.scrubbing, body.scrubbing * { cursor: ew-resize !important; user-select: no
   border: 1px solid var(--line); border-radius: 5px; background: var(--panel-2);
   color: var(--muted); font: inherit; font-size: 11px; line-height: 1;
 }
+
+/* ------------------------------------------------------------------ */
+/* Cloud                                                               */
+
+.cloud-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  max-width: 220px; padding: 0 10px; height: 28px;
+  border: 1px solid var(--line); border-radius: 8px;
+  background: var(--panel-2); color: var(--muted);
+  font: inherit; font-size: 11px; cursor: pointer;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cloud-badge:hover { color: var(--text); }
+.cloud-badge i {
+  flex: none; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--muted);
+}
+.cloud-badge.saved i   { background: #2f9e63; }
+.cloud-badge.saving i  { background: var(--accent); }
+.cloud-badge.conflict  { color: var(--danger); border-color: var(--danger); }
+.cloud-badge.conflict i,
+.cloud-badge.error i   { background: var(--danger); }
+
+.cloud-form { display: grid; gap: 8px; padding: 10px; }
+.cloud-form h4 { margin: 0; }
+.cloud-current { display: grid; gap: 8px; padding: 10px; }
+.cloud-current h4 { margin: 0; }
+.cloud-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cloud-row .textfield { flex: 1; min-width: 160px; }
+.cloud-status { font-size: 11px; color: var(--muted); }
+.cloud-status.conflict, .cloud-status.error { color: var(--danger); }
+.cloud-conflict {
+  display: grid; gap: 8px; padding: 10px; border-radius: 8px;
+  background: var(--panel-2); border: 1px solid var(--danger);
+}
+.sheet-row.on { background: var(--panel-2); }

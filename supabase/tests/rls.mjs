@@ -89,10 +89,20 @@ async function makeUser(email) {
 
 const doc = (name) => ({ name, document: { schemaVersion: 1, note: name }, schema_version: 1 })
 
+/** Delete an account and, by cascade, everything it owned. */
+async function removeUser(id) {
+  await fetch(`${API}/auth/v1/admin/users/${id}`, {
+    method: 'DELETE',
+    headers: { apikey: SERVICE, Authorization: `Bearer ${SERVICE}` },
+  })
+}
+
 const run = async () => {
   const stamp = Date.now()
   const alice = await makeUser(`alice+${stamp}@example.test`)
   const bob = await makeUser(`bob+${stamp}@example.test`)
+  // Left behind, these pile up in a database somebody is also using by hand.
+  const cleanUp = () => Promise.all([removeUser(alice.id), removeUser(bob.id)])
 
   console.log('\nprofiles')
   const aProfile = await (await rest(alice.token, '/profiles?select=id,display_name')).json()
@@ -206,6 +216,11 @@ const run = async () => {
   const anonRead = await rest(ANON, '/projects?select=id')
   const anonRows = await anonRead.json()
   check('a signed-out caller sees no projects', !Array.isArray(anonRows) || anonRows.length === 0, JSON.stringify(anonRows))
+
+  await cleanUp()
+  const gone = await (await rest(alice.token, '/projects?select=id')).json()
+  check('deleting an account takes its projects with it',
+    !Array.isArray(gone) || gone.length === 0, JSON.stringify(gone))
 
   console.log(`\n${passed} passed, ${failures.length} failed`)
   if (failures.length) {

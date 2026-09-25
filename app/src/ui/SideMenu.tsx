@@ -3,6 +3,8 @@ import { useStore, type InspectorTab } from '../state/store'
 import { resetTransform } from './resetTransform'
 import { pickProjectFile, saveProjectFile } from './projectFile'
 import { keyLabel } from './shortcuts'
+import { useCloud } from '../state/cloud'
+import { cloudEnabled } from '../state/supabase'
 
 const TABS: InspectorTab[] = ['Stage', 'Look', 'Light', 'Control', 'Angles', 'Export']
 
@@ -13,7 +15,10 @@ const TABS: InspectorTab[] = ['Stage', 'Look', 'Light', 'Control', 'Angles', 'Ex
  * the platform does not have is a bug report waiting to be filed. Everything
  * here maps to a real store action or panel.
  */
-export function SideMenu({ onShortcuts }: { onShortcuts: () => void }) {
+export function SideMenu({ onShortcuts, onProjects }: {
+  onShortcuts: () => void
+  onProjects: () => void
+}) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -29,6 +34,8 @@ export function SideMenu({ onShortcuts }: { onShortcuts: () => void }) {
   const showHelpers = useStore((s) => s.showLightHelpers)
   const setShowHelpers = useStore((s) => s.setShowLightHelpers)
   const setStatus = useStore((s) => s.setStatus)
+  const email = useCloud((s) => s.email)
+  const boundName = useCloud((s) => s.boundName)
 
   useEffect(() => {
     if (!open) return
@@ -56,6 +63,14 @@ export function SideMenu({ onShortcuts }: { onShortcuts: () => void }) {
 
       {open && (
         <div className="sidemenu-sheet" role="menu">
+          {cloudEnabled && (
+            <Group>
+              <Item onClick={run(onProjects)}>
+                {!email ? 'Sign in' : boundName ? `Projects — ${boundName}` : 'Projects'}
+              </Item>
+            </Group>
+          )}
+
           <Group>
             <Item onClick={run(() => setStatus(`Saved ${saveProjectFile()}`))}>Save project to a file</Item>
             <Item onClick={run(() => pickProjectFile((ok) =>
