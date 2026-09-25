@@ -10,19 +10,21 @@ const CURVE_H = 104
 const OVERSHOOT = 0.28
 
 /**
- * Spline's Edit Transition: the segment arriving at the selected key.
+ * What the inspector shows while something on the timeline is selected.
  *
- * A key's ease describes how it is *arrived at*, so the transition being
- * edited is always the one from the previous key on the same track. The first
- * key on a track has nothing before it, so it has values but no transition.
+ * Two panels, because easing belongs to the *segment* between two keys and not
+ * to either end of it: selecting a key offers its time and values, selecting a
+ * segment offers the transition. Selecting the thing you are editing beats
+ * selecting a proxy for it.
  */
-export function TransitionPanel() {
+export function InspectorTiming() {
   const selection = useStore((s) => s.selection)
   const composition = useStore((s) => s.composition)
   const updateKey = useStore((s) => s.updateKey)
   const moveKey = useStore((s) => s.moveKey)
   const removeKey = useStore((s) => s.removeKey)
   const recaptureKey = useStore((s) => s.recaptureKey)
+  const selectKey = useStore((s) => s.selectKey)
 
   const track = selection ? composition.tracks[selection.track] : undefined
   const def = selection ? trackDef(selection.track) : undefined
@@ -32,28 +34,32 @@ export function TransitionPanel() {
 
   const ease = useMemo(() => (key ? easeFn(key) : null), [key])
 
-  if (!selection || !track || !def || !key) {
-    return (
-      <p className="note tl-empty">
-        Select a keyframe to retime it, change how it is eased into, or edit its values.
-        Drag one along its row to retime it — hold <strong>alt</strong> to ignore snapping.
-      </p>
-    )
-  }
+  if (!selection || !track || !def || !key) return null
 
   const isCustom = key.ease === 'custom'
+  const segment = selection.kind === 'segment'
 
   return (
-    <div className="tr">
-      <BezierCurve
+    <div className="insp-timing">
+      <header className="insp-timing-head">
+        <h3>{segment ? 'Edit Transition' : 'Edit Keyframe'}</h3>
+        <button type="button" className="tl-head-btn" title="Close" onClick={() => selectKey(null)}>×</button>
+      </header>
+      <p className="note">
+        {def.label}
+        {segment && prev ? ` · ${prev.time.toFixed(2)}s → ${key.time.toFixed(2)}s` : ` · ${key.time.toFixed(2)}s`}
+      </p>
+
+      <div className="tr">
+      {segment && <BezierCurve
         ease={ease}
         bezier={isCustom ? key.bezier ?? SEED_BEZIER : null}
         onChange={(bezier) => updateKey(selection.track, key.id, { ease: 'custom', bezier })}
-      />
+      />}
 
       <div className="tr-cols">
         <div className="tr-col">
-          <span className="tr-title">{def.label}</span>
+          <span className="tr-title">Timing</span>
           <label className="tr-field">
             <span>Time</span>
             <input
@@ -61,7 +67,7 @@ export function TransitionPanel() {
               onChange={(e) => moveKey(selection.track, key.id, Number(e.target.value))}
             />
           </label>
-          {prev ? (
+          {segment && prev ? (
             <label className="tr-field">
               <span>Duration</span>
               <input
@@ -72,12 +78,12 @@ export function TransitionPanel() {
                 onChange={(e) => moveKey(selection.track, key.id, prev.time + Math.max(0.05, Number(e.target.value)))}
               />
             </label>
-          ) : (
+          ) : !prev ? (
             <span className="note">First key — nothing eases into it.</span>
-          )}
+          ) : null}
         </div>
 
-        <div className="tr-col">
+        {segment && <div className="tr-col">
           <span className="tr-title">Transition</span>
           <label className="tr-field">
             <span>Ease</span>
@@ -100,7 +106,7 @@ export function TransitionPanel() {
               cubic-bezier({(key.bezier ?? SEED_BEZIER).map((n) => n.toFixed(2)).join(', ')})
             </span>
           )}
-        </div>
+        </div>}
 
         <div className="tr-col grow">
           <span className="tr-title">Value</span>
@@ -139,6 +145,7 @@ export function TransitionPanel() {
             Delete
           </button>
         </div>
+      </div>
       </div>
     </div>
   )

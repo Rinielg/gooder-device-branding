@@ -3,10 +3,9 @@ import { useStore, animationEnd, compositionDuration } from '../state/store'
 import { engine } from '../engine/handle'
 import { TRACKS, TRACK_ORDER, hasAnimation, quantise, trackDef } from '../engine/tracks'
 import type { Composition, Track, TrackId } from '../engine/types'
-import { TransitionPanel } from './TransitionPanel'
 import { CurveEditor } from './CurveEditor'
 
-const ROW_H = 30
+const ROW_H = 28
 /** How tall the value graph stands when it replaces the lanes. */
 const CURVE_H = 168
 const MIN_PPS = 8
@@ -89,7 +88,9 @@ export function TimelinePanel() {
 
   const fit = useCallback(() => {
     const w = viewRef.current?.clientWidth ?? 0
-    if (w > 0 && duration > 0) setPxPerSec(clamp((w - LANE_PAD * 2 - 4) / duration, MIN_PPS, MAX_PPS))
+    if (w > 0 && duration > 0) {
+      setPxPerSec(clamp((w - LANE_PAD * 2 - 4) / (duration * 1.18), MIN_PPS, MAX_PPS))
+    }
     setUserZoomed(false)
   }, [duration])
 
@@ -136,6 +137,7 @@ export function TimelinePanel() {
     const el = scrollRef.current
     if (!el) return 0
     const x = clientX - el.getBoundingClientRect().left - LANE_PAD
+    // Clamped to the clip: the ruler runs past it, the playhead does not.
     return clamp(quantise(x / pxPerSec), 0, duration)
   }, [pxPerSec, duration])
 
@@ -218,7 +220,7 @@ export function TimelinePanel() {
       const st = useStore.getState()
       if (e.code === 'Space') { e.preventDefault(); togglePlay() }
       else if (e.code === 'KeyK') { e.preventDefault(); keyPose() }
-      else if ((e.code === 'Delete' || e.code === 'Backspace') && st.selection) {
+      else if ((e.code === 'Delete' || e.code === 'Backspace') && st.selection?.kind === 'key') {
         e.preventDefault()
         removeKey(st.selection.track, st.selection.key)
       }
@@ -227,8 +229,14 @@ export function TimelinePanel() {
     return () => window.removeEventListener('keydown', onKey)
   }, [keyPose, removeKey, togglePlay])
 
-  const ticks = useMemo(() => buildTicks(duration, pxPerSec), [duration, pxPerSec])
-  const contentWidth = duration * pxPerSec + LANE_PAD * 2
+  /**
+   * The ruler runs past the clip so its end reads as a boundary rather than as
+   * the edge of the panel — and so there is somewhere to drag a key to when you
+   * want to lengthen the clip.
+   */
+  const rulerEnd = duration * 1.18
+  const ticks = useMemo(() => buildTicks(rulerEnd, pxPerSec), [rulerEnd, pxPerSec])
+  const contentWidth = rulerEnd * pxPerSec + LANE_PAD * 2
   const at = (t: number) => LANE_PAD + t * pxPerSec
 
   return (
@@ -367,7 +375,6 @@ export function TimelinePanel() {
             {!curves && rows.map((track) => {
               const def = trackDef(track.id)
               if (!def) return null
-              const colour = def.channels[0].colour
               return (
                 <div
                   key={track.id}
@@ -385,39 +392,55 @@ export function TimelinePanel() {
                     <span key={t} className="tl-lane-tick" style={{ left: at(t) }} />
                   ))}
 
-                  {track.keys.length > 1 && (
-                    <span
-                      className="tl-span"
-                      style={{
-                        left: at(track.keys[0].time),
-                        width: (track.keys[track.keys.length - 1].time - track.keys[0].time) * pxPerSec,
-                        background: colour,
-                      }}
-                    />
+                  {/* One lone key pins the property; there is no segment to ease. */}
+                  {track.keys.length === 1 && (
+                    <span className="tl-pin" style={{ left: at(track.keys[0].time) }} />
                   )}
 
+                  {/* A segment per gap, because a transition is a thing you select. */}
+                  {track.keys.slice(1).map((k, i) => {
+                    const prev = track.keys[i]
+                    const on = selection?.kind === 'segment'
+                      && selection.track === track.id && selection.key === k.id
+                    return (
+                      <button
+                        key={`seg:${k.id}`}
+                        type="button"
+                        className={`tl-seg${on ? ' on' : ''}`}
+                        style={{ left: at(prev.time), width: (k.time - prev.time) * pxPerSec }}
+                        title={`${def.label} · ${prev.time.toFixed(2)}s → ${k.time.toFixed(2)}s · ${k.ease}`}
+                        onPointerDown={(e) => {
+                          e.stopPropagation()
+                          setPlaying(false)
+                          selectKey({ track: track.id, key: k.id, kind: 'segment' })
+                        }}
+                      />
+                    )
+                  })}
+
                   {track.keys.map((k) => {
-                    const on = selection?.track === track.id && selection.key === k.id
+                    const on = selection?.kind === 'key'
+                      && selection.track === track.id && selection.key === k.id
                     return (
                       <button
                         key={k.id}
                         type="button"
                         className={`tl-key${on ? ' on' : ''}`}
                         style={{ left: at(k.time) }}
-                        title={`${def.label} · ${k.time.toFixed(2)}s · ${k.ease}`}
+                        title={`${def.label} · ${k.time.toFixed(2)}s`}
                         onPointerDown={(e) => {
                           e.stopPropagation()
                           if (e.button === 2) return
                           setMenu(null)
                           setPlaying(false)
-                          selectKey({ track: track.id, key: k.id })
+                          selectKey({ track: track.id, key: k.id, kind: 'key' })
                           startKeyDrag(track.id, k.id)
                           scrubTo(k.time)
                         }}
                         onContextMenu={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
-                          selectKey({ track: track.id, key: k.id })
+                          selectKey({ track: track.id, key: k.id, kind: 'key' })
                           setMenu({
                             x: e.clientX, y: e.clientY, track: track.id, key: k.id, time: k.time,
                             atTime: rows.reduce(
@@ -440,6 +463,9 @@ export function TimelinePanel() {
                 />
               </div>
             )}
+
+            {/* Past the clip's own length, so the length reads as a boundary. */}
+            <div className="tl-beyond" style={{ left: at(duration) }} />
 
             {/* Hoisted out of the rows so one playhead spans every track. */}
             <div className="tl-playhead" style={{ left: at(playhead) }} />
@@ -467,14 +493,13 @@ export function TimelinePanel() {
         </div>
       )}
 
-      {rows.length === 0 ? (
+      {rows.length === 0 && (
         <p className="note tl-empty">
           Pose the device, then <strong>Key pose</strong> to start animating. After that, posing the
           device at a new point on the timeline keys itself. Pick a single property from
-          <strong> Animate</strong> to give it its own row.
+          <strong> Animate</strong> to give it its own row. Select a key or the bar between two to
+          edit it in the panel on the right.
         </p>
-      ) : (
-        <TransitionPanel />
       )}
     </div>
   )

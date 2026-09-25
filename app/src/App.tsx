@@ -10,6 +10,7 @@ import {
   EnvironmentPanel, LightingHelpersPanel, LightsPanel, ShadowPanel,
 } from './ui/LightingPanel'
 import { TimelinePanel } from './ui/TimelinePanel'
+import { InspectorTiming } from './ui/InspectorTiming'
 import { ExportPanel } from './ui/ExportPanel'
 import { useStore, type InspectorTab } from './state/store'
 import './styles.css'
@@ -31,6 +32,7 @@ export default function App() {
   const future = useStore((s) => s.future)
   const undo = useStore((s) => s.undo)
   const redo = useStore((s) => s.redo)
+  const selection = useStore((s) => s.selection)
   useEffect(() => {
     if (!error) return
     const id = setTimeout(() => setError(null), 8000)
@@ -90,7 +92,14 @@ export default function App() {
         {/* The inspector sits beside the viewport and stops above the timeline,
             which spans the window. Time belongs to the whole scene, not to the
             viewport, so the ruler gets the full width to spend on it. */}
+        {/* Selecting something on the timeline takes the inspector over: the
+            thing being edited and the controls for it belong in one place, and
+            the timeline stays a timeline. */}
         <aside className="inspector">
+          {selection ? (
+            <InspectorTiming />
+          ) : (
+            <>
           <nav className="tabs">
             {TABS.map((t) => (
               <button key={t} type="button" className={t === tab ? 'on' : ''} onClick={() => setTab(t)}>
@@ -123,6 +132,8 @@ export default function App() {
             {tab === 'Views' && (<><ViewsPanel /><ProjectPanel /></>)}
             {tab === 'Export' && <ExportPanel />}
           </div>
+            </>
+          )}
         </aside>
       </main>
 

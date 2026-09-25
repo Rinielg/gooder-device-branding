@@ -141,7 +141,7 @@ export function CurveEditor({ track, pxPerSec, gutter, height, hidden }: Props) 
               onPointerDown={(e) => {
                 e.stopPropagation()
                 setPlaying(false)
-                selectKey({ track: track.id, key: k.id })
+                selectKey({ track: track.id, key: k.id, kind: 'key' })
                 drag.current = { key: k.id, channel: ch.key }
               }}
             >

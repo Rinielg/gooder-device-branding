@@ -207,7 +207,18 @@ function migrateKeyframes(persisted: PersistedProject): Composition {
 
 export interface KeySelection {
   track: TrackId
+  /**
+   * The key itself, or — for a segment — the key it *arrives at*, since that is
+   * where the easing lives.
+   */
   key: string
+  /**
+   * What was clicked. Easing belongs to the segment between two keys, so
+   * selecting a segment is what opens the transition editor; selecting a key
+   * offers its time and values instead. Spline draws the same distinction and
+   * it is the right one: you select the thing you are editing.
+   */
+  kind: 'key' | 'segment'
 }
 
 export type InspectorTab = 'Stage' | 'Look' | 'Light' | 'Control' | 'Views' | 'Export'
