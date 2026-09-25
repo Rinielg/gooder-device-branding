@@ -228,6 +228,14 @@ persisted, not undoable, never written back. Editing a control still writes to
 the project, and auto-key turns that into a key at the playhead — which is why
 a slider showing an interpolated value can be nudged and lands a key there.
 
+**`supabase config push` is not a deploy — it is a config overwrite, and the
+defaults are local ones.** `config.toml` is what `supabase init` wrote for a
+throwaway Docker stack. Pushed at the hosted project it would set `site_url` to
+localhost, turn email confirmations off, drop the sign-in mail rate limit from
+a minute to a second, shorten the OTP and disable MFA. A non-interactive run
+does not prompt. Run `supabase config diff` and read every line, or manage the
+hosted auth settings in the dashboard, which is what this project does.
+
 **Renaming the Vercel project moves the origin, and localStorage does not
 follow.** A project saved in the browser at the old `*.vercel.app` host is not
 visible at the new one — different origin, different storage — and once the old

@@ -1,3 +1,21 @@
+# ---------------------------------------------------------------------------
+# THIS FILE DESCRIBES LOCAL DEVELOPMENT. DO NOT `supabase config push`.
+#
+# Most of what follows is the template `supabase init` wrote, tuned for a
+# throwaway Docker stack. Pushing it at the hosted project would, measured by
+# `supabase config diff` against Gooder Studio:
+#
+#   site_url                  -> http://localhost:5199   (breaks every link)
+#   email.enable_confirmations-> false                   (anyone can claim an address)
+#   email.max_frequency       -> 1s                      (no rate limit on sign-in mail)
+#   email.otp_length          -> 6                       (weaker than the hosted 8)
+#   mfa.totp.enroll/verify    -> false                   (turns MFA off)
+#
+# A non-interactive push does not prompt. The hosted project's auth settings
+# are managed in the dashboard; run `supabase config diff` before ever
+# reconsidering this.
+# ---------------------------------------------------------------------------
+
 # For detailed configuration reference documentation, visit:
 # https://supabase.com/docs/guides/local-development/cli/config
 # A string used to distinguish different Supabase projects on the same host. Defaults to the
