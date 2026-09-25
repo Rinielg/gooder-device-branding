@@ -248,3 +248,20 @@ Animating colours or enums, multi-select and marquee on keyframes, copy/paste of
 keys, nested timelines or per-object timelines (there is one object), and Spline
 features with no meaning here — Path Extrusion, Cloner, Simulation, Events,
 Variables & Data.
+
+---
+
+## Phase closed
+
+Every step above landed, and a second pass on top of it, driven by
+`docs/SPLINE-AUDIT.md`. What followed the plan:
+
+| | |
+|---|---|
+| Spline shell corrected | The timeline runs the full width with the inspector above it — the reverse of what this plan said, settled by sampling the reference |
+| Angle presets | Spec in `docs/PLAN-PRESETS.md`, built in full |
+| Tests | Vitest and a mutation harness, adopted late; see `docs/GUIDELINES.md` |
+
+Next candidates, none started: a left object panel if a second object ever
+exists, bezier handles draggable on the value graph itself, and the Figma
+plugin that the preset descriptions were designed to serve.

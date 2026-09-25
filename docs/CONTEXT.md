@@ -126,3 +126,36 @@ established patterns, worth reusing:
   renderer, or `relayout()` will overwrite the value under test between frames.
 - Dev-only hooks — `window.__stage`, `__engine`, `__store` — exist for exactly
   this and are stripped from production builds.
+
+---
+
+## Added since this file was first written
+
+| Where | What |
+|---|---|
+| `src/engine/tracks.ts` | The track registry — one entry per animatable property. Eleven of them. Adding a property is one entry, not an edit in five files |
+| `src/engine/presets.ts` | Angle presets: six built-in elevations, shortest-path rotation, scope, sanitising |
+| `src/engine/starters.ts` | Ready-made animations for an empty timeline |
+| `src/ui/spring.ts` | A damped spring as an easing function, normalised to its own settle time |
+| `src/ui/ScrubField.tsx` · `src/ui/expr.ts` | Number fields whose handle scrubs and whose body types, with arithmetic |
+| `src/ui/InspectorTiming.tsx` | Edit Keyframe / Edit Transition, in the inspector |
+| `src/ui/CurveEditor.tsx` | The value graph, replacing the lanes on the same ruler |
+| `scripts/mutants.mjs` | Breaks each function on purpose to prove the tests notice |
+
+### The two ideas worth keeping in mind
+
+**The registry is the single description of a track.** The `+ Animate` menu,
+the rows, the GSAP build, the curve editor, presets and the sampler all read
+from it. A `TrackId` that is not registered does not exist as far as the app is
+concerned.
+
+**A preset's value is a `Sample`** — the same shape the timeline evaluates to.
+Applying one goes through the ordinary setters, so auto-key is the timeline
+integration and there is no preset-shaped special case anywhere in the
+timeline.
+
+### Reference material
+
+`docs/SPLINE-REFERENCE.md` says where the Spline screenshots are (outside the
+repo, deliberately) and what each shows. `docs/SPLINE-AUDIT.md` is what we took
+from the behavioural audit and what we refused.

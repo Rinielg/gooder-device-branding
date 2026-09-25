@@ -15,7 +15,9 @@ Where the project stands, and what done looks like for the current phase.
 | Lighting | Environment (studio / HDRI / sky / none), key-fill-rim rig, shadow panel, ground modes, light gizmos |
 | Shadows | Real cast shadow on a backdrop or floor; frustum invariant swept across 1,728 combinations |
 | Timeline | Per-property tracks with independent timing and easing; auto-key; undo/redo; transition editor; value curve editor |
+| Angles | Six built-in elevations plus saved presets, each carrying a description for later automation; shortest-path rotation; popover in the viewport and a full panel |
 | Export | PNG at 1-3x including transparent; MP4/H.264 and WebM/VP9, encoded frame-by-frame |
+| Tests | Vitest, 128 tests over the pure layer, plus a mutation harness (`npm run test:mutate`, 23/23) |
 | Deploy | Public repo, MIT code with assets carved out, auto-deploy on push |
 
 Measured: export is deterministic across independent passes; 3x matches 1x;
@@ -23,7 +25,7 @@ a 20-second clip encodes in roughly 4.4s at ~9ms a frame with shadows on.
 
 ## Done for this phase
 
-The phase is complete when all of the following hold:
+**All seven hold as of `6584ba0`.** Kept for the record of what was asked.
 
 1. **Independent rows.** Position keyed at 0s and 2s and rotation at 1s and 3s
    appear as two rows, animate independently, and can carry different easing.
@@ -50,6 +52,17 @@ nested or per-object timelines; arbitrary add/remove lights; mirror floor;
 per-object shadow toggles; bundled HDRI presets. Spline features with no meaning
 here — Path Extrusion, Cloner, Simulation, Events, Variables & Data.
 
+## Where it stands after the Spline pass
+
+Adopted from the audit: segment selection, timing controls in the inspector,
+clip-style tracks with caps, the over-running ruler with the clip length
+shaded, lane metrics, scrub handles on number fields, backfilling a key at 0,
+spring easing, starter tiles, dragging a segment to carry both its keys.
+
+Refused, with reasons in `docs/SPLINE-AUDIT.md`: no snapping, undo that merges
+across properties, auto-key gated on a timeline being open, non-collapsing
+inspector sections, and four documented Spline bugs.
+
 ## Known open items
 
 - ~~`syncHelper` rebuilds light helpers on every `applyLighting` call.~~ Fixed:
@@ -60,9 +73,14 @@ here — Path Extrusion, Cloner, Simulation, Events, Variables & Data.
 - ~~`compositionDuration` takes a keyframe array.~~ Fixed: it takes a
   `Composition`.
 - One deliberate `exhaustive-deps` warning in `Dials.tsx`, documented in place.
-- While a lighting or camera track is animating, editing its control writes the
-  sampled value into the project as well as keying it. Consistent with "the
-  panel shows what you set", but it means deleting the track later leaves the
-  property where the last edit put it rather than where it started.
+- ~~Deleting a track leaves the property where the last edit put it.~~ Fixed:
+  deleting hands it back at its last sampled value.
 - The value graph draws easing accurately but does not let you drag bezier
   handles on the curve itself; that stays in the transition editor.
+- **Commit-on-blur in a number field is unverified.** A hidden browser pane
+  never has window focus, so no focus event fires at all and it cannot be
+  exercised there. Enter commits, which does not depend on focus.
+- **A spring's curve preview clips** when the overshoot exceeds the graph's
+  margin. The value is right; the picture is cropped.
+- Coverage is the pure layer only. The three.js engine, the exporter and every
+  pointer interaction are browser-verified.

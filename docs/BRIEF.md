@@ -33,7 +33,13 @@ Each phase was requested on top of the last, not planned up front:
 3. **Public repo and deploy** — MIT for the code, third-party assets carved out.
 4. **Lighting system** — a Spline-style split of scene environment and light
    objects, prompted by a shadow being clipped.
-5. **Spline-style UI and per-property timeline** — the current phase.
+5. ~~**Spline-style UI and per-property timeline**~~ — delivered, then taken
+   further against a behavioural audit of Spline itself.
+6. **Angle presets** — six built-in elevations and saved presets, each carrying
+   a plain-language description. The descriptions are not a notes field: they
+   are what a future automation matches a request against, so that "focus on
+   the bottom navigation" can resolve to an angle. This is the seam the planned
+   Figma plugin will use to pull a UI screen onto the display and frame it.
 
 ## What this is not
 

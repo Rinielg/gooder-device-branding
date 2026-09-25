@@ -38,3 +38,24 @@ package, and without the output ever disagreeing with the preview.
 A user can key position at 0s and 2s and rotation at 1s and 3s, see them as two
 independent rows, give them different easing, and export a clip where both
 behave as shown. See `OUTCOME.md`.
+
+---
+
+## Added goals
+
+**Animating should not require knowing what a keyframe is.** An empty timeline
+offers starters that animate *into* the shot already set up. After the first
+key, editing any property at a new time keys it, with a key at zero behind it
+so the result is an animation rather than a pin.
+
+**A control should never disagree with the picture.** While a property is
+animated its control reads the sampled value, and editing that value keys it at
+the playhead. Deleting the track hands the property back where it looked.
+
+**An angle should be describable, not only numeric.** Every preset carries a
+plain-language description of the shot, because the next thing to use them will
+be matching a request to an angle rather than reading coordinates.
+
+**Claims should be checkable.** Behaviour that can be a pure function is one,
+and is tested. Tests written after the code are proved by breaking the code and
+watching them catch it, not by passing.
