@@ -816,3 +816,35 @@ body.scrubbing, body.scrubbing * { cursor: ew-resize !important; user-select: no
   background: var(--panel-2); border: 1px solid var(--danger);
 }
 .sheet-row.on { background: var(--panel-2); }
+
+/* ------------------------------------------------------------------ */
+/* History                                                             */
+
+.ver { border-bottom: 1px solid var(--line-soft); }
+.ver:last-child { border-bottom: 0; }
+.ver.current .ver-summary { color: var(--text); font-weight: 500; }
+.ver-head {
+  display: flex; align-items: baseline; gap: 10px; width: 100%;
+  padding: 10px; border: 0; background: none; cursor: pointer;
+  font: inherit; text-align: left; color: var(--text);
+}
+.ver-head:hover { background: var(--panel-2); }
+.ver-when {
+  flex: none; width: 118px; font-size: 11px; color: var(--muted);
+  display: flex; align-items: baseline; gap: 5px;
+}
+.ver-when em {
+  font-style: normal; font-size: 9px; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--accent);
+}
+.ver-when i { font-style: normal; color: var(--accent); }
+.ver-summary { flex: 1; min-width: 0; font-size: 13px; }
+.ver-chevron { flex: none; color: var(--muted); font-size: 10px; }
+.ver-body { padding: 0 10px 12px 128px; display: grid; gap: 8px; justify-items: start; }
+.ver-changes { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; }
+.ver-changes li { font-size: 12px; color: var(--text); }
+.ver-changes b {
+  display: inline-block; min-width: 62px; font-weight: 500;
+  font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--muted);
+}

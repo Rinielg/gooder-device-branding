@@ -3,6 +3,7 @@ import { Stage } from '../engine/Stage'
 import { CompositionTimeline } from '../engine/Timeline'
 import { engine } from '../engine/handle'
 import { mergeTransform } from '../engine/tracks'
+import { useCloud } from '../state/cloud'
 import { useStore, compositionDuration } from '../state/store'
 import type { VariantManifest } from '../engine/types'
 
@@ -57,6 +58,7 @@ export function Viewport({ children }: { children?: ReactNode }) {
       w.__stage = stage
       w.__engine = engine
       w.__store = useStore
+      w.__cloud = useCloud
     }
     engine.thumbnail = (t: number) => {
       // Gizmos are an editing aid; a saved view should not be a picture of them.

@@ -15,9 +15,10 @@ const TABS: InspectorTab[] = ['Stage', 'Look', 'Light', 'Control', 'Angles', 'Ex
  * the platform does not have is a bug report waiting to be filed. Everything
  * here maps to a real store action or panel.
  */
-export function SideMenu({ onShortcuts, onProjects }: {
+export function SideMenu({ onShortcuts, onProjects, onHistory }: {
   onShortcuts: () => void
   onProjects: () => void
+  onHistory: () => void
 }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -68,6 +69,7 @@ export function SideMenu({ onShortcuts, onProjects }: {
               <Item onClick={run(onProjects)}>
                 {!email ? 'Sign in' : boundName ? `Projects — ${boundName}` : 'Projects'}
               </Item>
+              {email && <Item onClick={run(onHistory)}>History</Item>}
             </Group>
           )}
 

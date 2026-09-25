@@ -3,6 +3,8 @@ import { supabase } from './supabase'
 import { useStore, type Project } from './store'
 import { fingerprint, projectColumns } from './projectRow'
 import { stripRuntimeUrls } from './assets'
+import { describeChanges, type Change } from './changes'
+import { DEFAULT_COMPOSITION } from '../engine/types'
 import type { Json } from './database.types'
 
 /** Where the binding is remembered, so a reload reopens what you were editing. */
@@ -10,6 +12,24 @@ const BOUND_KEY = 'gooder-device-branding.cloud'
 
 /** How long after the last edit an autosave goes out. */
 const AUTOSAVE_MS = 2500
+
+/**
+ * How often a save also appends to the history.
+ *
+ * Every save would give a row per keystroke; only on demand would give a
+ * history with holes in it. A minute is roughly one entry per train of
+ * thought, which is what the panel is for.
+ */
+const VERSION_MS = 60_000
+
+export interface VersionRow {
+  id: string
+  created_at: string
+  label: string | null
+  summary: string | null
+  changes: Change[]
+  is_autosave: boolean
+}
 
 export interface ProjectSummary {
   id: string
@@ -40,13 +60,22 @@ interface CloudState {
   status: SyncStatus
   message: string | null
 
+  /** History for the bound project, newest first. */
+  versions: VersionRow[]
+  loadingVersions: boolean
+
   init(): void
   sendLink(email: string): Promise<boolean>
   signOut(): Promise<void>
   refresh(): Promise<void>
   open(id: string): Promise<void>
   saveAs(name: string): Promise<void>
-  saveNow(opts?: { force?: boolean }): Promise<void>
+  /** Start a fresh project from the defaults, and bind to it. */
+  newProject(name: string): Promise<void>
+  loadVersions(): Promise<void>
+  /** Put an earlier version back on screen, and save it as the newest one. */
+  restoreVersion(id: string): Promise<void>
+  saveNow(opts?: { force?: boolean; label?: string }): Promise<void>
   rename(id: string, name: string): Promise<void>
   remove(id: string): Promise<void>
   unbind(): void
@@ -73,6 +102,15 @@ const writeBound = (id: string | null, revision: number) => {
 
 /** The last document sent, so an autosave can tell changed from re-rendered. */
 let lastSent: string | null = null
+/**
+ * And the document itself, so a save can say what it changed.
+ *
+ * Kept rather than re-read from the row: describing a change needs both sides,
+ * and the side being replaced is the one already in this tab's hands.
+ */
+let lastDocument: Project | null = null
+/** When this tab last appended to the history. */
+let lastVersionAt = 0
 
 /**
  * Treat the document as already saved.
@@ -82,7 +120,8 @@ let lastSent: string | null = null
  * back and burn a revision for nothing.
  */
 export function markSynced() {
-  lastSent = fingerprint(stripRuntimeUrls(useStore.getState().exportProject()))
+  lastDocument = stripRuntimeUrls(useStore.getState().exportProject())
+  lastSent = fingerprint(lastDocument)
 }
 let timer: ReturnType<typeof setTimeout> | undefined
 
@@ -97,6 +136,8 @@ export const useCloud = create<CloudState>((set, get) => ({
   revision: 1,
   status: supabase ? 'idle' : 'offline',
   message: null,
+  versions: [],
+  loadingVersions: false,
 
   init: () => {
     if (!supabase) return
@@ -189,6 +230,63 @@ export const useCloud = create<CloudState>((set, get) => ({
     })
     // Ids in the document are not pictures yet.
     void import('./assetSync').then((m) => m.resolveAssets())
+    void get().loadVersions()
+  },
+
+  newProject: async (name) => {
+    if (!supabase || !get().userId) return
+    // A fresh project is the defaults, not a copy of what is on screen —
+    // "save this as" is a different action and already exists.
+    useStore.getState().importProject({
+      composition: structuredClone(DEFAULT_COMPOSITION),
+      presets: [],
+    } as never)
+    get().unbind()
+    await get().saveAs(name.trim() || 'Untitled')
+  },
+
+  loadVersions: async () => {
+    const { boundId } = get()
+    if (!supabase || !boundId) { set({ versions: [] }); return }
+    set({ loadingVersions: true })
+    const { data, error } = await supabase
+      .from('project_versions')
+      .select('id,created_at,label,summary,changes,is_autosave')
+      .eq('project_id', boundId)
+      .order('created_at', { ascending: false })
+      .limit(60)
+    set({
+      loadingVersions: false,
+      versions: (data ?? []) as unknown as VersionRow[],
+      message: error ? error.message : get().message,
+    })
+  },
+
+  restoreVersion: async (id) => {
+    const { boundId } = get()
+    if (!supabase || !boundId) return
+    const { data, error } = await supabase
+      .from('project_versions')
+      .select('document,created_at')
+      .eq('id', id)
+      .maybeSingle()
+    if (error || !data) {
+      set({ status: 'error', message: error?.message ?? 'That version could not be read.' })
+      return
+    }
+
+    // Through the validated door, exactly as opening a project does: an old
+    // row was written by an older build and is no safer than a file.
+    useStore.getState().importProject(data.document as unknown as Project)
+    void import('./assetSync').then((m) => m.resolveAssets())
+
+    // Restoring saves forward rather than deleting what came after. Nothing in
+    // the history is ever destroyed, which is the only reason it is safe to
+    // press — including the restore itself, which can be undone by restoring
+    // the version it replaced.
+    lastVersionAt = 0
+    await get().saveNow({ force: true, label: `Restored the version from ${when(data.created_at)}` })
+    await get().loadVersions()
   },
 
   saveAs: async (name) => {
@@ -210,13 +308,29 @@ export const useCloud = create<CloudState>((set, get) => ({
       set({ status: 'error', message: error?.message ?? 'Could not create that project.' })
       return
     }
+    lastDocument = document
     lastSent = fingerprint(document)
+    lastVersionAt = Date.now()
     writeBound(data.id, data.revision)
-    set({ boundId: data.id, boundName: data.name, revision: data.revision, status: 'saved' })
+    set({ boundId: data.id, boundName: data.name, revision: data.revision, status: 'saved', versions: [] })
+
+    // A starting point, so the oldest entry is the project as it was created
+    // rather than the first edit after it.
+    await supabase.from('project_versions').insert({
+      project_id: data.id,
+      document: document as unknown as Json,
+      schema_version: projectColumns(document).schema_version,
+      label: 'Created',
+      summary: 'Project created',
+      changes: [],
+      is_autosave: false,
+      created_by: get().userId!,
+    })
     void get().refresh()
+    void get().loadVersions()
   },
 
-  saveNow: async ({ force } = {}) => {
+  saveNow: async ({ force, label } = {}) => {
     const { boundId, revision, userId } = get()
     if (!supabase || !userId || !boundId) return
 
@@ -246,24 +360,51 @@ export const useCloud = create<CloudState>((set, get) => ({
       return
     }
 
+    const previous = lastDocument
+    lastDocument = document
     lastSent = print
     writeBound(boundId, data[0].revision)
     set({ revision: data[0].revision, status: 'saved', message: null })
+
+    // The history is the same edits seen from further away, so it is written
+    // from the same save rather than from a second code path that could
+    // disagree with it.
+    const due = label != null || Date.now() - lastVersionAt > VERSION_MS
+    if (due && previous) {
+      lastVersionAt = Date.now()
+      const described = describeChanges(previous, document)
+      await supabase.from('project_versions').insert({
+        project_id: boundId,
+        document: document as unknown as Json,
+        schema_version: projectColumns(document).schema_version,
+        label: label ?? null,
+        summary: described.headline,
+        changes: described.changes as unknown as Json,
+        is_autosave: label == null,
+        created_by: userId,
+      })
+      void get().loadVersions()
+    }
   },
 
   snapshot: async (label) => {
     const { boundId, userId } = get()
     if (!supabase || !userId || !boundId) return
     const document = stripRuntimeUrls(useStore.getState().exportProject())
+    const described = lastDocument ? describeChanges(lastDocument, document) : null
     await supabase.from('project_versions').insert({
       project_id: boundId,
       document: document as unknown as Json,
       schema_version: projectColumns(document).schema_version,
       label: label.trim() || null,
+      summary: described?.headline ?? 'Saved by hand',
+      changes: (described?.changes ?? []) as unknown as Json,
       is_autosave: false,
       created_by: userId,
     })
+    lastVersionAt = Date.now()
     set({ message: `Saved a version${label.trim() ? ` — ${label.trim()}` : ''}.` })
+    void get().loadVersions()
   },
 
   rename: async (id, name) => {
@@ -289,6 +430,9 @@ export const useCloud = create<CloudState>((set, get) => ({
 
   unbind: () => {
     lastSent = null
+    lastDocument = null
+    lastVersionAt = 0
+    set({ versions: [] })
     writeBound(null, 1)
     set({ boundId: null, boundName: null, revision: 1, status: supabase ? 'idle' : 'offline' })
   },
@@ -312,4 +456,14 @@ export function initCloud() {
     clearTimeout(timer)
     timer = setTimeout(() => { void useCloud.getState().saveNow() }, AUTOSAVE_MS)
   })
+}
+
+/** A timestamp as a person would say it. */
+export function when(iso: string): string {
+  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins} minute${mins === 1 ? '' : 's'} ago`
+  const hours = Math.round(mins / 60)
+  if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`
+  return new Date(iso).toLocaleString()
 }

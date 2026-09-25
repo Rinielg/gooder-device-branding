@@ -9,7 +9,10 @@ import { cloudEnabled } from '../state/supabase'
  * worth building a password field for, and a field that takes a password is a
  * field that can leak one.
  */
-export function CloudSheet({ onClose }: { onClose: () => void }) {
+export function CloudSheet({ onClose, onHistory }: {
+  onClose: () => void
+  onHistory: () => void
+}) {
   const ready = useCloud((s) => s.ready)
   const email = useCloud((s) => s.email)
   const projects = useCloud((s) => s.projects)
@@ -113,6 +116,9 @@ export function CloudSheet({ onClose }: { onClose: () => void }) {
                         >
                           Keep a version
                         </button>
+                        <button type="button" className="btn small" onClick={onHistory}>
+                          History
+                        </button>
                         <button type="button" className="btn small ghost" onClick={() => useCloud.getState().unbind()}>
                           Work on it locally
                         </button>
@@ -133,7 +139,16 @@ export function CloudSheet({ onClose }: { onClose: () => void }) {
                 )}
               </section>
 
-              <h4>All projects</h4>
+              <div className="cloud-row" style={{ padding: '0 10px 6px' }}>
+                <h4 style={{ flex: 1, margin: 0 }}>All projects</h4>
+                <button
+                  type="button" className="btn small"
+                  onClick={() => {
+                    const n = prompt('Name the new project', 'Untitled')
+                    if (n !== null) void useCloud.getState().newProject(n)
+                  }}
+                >New project</button>
+              </div>
               {listing && projects.length === 0 && <p className="note" style={{ padding: '0 10px' }}>Loading…</p>}
               {!listing && projects.length === 0 && (
                 <p className="note" style={{ padding: '0 10px' }}>Nothing saved yet.</p>

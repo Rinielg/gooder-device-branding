@@ -385,6 +385,7 @@ export type Database = {
       }
       project_versions: {
         Row: {
+          changes: Json
           created_at: string
           created_by: string | null
           document: Json
@@ -393,8 +394,10 @@ export type Database = {
           label: string | null
           project_id: string
           schema_version: number
+          summary: string | null
         }
         Insert: {
+          changes?: Json
           created_at?: string
           created_by?: string | null
           document: Json
@@ -403,8 +406,10 @@ export type Database = {
           label?: string | null
           project_id: string
           schema_version?: number
+          summary?: string | null
         }
         Update: {
+          changes?: Json
           created_at?: string
           created_by?: string | null
           document?: Json
@@ -413,6 +418,7 @@ export type Database = {
           label?: string | null
           project_id?: string
           schema_version?: number
+          summary?: string | null
         }
         Relationships: [
           {
