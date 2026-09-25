@@ -292,36 +292,58 @@ input[type="color"] {
 .link { background: none; border: 0; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; padding: 0; }
 .link.danger { color: var(--danger); }
 
-/* --- presets --- */
-.preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-.preset-grid.wide { grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
-.preset {
+/* --- angles popover, in the viewport --- */
+.angles { position: absolute; right: 14px; top: 98px; }
+.angles > .btn { background: var(--panel); box-shadow: var(--pop-shadow); }
+.angles-pop {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20;
+  /* Wide enough that "Bottom" fits its cell, short enough to stay inside a
+     squat viewport — it scrolls rather than running into the timeline. */
+  width: 256px; max-height: min(58vh, 380px); overflow-y: auto;
+  display: grid; gap: 8px; padding: 8px;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; box-shadow: var(--pop-shadow);
+}
+.angles-pop .rule { margin: 0; }
+.angles-pop .note { margin: 0; }
+.angles-pop .link { justify-self: start; }
+
+/* --- angle presets --- */
+.angle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.angle-grid.wide { grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
+.angle-grid.mini { grid-template-columns: repeat(2, 1fr); }
+.angle {
   border: 1px solid var(--line); border-radius: 8px; overflow: hidden;
   background: var(--panel);
 }
-.preset.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.preset-hit {
+.angle.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.angle-hit {
   display: block; width: 100%; padding: 0; border: 0; background: none;
   color: var(--text); font: inherit; cursor: pointer; text-align: left;
 }
-.preset.compact .preset-hit { padding: 7px 4px; text-align: center; font-size: 11px; }
-.preset-hit:hover { background: var(--hover-bg); }
-.preset-hit img, .preset-empty {
+.angle.compact .angle-hit {
+  padding: 7px 2px; text-align: center; font-size: 11px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.angle.mini .angle-name { padding: 4px 6px; font-size: 11px; font-weight: 400; }
+.angle.mini img, .angle.mini .angle-empty { aspect-ratio: 16 / 9; }
+.angle-hit:hover { background: var(--hover-bg); }
+.angle-hit img, .angle-empty {
   display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover;
   background: var(--panel-2); border-bottom: 1px solid var(--line-soft);
 }
-.preset-name { display: block; padding: 6px 8px 2px; font-size: 12px; font-weight: 500; }
-.preset.compact .preset-name { padding: 0; font-weight: 400; }
-.preset-chips { display: flex; align-items: center; gap: 3px; padding: 0 8px; }
-.preset-chips i { width: 6px; height: 6px; border-radius: 50%; }
-.preset-chips em {
+.angle-name { display: block; padding: 6px 8px 2px; font-size: 12px; font-weight: 500; }
+.angle.compact .angle-name { padding: 0; font-weight: 400; }
+.angle-chips { display: flex; align-items: center; gap: 3px; padding: 0 8px; }
+.angle-chips i { width: 6px; height: 6px; border-radius: 50%; }
+.angle-chips em {
   margin-left: 4px; font-style: normal; font-size: 10px; color: var(--muted);
   text-transform: capitalize;
 }
-.preset-desc { padding: 4px 8px 0; cursor: text; }
-.preset-actions { display: flex; gap: 10px; padding: 6px 8px 8px; }
-.preset-save { display: grid; gap: 8px; }
-.preset-save textarea { resize: vertical; font: inherit; font-size: 11px; line-height: 1.5; }
+.angle-desc { padding: 4px 8px 0; cursor: text; }
+.angle-actions { display: flex; gap: 10px; padding: 6px 8px 8px; }
+.angle-save { display: grid; gap: 8px; }
+.angle-save textarea { resize: vertical; font: inherit; font-size: 11px; line-height: 1.5; }
 
 /* --- scrub field --- */
 .scrub {

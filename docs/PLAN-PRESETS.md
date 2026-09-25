@@ -167,13 +167,16 @@ it be discovered later.
 
 ## UI
 
-### Viewport
-A small button beside the gizmo opens a **popover** with the labelled grid: the
+### Viewport — **built**
+A labelled `Angles ▾` button beside the gizmo opens a **popover** with the labelled grid: the
 six built-ins, then custom presets. The gizmo already snaps to the six
 orientations by clicking its handles — this is the labelled, discoverable
 version of the same thing, and they stay in sync because both write the same
 values. Keeping it in a popover means the frame stays clear and tall crops are
-not overlapped.
+not overlapped. It stays open after applying, so Front / Back / Left can be
+compared in three clicks rather than nine, and closes on Escape or a click
+outside. The trigger is labelled rather than an icon, because the whole reason
+it exists alongside the gizmo is that the gizmo's handles are unlabelled.
 
 ### Inspector
 The **Views** tab becomes **Presets**: a grid of cards (thumbnail, name, scope

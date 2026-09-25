@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Viewport } from './ui/Viewport'
 import { Dials } from './ui/Dials'
 import { Gizmo } from './ui/Gizmo'
+import { PresetPopover } from './ui/PresetPopover'
 import { resetTransform } from './ui/resetTransform'
 import {
   BackgroundPanel, DevicePanel, FramePanel, ProjectPanel, ScreenPanel,
@@ -88,6 +89,7 @@ export default function App() {
       <main className="main">
         <Viewport>
           <Gizmo />
+          <PresetPopover />
         </Viewport>
 
         {/* The inspector sits beside the viewport and stops above the timeline,

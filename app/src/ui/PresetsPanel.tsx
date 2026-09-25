@@ -32,8 +32,8 @@ export function PresetsPanel() {
   return (
     <>
       <Section title="Angles">
-        <div className="preset-grid">
-          {BUILT_INS.map((p) => <PresetCard key={p.id} preset={p} compact />)}
+        <div className="angle-grid">
+          {BUILT_INS.map((p) => <PresetCard key={p.id} preset={p} density="compact" />)}
         </div>
         <p className="note">
           Each one centres and unscales the device as well as turning it.
@@ -43,7 +43,7 @@ export function PresetsPanel() {
 
       <Section title="Saved" aside={<span className="count">{presets.length}</span>}>
         {open ? (
-          <div className="preset-save">
+          <div className="angle-save">
             <input
               className="textfield" placeholder="Name" value={name} autoFocus
               onChange={(e) => setName(e.target.value)}
@@ -80,7 +80,7 @@ export function PresetsPanel() {
           </p>
         )}
 
-        <div className="preset-grid wide">
+        <div className="angle-grid wide">
           {presets.map((p) => <PresetCard key={p.id} preset={p} />)}
         </div>
       </Section>
@@ -90,7 +90,12 @@ export function PresetsPanel() {
 
 /* ------------------------------------------------------------------ */
 
-function PresetCard({ preset, compact }: { preset: Preset; compact?: boolean }) {
+export type PresetDensity = 'card' | 'mini' | 'compact'
+
+export function PresetCard(
+  { preset, density = 'card' }: { preset: Preset; density?: PresetDensity },
+) {
+  const compact = density !== 'card'
   const applyPreset = useStore((s) => s.applyPreset)
   const applyPresetAsKeys = useStore((s) => s.applyPresetAsKeys)
   const deletePreset = useStore((s) => s.deletePreset)
@@ -115,10 +120,10 @@ function PresetCard({ preset, compact }: { preset: Preset; compact?: boolean }) 
   const builtIn = preset.id.startsWith('builtin:')
 
   return (
-    <div className={`preset${active ? ' on' : ''}${compact ? ' compact' : ''}`}>
+    <div className={`angle ${density}${active ? ' on' : ''}`}>
       <button
         type="button"
-        className="preset-hit"
+        className="angle-hit"
         title={`${preset.description}\n\nClick to apply${builtIn ? ' · alt-click for rotation only' : ''} · shift-click to key it at ${playhead.toFixed(2)}s`}
         onClick={(e) => {
           if (e.shiftKey) applyPresetAsKeys(preset.id)
@@ -126,15 +131,15 @@ function PresetCard({ preset, compact }: { preset: Preset; compact?: boolean }) 
           else applyPreset(preset.id, e.altKey ? ['rotation'] : undefined)
         }}
       >
-        {!compact && (preset.thumb
+        {density !== 'compact' && (preset.thumb
           ? <img src={preset.thumb} alt="" />
-          : <span className="preset-empty" />)}
-        <span className="preset-name">{preset.name}</span>
+          : <span className="angle-empty" />)}
+        <span className="angle-name">{preset.name}</span>
       </button>
 
       {!compact && (
         <>
-          <span className="preset-chips">
+          <span className="angle-chips">
             {preset.tracks.map((id) => {
               const def = trackDef(id)
               return def ? <i key={id} title={def.label} style={{ background: def.channels[0].colour }} /> : null
@@ -148,11 +153,11 @@ function PresetCard({ preset, compact }: { preset: Preset; compact?: boolean }) 
               onBlur={(e) => { updatePreset(preset.id, { description: e.target.value }); setEditing(false) }}
             />
           ) : (
-            <p className="note preset-desc" onDoubleClick={() => setEditing(true)}>
+            <p className="note angle-desc" onDoubleClick={() => setEditing(true)}>
               {preset.description || 'No description — double-click to add one.'}
             </p>
           )}
-          <div className="preset-actions">
+          <div className="angle-actions">
             <button type="button" className="link" onClick={() => setEditing(true)}>Describe</button>
             <button
               type="button" className="link"
