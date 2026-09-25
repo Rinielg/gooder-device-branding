@@ -93,9 +93,13 @@ inspector sections, and four documented Spline bugs.
 - **Media still does not survive a reload.** Uploaded images and video are
   `blob:` URLs. The `assets` table exists for it; the document has to start
   carrying asset ids instead of URLs, which needs a `migrateAssets`.
-- **Nothing is deployed against a database yet.** Without
-  `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` the editor behaves exactly
-  as before, and the client is not even bundled.
+- ~~**Nothing is deployed against a database yet.**~~ The deployed site is
+  connected to the hosted project `bfacpnsiwbynesjsteov` (eu-central-1), with
+  the publishable key. A build given neither variable still behaves exactly as
+  it did before any of this existed, and does not bundle the client.
+- **Sign-in email is on Supabase's built-in SMTP**, which is rate limited to a
+  couple of messages an hour and meant for testing. Attach real SMTP before
+  anyone else uses it.
 - ~~Deleting a track leaves the property where the last edit put it.~~ Fixed:
   deleting hands it back at its last sampled value.
 - ~~The value graph draws easing accurately but does not let you drag bezier

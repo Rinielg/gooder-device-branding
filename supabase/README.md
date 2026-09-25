@@ -7,6 +7,23 @@ account, open one from the list, and autosave with conflict detection. Media is
 not — uploads are still `blob:` URLs, and the `assets` table is waiting for the
 document to carry asset ids instead.
 
+## The hosted project
+
+`Gooder Studio` — ref `bfacpnsiwbynesjsteov`, eu-central-1, free tier. All ten
+migrations are applied and the local and remote versions match, so `db push`
+stays idempotent. The deployed site is wired to it.
+
+**Its auth settings are managed in the dashboard, not by this file.** See the
+banner at the top of `config.toml`: a non-interactive `supabase config push`
+would overwrite the hosted Site URL with a localhost one and turn off email
+confirmation, the mail rate limit and MFA, because those are the local
+defaults `supabase init` wrote.
+
+One thing to know about the free tier: Supabase's built-in SMTP is rate limited
+to a couple of messages an hour and is intended for testing. A sign-in link
+that does not arrive is usually that, not a broken redirect. Attach your own
+SMTP before anyone else uses this.
+
 ## Pointing the editor at it
 
 Two variables, in `app/.env.local` for development and in the Vercel project's
