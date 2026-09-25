@@ -166,6 +166,9 @@ site_url = "http://localhost:5199"
 additional_redirect_urls = [
   "http://localhost:5199",
   "http://127.0.0.1:5199",
+  "https://gooder-studio.vercel.app",
+  # The project was renamed; the old alias 307s to the new one, but a
+  # redirect is a bad place for a token to be in flight.
   "https://gooder-device-branding.vercel.app",
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).

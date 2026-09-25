@@ -1,6 +1,6 @@
 # Gooder Device Branding
 
-**Live:** https://gooder-device-branding.vercel.app
+**Live:** https://gooder-studio.vercel.app
 
 A hostable web page that renders the iPhone 18 Pro / Pro Max in 3D inside a
 configurable frame, animates it on a keyframe timeline, and exports the result

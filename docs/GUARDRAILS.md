@@ -228,6 +228,20 @@ persisted, not undoable, never written back. Editing a control still writes to
 the project, and auto-key turns that into a key at the playhead — which is why
 a slider showing an interpolated value can be nudged and lands a key there.
 
+**Renaming the Vercel project moves the origin, and localStorage does not
+follow.** A project saved in the browser at the old `*.vercel.app` host is not
+visible at the new one — different origin, different storage — and once the old
+alias starts redirecting there is no way back to it to export anything. The
+project id and the deployment history are untouched; the browser state is not.
+Rename before anyone has work worth keeping in a browser, or tell them to save
+a project file first.
+
+**The localStorage keys are not the project name.** `STORAGE_KEY`, the theme
+key and the cloud binding key all read `gooder-device-branding.*` and must stay
+that way whatever the product is called. They are the address of someone's
+saved work; renaming one is deleting it. `STORAGE_KEY` has deliberately never
+been bumped, for the same reason.
+
 **A resolved URL must never be written into a saved document.** Signed links
 expire and object URLs die with the page. One signed URL persisted into a
 project was still there hours later, dead; the screen texture failed, the boot

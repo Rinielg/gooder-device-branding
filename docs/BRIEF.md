@@ -8,7 +8,7 @@ Owner: Riniel Gresse (The Good Machine). Built for Pure Health / Pura device
 mockups, then generalised and open-sourced.
 
 - Repository: https://github.com/Rinielg/gooder-device-branding (public)
-- Live: https://gooder-device-branding.vercel.app
+- Live: https://gooder-studio.vercel.app
 - Source assets live at the repo root; the app is in `app/`
 
 ## The original ask
