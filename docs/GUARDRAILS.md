@@ -211,6 +211,24 @@ persisted, not undoable, never written back. Editing a control still writes to
 the project, and auto-key turns that into a key at the playhead — which is why
 a slider showing an interpolated value can be nudged and lands a key there.
 
+**A resolved URL must never be written into a saved document.** Signed links
+expire and object URLs die with the page. One signed URL persisted into a
+project was still there hours later, dead; the screen texture failed, the boot
+sequence aborted at `setScreen`, and the app sat on "Loading model…" for ever
+— with the error auto-cleared from the toast before anybody looked at it. The
+id is durable, the URL is not: `stripRuntimeUrls` blanks the URL of any slot
+that has an id, and every media load in the boot path now fails soft.
+
+**An upload is an edit.** Marking the document synced after recording an asset
+id suppressed the very save that would have recorded it, so the file reached
+the bucket and nothing in the project pointed at it. Only *resolving* an id
+into a URL is a non-edit.
+
+**`img.decode()` can stay pending while the document is hidden.** It waits for
+the image to be ready to paint, which a background tab is in no hurry to be, so
+the await never returns and whatever was loading never finishes. `onload` fires
+on bytes and parsing regardless.
+
 **An origin missing from `additional_redirect_urls` is silently rewritten.**
 A sign-in link then arrives pointing at `site_url` — a port nothing is serving
 — and reads as a broken link rather than as a config gap. Both the dev server's

@@ -79,15 +79,24 @@ export interface BackgroundState {
   kind: BackgroundKind
   color: string
   gradient: GradientState
-  /** Object URL for an uploaded still. */
+  /**
+   * Where an uploaded file currently is, and what it durably is.
+   *
+   * The URL is a runtime value — an object URL, a signed URL, or a path to a
+   * file this app ships. The id is the durable one. A signed URL written into
+   * a saved project rots: it expires, buckets get renamed, and a project that
+   * was fine last month opens with a missing texture and no explanation.
+   */
   imageUrl: string | null
   imageName: string | null
-  /** Object URL for an uploaded video. */
+  imageAssetId: string | null
   videoUrl: string | null
   videoName: string | null
+  videoAssetId: string | null
   /** Lottie animation used by the `mesh` kind. */
   meshUrl: string
   meshName: string
+  meshAssetId: string | null
   fit: 'cover' | 'contain'
   /** Uniform scale applied on top of the fit, 1 = none. */
   zoom: number
@@ -108,9 +117,12 @@ export const DEFAULT_BACKGROUND: BackgroundState = {
   },
   imageUrl: null,
   imageName: null,
+  imageAssetId: null,
   videoUrl: null,
   videoName: null,
+  videoAssetId: null,
   meshUrl: DEFAULT_MESH_URL,
+  meshAssetId: null,
   meshName: DEFAULT_MESH_NAME,
   fit: 'cover',
   zoom: 1,
@@ -127,6 +139,8 @@ export interface ScreenState {
   kind: 'image' | 'video'
   url: string
   name: string
+  /** The durable reference for an upload; null for a file this app ships. */
+  assetId: string | null
   /** When true the display shows the stock wallpaper of the selected colourway. */
   followVariant: boolean
   /** Emissive multiplier — how bright the display reads. */
@@ -141,6 +155,7 @@ export const DEFAULT_SCREEN: ScreenState = {
   kind: 'image',
   url: '/screen/stock-wallpaper.jpg',
   name: 'Stock wallpaper',
+  assetId: null,
   followVariant: true,
   brightness: 1.0,
   zoom: 1,
@@ -201,6 +216,7 @@ export interface EnvironmentState {
   rotationY: number
   hdriUrl: string | null
   hdriName: string | null
+  hdriAssetId: string | null
   showAsBackground: boolean
   backgroundBlur: number
   ambientColor: string
@@ -266,6 +282,7 @@ export const DEFAULT_LIGHTING: LightingState = {
     rotationY: 0,
     hdriUrl: null,
     hdriName: null,
+    hdriAssetId: null,
     showAsBackground: false,
     backgroundBlur: 0.25,
     ambientColor: '#ffffff',

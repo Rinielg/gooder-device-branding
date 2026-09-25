@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { supabase } from './supabase'
 import { useStore, type Project } from './store'
 import { fingerprint, projectColumns } from './projectRow'
+import { stripRuntimeUrls } from './assets'
 import type { Json } from './database.types'
 
 /** Where the binding is remembered, so a reload reopens what you were editing. */
@@ -72,6 +73,17 @@ const writeBound = (id: string | null, revision: number) => {
 
 /** The last document sent, so an autosave can tell changed from re-rendered. */
 let lastSent: string | null = null
+
+/**
+ * Treat the document as already saved.
+ *
+ * Resolving an asset id into a signed URL changes the document without anybody
+ * editing anything. Without this each open would save the fresh URLs straight
+ * back and burn a revision for nothing.
+ */
+export function markSynced() {
+  lastSent = fingerprint(stripRuntimeUrls(useStore.getState().exportProject()))
+}
 let timer: ReturnType<typeof setTimeout> | undefined
 
 export const useCloud = create<CloudState>((set, get) => ({
@@ -169,18 +181,20 @@ export const useCloud = create<CloudState>((set, get) => ({
     // A row is not safer than a file: it was written by some version of this
     // app, and possibly not this one. `importProject` is the validated door.
     useStore.getState().importProject(data.document as unknown as Project)
-    lastSent = fingerprint(useStore.getState().exportProject())
+    markSynced()
     writeBound(data.id, data.revision)
     set({
       boundId: data.id, boundName: data.name, revision: data.revision,
       status: 'saved', message: null,
     })
+    // Ids in the document are not pictures yet.
+    void import('./assetSync').then((m) => m.resolveAssets())
   },
 
   saveAs: async (name) => {
     if (!supabase || !get().userId) return
     set({ status: 'saving', message: null })
-    const document = useStore.getState().exportProject()
+    const document = stripRuntimeUrls(useStore.getState().exportProject())
     const { data, error } = await supabase
       .from('projects')
       .insert({
@@ -206,7 +220,7 @@ export const useCloud = create<CloudState>((set, get) => ({
     const { boundId, revision, userId } = get()
     if (!supabase || !userId || !boundId) return
 
-    const document = useStore.getState().exportProject()
+    const document = stripRuntimeUrls(useStore.getState().exportProject())
     const print = fingerprint(document)
     if (!force && print === lastSent) { set({ status: 'saved' }); return }
 
@@ -240,7 +254,7 @@ export const useCloud = create<CloudState>((set, get) => ({
   snapshot: async (label) => {
     const { boundId, userId } = get()
     if (!supabase || !userId || !boundId) return
-    const document = useStore.getState().exportProject()
+    const document = stripRuntimeUrls(useStore.getState().exportProject())
     await supabase.from('project_versions').insert({
       project_id: boundId,
       document: document as unknown as Json,

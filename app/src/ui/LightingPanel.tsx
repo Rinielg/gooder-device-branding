@@ -6,6 +6,7 @@ import {
   type ShadowQuality, type ToneMappingName, type TrackId,
 } from '../engine/types'
 import { ColorField, FileButton, Row, Section, Segmented, Slider } from './kit'
+import { attach } from '../state/assetSync'
 import { useAnimated, useChannel } from './sampled'
 
 const ENV_MODES: { value: EnvMode; label: string }[] = [
@@ -40,10 +41,7 @@ export function EnvironmentPanel() {
             <span className="filerow">
               <FileButton
                 accept=".hdr,.exr,image/vnd.radiance" label={env.hdriName ? 'Replace' : 'Upload HDRI'} compact
-                onFile={(f) => {
-                  if (env.hdriUrl?.startsWith('blob:')) URL.revokeObjectURL(env.hdriUrl)
-                  set({ hdriUrl: URL.createObjectURL(f), hdriName: f.name })
-                }}
+                onFile={(f) => void attach('environment.hdri', f)}
               />
               <em className="filename">{env.hdriName ?? 'none'}</em>
             </span>

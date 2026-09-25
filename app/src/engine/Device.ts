@@ -57,12 +57,9 @@ function loadModelTexture(url: string, srgb: boolean): Promise<THREE.Texture> {
 async function loadScreenTexture(url: string, screenAspect: number): Promise<THREE.Texture> {
   let img: HTMLImageElement
   try {
-    img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.src = url
-    await img.decode()
+    img = await loadImage(url)
   } catch {
-    // Undecodable here does not mean unloadable there; let the loader try.
+    // Unreadable here does not mean unloadable there; let the loader try.
     return loadModelTexture(url, true)
   }
 
@@ -91,6 +88,25 @@ async function loadScreenTexture(url: string, screenAspect: number): Promise<THR
     // unpadded texture is still better than no screen at all.
     return loadModelTexture(url, true)
   }
+}
+
+/**
+ * An image, by its load event rather than by `decode()`.
+ *
+ * `decode()` waits until the image is ready to *paint*, which a background tab
+ * is in no hurry to be — it can stay pending for as long as the document is
+ * hidden, and the await never returns. `onload` fires on bytes and parsing,
+ * which happens regardless. A screen that stays blank because the tab was in
+ * the background is not a screen anybody would report accurately.
+ */
+function loadImage(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error(`could not load ${url}`))
+    img.src = url
+  })
 }
 
 /** The mean of one row of pixels, as a CSS colour. */

@@ -7,6 +7,7 @@ import {
 import { ColorField, FileButton, Row, Section, Segmented, Slider, NumberInput } from './kit'
 import { useAnimated, useChannel } from './sampled'
 import { loadProjectFile, saveProjectFile } from './projectFile'
+import { attach } from '../state/assetSync'
 
 /* ------------------------------------------------------------------ */
 /* Frame                                                               */
@@ -147,8 +148,7 @@ export function BackgroundPanel() {
                     useStore.getState().setError(`${f.name} is not a readable Lottie JSON file`)
                     return
                   }
-                  if (bg.meshUrl.startsWith('blob:')) URL.revokeObjectURL(bg.meshUrl)
-                  setBackground({ meshUrl: URL.createObjectURL(f), meshName: f.name })
+                  await attach('background.mesh', f)
                 }}
               />
               {bg.meshUrl !== DEFAULT_MESH_URL && (
@@ -214,10 +214,7 @@ export function BackgroundPanel() {
           <Row label="File">
             <span className="filerow">
               <FileButton accept="image/*" label={bg.imageName ? 'Replace' : 'Upload image'} compact
-                onFile={(f) => {
-                  if (bg.imageUrl?.startsWith('blob:')) URL.revokeObjectURL(bg.imageUrl)
-                  setBackground({ imageUrl: URL.createObjectURL(f), imageName: f.name })
-                }} />
+                onFile={(f) => void attach('background.image', f)} />
               <em className="filename">{bg.imageName ?? 'none'}</em>
             </span>
           </Row>
@@ -230,10 +227,7 @@ export function BackgroundPanel() {
           <Row label="File">
             <span className="filerow">
               <FileButton accept="video/*" label={bg.videoName ? 'Replace' : 'Upload video'} compact
-                onFile={(f) => {
-                  if (bg.videoUrl?.startsWith('blob:')) URL.revokeObjectURL(bg.videoUrl)
-                  setBackground({ videoUrl: URL.createObjectURL(f), videoName: f.name }, f)
-                }} />
+                onFile={(f) => void attach('background.video', f)} />
               <em className="filename">{bg.videoName ?? 'none'}</em>
             </span>
           </Row>
@@ -307,15 +301,9 @@ export function ScreenPanel() {
       <Row label="Content" stack>
         <span className="filerow">
           <FileButton accept="image/*" label="Image" compact
-            onFile={(f) => {
-              if (screen.url.startsWith('blob:')) URL.revokeObjectURL(screen.url)
-              setScreen({ kind: 'image', url: URL.createObjectURL(f), name: f.name, followVariant: false }, null)
-            }} />
+            onFile={(f) => void attach('screen', f, { kind: 'image' })} />
           <FileButton accept="video/*" label="Video" compact
-            onFile={(f) => {
-              if (screen.url.startsWith('blob:')) URL.revokeObjectURL(screen.url)
-              setScreen({ kind: 'video', url: URL.createObjectURL(f), name: f.name, followVariant: false }, f)
-            }} />
+            onFile={(f) => void attach('screen', f, { kind: 'video' })} />
           {!screen.followVariant && (
             <button
               type="button" className="btn small ghost"

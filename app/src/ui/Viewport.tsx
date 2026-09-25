@@ -6,6 +6,22 @@ import { mergeTransform } from '../engine/tracks'
 import { useStore, compositionDuration } from '../state/store'
 import type { VariantManifest } from '../engine/types'
 
+/**
+ * Run a load step that is allowed to fail.
+ *
+ * Media can be missing — a link that expired, a file that moved — and the
+ * editor still has to start. Before this, a stale screen URL aborted the boot
+ * sequence and the app sat on "Loading model…" for ever, with no error left on
+ * screen by the time anybody looked.
+ */
+async function softly(what: string, run: () => Promise<unknown>) {
+  try {
+    await run()
+  } catch (e) {
+    useStore.getState().setError(`Could not load ${what} — ${(e as Error).message}`)
+  }
+}
+
 export function Viewport({ children }: { children?: ReactNode }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const holderRef = useRef<HTMLDivElement>(null)
@@ -68,8 +84,11 @@ export function Viewport({ children }: { children?: ReactNode }) {
         await stage.applyLighting(useStore.getState().lighting)
         if (disposed) return
         await stage.device.applyVariant(m, useStore.getState().variant)
-        await stage.device.setScreen(useStore.getState().screen)
-        await stage.applyBackground(useStore.getState().background)
+        // Media can fail — a link that expired, a file that moved — and the
+        // editor still has to start. Before this, a stale screen URL aborted
+        // the sequence here and the app sat on "Loading model…" for ever.
+        await softly('the screen content', () => stage.device.setScreen(useStore.getState().screen))
+        await softly('the background', () => stage.applyBackground(useStore.getState().background))
         useStore.getState().setReady(true)
         setBooted(true)
       } catch (e) {
@@ -126,7 +145,7 @@ export function Viewport({ children }: { children?: ReactNode }) {
       if (cancelled) return
       const m = useStore.getState().manifest
       if (m) await stage.device.applyVariant(m, useStore.getState().variant)
-      await stage.device.setScreen(useStore.getState().screen)
+      await softly('the screen content', () => stage.device.setScreen(useStore.getState().screen))
       useStore.getState().setStatus(null)
     })()
     return () => { cancelled = true }
