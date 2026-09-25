@@ -419,8 +419,12 @@ function dropTrack(s: Project, id: TrackId): { composition: Composition } {
  * between posing the device and having the next scrub silently throw the pose
  * away.
  *
- * Only tracks that are already animated take part. Posing an unkeyed device
- * must not start an animation by accident, so the first key stays deliberate.
+ * **Once anything is animated, a property that is edited joins in.** A track
+ * that does not exist yet is created, with a key at 0 carrying the value from
+ * *before* the edit and a key at the playhead carrying the value after it — so
+ * what you get is an animation rather than a property pinned to one value. The
+ * first key on the composition stays deliberate; after that, having to arm each
+ * property separately is ceremony.
  *
  * Which tracks are affected is derived by reading them before and after rather
  * than declared, so the registry stays the only description of a track.
@@ -430,14 +434,31 @@ function autoKey(s: Store, next: TrackSource): { composition: Composition } | nu
   const before = trackSource(s)
   const after_ = trackSource(next)
   let tracks = s.composition.tracks
+  // Nothing animated at all means the user is posing, not animating.
+  const animating = Object.keys(tracks).length > 0
   let touched = false
 
   for (const id of TRACK_ORDER) {
     const def = TRACKS[id]
+    if (!def) continue
     const track = tracks[id]
-    if (!def || !track) continue
+    if (!track && !animating) continue
+
     const value = def.read(after_)
-    if (sameValue(value, def.read(before))) continue
+    const was = def.read(before)
+    if (sameValue(value, was)) continue
+
+    if (!track) {
+      // A key at 0 holding what the property was, so the new track animates
+      // from where it stood rather than starting life pinned.
+      const keys = time > 1e-3
+        ? [makeTrackKey(0, was), makeTrackKey(time, value)]
+        : [makeTrackKey(0, value)]
+      tracks = { ...tracks, [id]: makeTrack(id, keys) }
+      touched = true
+      continue
+    }
+
     const existing = track.keys.find((k) => Math.abs(k.time - time) < 1e-3)
     const keys = existing
       ? track.keys.map((k) => (k.id === existing.id ? { ...k, value } : k))
@@ -629,7 +650,10 @@ export const useStore = create<Store>((set, get) => {
       if (!def) return {}
       const time = quantise(s.playhead)
       const value = def.read(s)
-      const track = s.composition.tracks[id] ?? makeTrack(id)
+      // Arming a property part-way along gives it a clip, not a pin: a key at 0
+      // as well, so there is something to animate between.
+      const track = s.composition.tracks[id]
+        ?? makeTrack(id, time > 1e-3 ? [makeTrackKey(0, value)] : [])
       // Re-keying at a time that already has one replaces its value rather than
       // stacking a second key nobody can select.
       const existing = track.keys.find((k) => Math.abs(k.time - time) < 1e-3)

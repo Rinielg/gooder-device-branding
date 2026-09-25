@@ -4,6 +4,7 @@ import { engine } from '../engine/handle'
 import { TRACKS, TRACK_ORDER, hasAnimation, quantise, trackDef } from '../engine/tracks'
 import type { Composition, Track, TrackId } from '../engine/types'
 import { CurveEditor } from './CurveEditor'
+import { ScrubField } from './ScrubField'
 
 const ROW_H = 28
 /** How tall the value graph stands when it replaces the lanes. */
@@ -258,11 +259,10 @@ export function TimelinePanel() {
 
         <label className="tl-length" title="Fixed composition length. Leave blank to follow the keys and the background.">
           Length
-          <input
-            className="textfield tiny" type="number" min={0} step={0.5}
-            value={composition.duration || ''}
-            placeholder={duration.toFixed(1)}
-            onChange={(e) => setCompositionLength(Number(e.target.value) || 0)}
+          <ScrubField
+            value={composition.duration || duration} min={0} step={0.1} handle="S" suffix="s" width={92}
+            title="Fixed clip length. Drag S, or type — 0 follows the keys."
+            onChange={setCompositionLength}
           />
         </label>
         <div className="tl-zoom">

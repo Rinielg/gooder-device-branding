@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useStore } from '../state/store'
 import { trackDef } from '../engine/tracks'
 import { SEED_BEZIER, clamp, easeFn } from './ease'
+import { ScrubField } from './ScrubField'
 import { EASES, type EaseName } from '../engine/types'
 
 const CURVE_W = 104
@@ -62,20 +63,20 @@ export function InspectorTiming() {
           <span className="tr-title">Timing</span>
           <label className="tr-field">
             <span>Time</span>
-            <input
-              className="textfield tiny" type="number" step={0.05} min={0} value={key.time}
-              onChange={(e) => moveKey(selection.track, key.id, Number(e.target.value))}
+            <ScrubField
+              value={key.time} step={0.05} min={0} handle="S" suffix="s" width={92}
+              onChange={(t) => moveKey(selection.track, key.id, t)}
             />
           </label>
           {segment && prev ? (
             <label className="tr-field">
               <span>Duration</span>
-              <input
-                className="textfield tiny" type="number" step={0.05} min={0.05}
+              <ScrubField
                 value={Math.round((key.time - prev.time) * 1000) / 1000}
+                step={0.05} min={0.05} handle="S" suffix="s" width={92}
                 // Duration is the gap, so changing it moves this key, not the
                 // one before it — the transition grows to the right.
-                onChange={(e) => moveKey(selection.track, key.id, prev.time + Math.max(0.05, Number(e.target.value)))}
+                onChange={(d) => moveKey(selection.track, key.id, prev.time + Math.max(0.05, d))}
               />
             </label>
           ) : !prev ? (
@@ -112,20 +113,16 @@ export function InspectorTiming() {
           <span className="tr-title">Value</span>
           <div className="tr-values">
             {def.channels.map((ch) => (
-              <label key={ch.key} className="tr-value">
-                <i style={{ background: ch.colour }} />
-                <span>{ch.label}</span>
-                <input
-                  className="textfield tiny" type="number" step={ch.step}
-                  value={round(key.value[ch.key])}
-                  onChange={(e) => {
-                    const n = Number(e.target.value)
-                    if (!Number.isFinite(n)) return
-                    updateKey(selection.track, key.id, { value: { ...key.value, [ch.key]: n } })
-                  }}
-                />
-                {ch.unit && <em>{ch.unit}</em>}
-              </label>
+              <ScrubField
+                key={ch.key}
+                value={round(key.value[ch.key])}
+                step={ch.step}
+                handle={ch.label}
+                colour={ch.colour}
+                suffix={ch.unit}
+                title={`Drag ${ch.label} to change it, or click to type`}
+                onChange={(n) => updateKey(selection.track, key.id, { value: { ...key.value, [ch.key]: n } })}
+              />
             ))}
           </div>
         </div>

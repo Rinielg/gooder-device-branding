@@ -1,3 +1,4 @@
+import { ScrubField } from './ScrubField'
 import { useRef, type ReactNode } from 'react'
 import { round } from './format'
 
@@ -48,6 +49,7 @@ export function Slider({
   )
 }
 
+/** Kept for its call sites; a ScrubField with a plain drag strip. */
 export function NumberInput({
   value, min, max, step = 1, onChange, suffix,
 }: {
@@ -55,16 +57,10 @@ export function NumberInput({
   onChange: (v: number) => void; suffix?: string
 }) {
   return (
-    <span className="numfield">
-      <input
-        type="number" value={value} min={min} max={max} step={step}
-        onChange={(e) => {
-          const n = Number(e.target.value)
-          if (Number.isFinite(n)) onChange(n)
-        }}
-      />
-      {suffix && <em>{suffix}</em>}
-    </span>
+    <ScrubField
+      value={value} min={min} max={max} step={step} onChange={onChange}
+      suffix={suffix} handle="⋮" title="Drag the left edge to change, or click to type"
+    />
   )
 }
 

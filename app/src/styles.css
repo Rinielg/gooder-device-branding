@@ -292,6 +292,30 @@ input[type="color"] {
 .link { background: none; border: 0; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; padding: 0; }
 .link.danger { color: var(--danger); }
 
+/* --- scrub field --- */
+.scrub {
+  display: inline-flex; align-items: center; min-width: 0;
+  background: var(--panel-2); border-radius: 6px; height: 24px;
+  border: 1px solid transparent;
+}
+.scrub:focus-within { border-color: var(--line); background: var(--panel); }
+.scrub-handle {
+  flex: none; width: 20px; height: 100%; padding: 0; border: 0;
+  background: none; color: var(--muted);
+  font: inherit; font-size: 10px; font-weight: 600; line-height: 1;
+  cursor: ew-resize; touch-action: none; user-select: none;
+}
+.scrub-handle:hover { color: var(--text); }
+.scrub input {
+  flex: 1; min-width: 0; width: 100%;
+  padding: 0 4px 0 0; border: 0; background: none; color: var(--text);
+  font: inherit; font-size: 11px; font-variant-numeric: tabular-nums;
+  text-align: left; outline: none;
+}
+.scrub em { flex: none; padding-right: 6px; font-style: normal; font-size: 10px; color: var(--muted); }
+/* Held on <body> so the cursor survives leaving the handle mid-drag. */
+body.scrubbing, body.scrubbing * { cursor: ew-resize !important; user-select: none; }
+
 .row-keyed {
   display: inline-block; width: 6px; height: 6px; margin-left: 6px;
   background: var(--accent); border-radius: 1px; transform: rotate(45deg);
@@ -553,11 +577,7 @@ input[type="color"] {
 .tr-title { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .tr-field { display: flex; align-items: center; gap: 8px; font-size: 12px; }
 .tr-field > span { color: var(--muted); min-width: 64px; }
-.tr-values { display: flex; gap: 10px; flex-wrap: wrap; }
-.tr-value { display: flex; align-items: center; gap: 5px; font-size: 12px; }
-.tr-value i { width: 6px; height: 6px; border-radius: 50%; flex: none; }
-.tr-value > span { color: var(--muted); }
-.tr-value em { font-style: normal; color: var(--muted); font-size: 11px; }
+.tr-values { display: grid; grid-template-columns: repeat(auto-fit, minmax(78px, 1fr)); gap: 6px; }
 
 /* ---------- dialkit host ---------- */
 .dial-host { padding: 0 6px 6px; }
