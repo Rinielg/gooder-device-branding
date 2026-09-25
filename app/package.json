@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:mutate": "node scripts/mutants.mjs"
   },
   "dependencies": {
     "dialkit": "^2.0.2",

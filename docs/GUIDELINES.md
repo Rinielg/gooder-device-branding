@@ -112,3 +112,23 @@ module scope for the same reason.
 Pure logic belongs in `engine/` where it can be tested directly; the thin
 adapter that wires it to a pointer event is browser-verified. Say which is
 which when reporting.
+
+### Characterisation tests, and proving them
+
+Tests written after the code pass the moment they are written, so "watch it
+fail" cannot be the proof they test the right thing. `npm run test:mutate` is
+the substitute: it breaks each function on purpose and checks the suite
+notices. A new characterisation test should come with a mutant that it catches.
+
+A survivor is one of two things, and the difference matters:
+
+- **A gap** — the behaviour is untested. Add the test.
+- **An equivalent mutant** — the code cannot behave differently, so nothing
+  could catch it. `sanitisePreset` cannot let an unknown track through, because
+  it walks the registry rather than the input. The honest response was to
+  rename the test to claim only what it pins, not to invent an assertion.
+
+**The undo coalescing window is module state and leaks between tests.** A test
+that resets the history stack with `setState` still inherits the previous
+test's open run, and its first edit folds into nothing. `beforeEach` goes
+through an action first to close the run.

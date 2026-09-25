@@ -1,0 +1,79 @@
+/**
+ * Mutation check for the characterisation tests.
+ *
+ * Tests written after the code pass the moment they are written, so "watch it
+ * fail" cannot be the proof that they test the right thing. This is the
+ * substitute: break the code on purpose and confirm the suite notices.
+ *
+ * A survivor means either a gap in the tests or an equivalent mutant — code
+ * that cannot behave differently. Work out which before adding a test.
+ *
+ *   node scripts/mutants.mjs
+ */
+import { readFileSync, writeFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+
+const MUTANTS = [
+  ['nearestAngle: drop the wrap', 'src/engine/presets.ts',
+    '  let a = target\n  while (a - from > 180) a -= 360\n  while (a - from < -180) a += 360\n  return Math.round(a * 1000) / 1000',
+    '  return Math.round(target * 1000) / 1000'],
+  ['isPresetActive: compare rotation without the wrap', 'src/engine/presets.ts',
+    '        ? near(((w - h) % 360 + 540) % 360 - 180, 0, 0.5)', '        ? near(w, h, 0.5)'],
+  ['sanitisePreset: walk the input, not the registry', 'src/engine/presets.ts',
+    "  for (const id of TRACK_ORDER) {\n    const def = TRACKS[id]\n    const v = rawValue[id]\n    if (!def || typeof v !== 'object' || v === null) continue",
+    "  for (const id of Object.keys(rawValue) as TrackId[]) {\n    const def = TRACKS[id]\n    const v = rawValue[id]\n    if (typeof v !== 'object' || v === null) continue\n    if (!def) { value[id] = {}; tracks.push(id); continue }"],
+  ['shiftKeys: clamp each key, not the delta', 'src/engine/tracks.ts',
+    '  const shift = Math.max(delta, -earliest)\n  return keys.map((k) => (moving.has(k.id) ? { ...k, time: quantise(k.time + shift) } : k))',
+    '  return keys.map((k) => (moving.has(k.id) ? { ...k, time: quantise(Math.max(0, k.time + delta)) } : k))'],
+  ['shiftKeys: drop quantise', 'src/engine/tracks.ts',
+    'time: quantise(k.time + shift)', 'time: k.time + shift'],
+  ['mergeTransform: ignore the sample', 'src/engine/tracks.ts',
+    '    if (def?.write && v) def.write(out, v)', '    if (false && def?.write && v) def.write(out, v)'],
+  ['hasAnimation: require two keys', 'src/engine/tracks.ts',
+    'export const hasAnimation = (c: Composition) => liveTracks(c).some((t) => t.enabled)',
+    'export const hasAnimation = (c: Composition) => liveTracks(c).some((t) => t.enabled && t.keys.length > 1)'],
+  ['lastKeyTime: skip muted tracks', 'src/engine/tracks.ts',
+    '  for (const t of liveTracks(c)) out = Math.max(out, t.keys[t.keys.length - 1].time)',
+    '  for (const t of liveTracks(c)) if (t.enabled) out = Math.max(out, t.keys[t.keys.length - 1].time)'],
+  ['evaluate: allow trailing junk', 'src/ui/expr.ts',
+    '  return i === s.length && out !== null && Number.isFinite(out) ? out : null',
+    '  return out !== null && Number.isFinite(out) ? out : null'],
+  ['Timeline: ease from the wrong key', 'src/engine/Timeline.ts',
+    'ease: easeOf(cur)', 'ease: easeOf(prev)'],
+  ['compositionDuration: background beats an explicit length', 'src/state/store.ts',
+    '  if (c.duration > 0) return Math.max(c.duration, lastKeyTime(c))',
+    '  if (c.duration > 0) return Math.max(c.duration, lastKeyTime(c), backgroundDuration)'],
+  ['compositionDuration: clip ignores the keys once explicit', 'src/state/store.ts',
+    '  if (c.duration > 0) return Math.max(c.duration, lastKeyTime(c))', '  if (c.duration > 0) return c.duration'],
+  ['compositionDuration: drop the headroom past the last key', 'src/state/store.ts',
+    '    ? Math.max(keys + 1, MIN_COMPOSITION)', '    ? Math.max(keys, MIN_COMPOSITION)'],
+  ['autoKey: stop backfilling zero', 'src/state/store.ts',
+    '      const keys = time > 1e-3\n        ? [makeTrackKey(0, was), makeTrackKey(time, value)]\n        : [makeTrackKey(0, value)]',
+    '      const keys = [makeTrackKey(time, value)]'],
+  ['keyTrack: stop giving a clip when armed mid-way', 'src/state/store.ts',
+    '        ?? makeTrack(id, time > 1e-3 ? [makeTrackKey(0, value)] : [])', '        ?? makeTrack(id, [])'],
+  ['silently: record history anyway', 'src/state/store.ts',
+    '      restoring = true\n      try { run() } finally { restoring = false }', '      run()'],
+]
+
+let caught = 0
+const problems = []
+for (const [name, file, from, to] of MUTANTS) {
+  const original = readFileSync(file, 'utf8')
+  if (!original.includes(from)) {
+    problems.push([name, 'STALE — the source it targets has changed'])
+    continue
+  }
+  writeFileSync(file, original.replace(from, to))
+  try {
+    const { status } = spawnSync('npx', ['vitest', 'run'], { encoding: 'utf8' })
+    if (status !== 0) caught++
+    else problems.push([name, 'SURVIVED — a gap, or an equivalent mutant'])
+  } finally {
+    writeFileSync(file, original)
+  }
+}
+
+for (const [name, why] of problems) console.log(`  ${name}\n    ${why}`)
+console.log(`\n${caught}/${MUTANTS.length} mutations caught`)
+process.exit(problems.length === 0 ? 0 : 1)
