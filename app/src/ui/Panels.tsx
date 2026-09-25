@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '../state/store'
-import { engine } from '../engine/handle'
 import {
   DEFAULT_MESH_NAME, DEFAULT_MESH_URL, DEVICES, FRAME_PRESETS,
   type BackgroundKind, type DeviceId,
@@ -352,54 +351,6 @@ export function ScreenPanel() {
   )
 }
 
-/* ------------------------------------------------------------------ */
-/* Saved views                                                         */
-/* ------------------------------------------------------------------ */
-
-export function ViewsPanel() {
-  const views = useStore((s) => s.views)
-  const saveView = useStore((s) => s.saveView)
-  const deleteView = useStore((s) => s.deleteView)
-  const setTransform = useStore((s) => s.setTransform)
-  const playhead = useStore((s) => s.playhead)
-  const [name, setName] = useState('')
-
-  const capture = () => {
-    const thumb = engine.thumbnail?.(playhead) ?? ''
-    saveView(name.trim() || `View ${views.length + 1}`, thumb)
-    setName('')
-  }
-
-  return (
-    <Section title="Saved views" aside={<span className="count">{views.length}</span>}>
-      <div className="saverow">
-        <input
-          className="textfield" placeholder="Name this view" value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') capture() }}
-        />
-        <button type="button" className="btn primary" onClick={capture}>Save current</button>
-      </div>
-      {views.length === 0 && <p className="note">Position the device, then save it here to come back to it later.</p>}
-      <div className="views">
-        {views.map((v) => (
-          <div key={v.id} className="view">
-            <button type="button" className="view-thumb" onClick={() => setTransform(v.transform)} title="Apply this view">
-              {v.thumb ? <img src={v.thumb} alt={v.name} /> : <span className="view-empty" />}
-            </button>
-            <div className="view-meta">
-              <span>{v.name}</span>
-              <button type="button" className="link danger" onClick={() => deleteView(v.id)}>Delete</button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </Section>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/* Project save / load                                                 */
 /* ------------------------------------------------------------------ */
 
 export function ProjectPanel() {

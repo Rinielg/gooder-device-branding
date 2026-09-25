@@ -190,6 +190,11 @@ persisted, not undoable, never written back. Editing a control still writes to
 the project, and auto-key turns that into a key at the playhead — which is why
 a slider showing an interpolated value can be nudged and lands a key there.
 
+**A zustand selector must never build its result.** `useStore(s => ({ a: s.a,
+b: s.b }))` returns a fresh object every call, never compares equal, and
+re-renders until React gives up with "Maximum update depth exceeded". Select
+each slice on its own and compose with `useMemo`.
+
 **`setSampled` compares before it writes,** because it is called every frame.
 An idle playhead costs 0.006ms; a tab with no animated controls, 0.023ms; the
 Light tab with nine animated controls on screen, 0.93ms. The selectors return

@@ -292,6 +292,37 @@ input[type="color"] {
 .link { background: none; border: 0; color: var(--muted); font: inherit; font-size: 11px; cursor: pointer; padding: 0; }
 .link.danger { color: var(--danger); }
 
+/* --- presets --- */
+.preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.preset-grid.wide { grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
+.preset {
+  border: 1px solid var(--line); border-radius: 8px; overflow: hidden;
+  background: var(--panel);
+}
+.preset.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.preset-hit {
+  display: block; width: 100%; padding: 0; border: 0; background: none;
+  color: var(--text); font: inherit; cursor: pointer; text-align: left;
+}
+.preset.compact .preset-hit { padding: 7px 4px; text-align: center; font-size: 11px; }
+.preset-hit:hover { background: var(--hover-bg); }
+.preset-hit img, .preset-empty {
+  display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover;
+  background: var(--panel-2); border-bottom: 1px solid var(--line-soft);
+}
+.preset-name { display: block; padding: 6px 8px 2px; font-size: 12px; font-weight: 500; }
+.preset.compact .preset-name { padding: 0; font-weight: 400; }
+.preset-chips { display: flex; align-items: center; gap: 3px; padding: 0 8px; }
+.preset-chips i { width: 6px; height: 6px; border-radius: 50%; }
+.preset-chips em {
+  margin-left: 4px; font-style: normal; font-size: 10px; color: var(--muted);
+  text-transform: capitalize;
+}
+.preset-desc { padding: 4px 8px 0; cursor: text; }
+.preset-actions { display: flex; gap: 10px; padding: 6px 8px 8px; }
+.preset-save { display: grid; gap: 8px; }
+.preset-save textarea { resize: vertical; font: inherit; font-size: 11px; line-height: 1.5; }
+
 /* --- scrub field --- */
 .scrub {
   display: inline-flex; align-items: center; min-width: 0;

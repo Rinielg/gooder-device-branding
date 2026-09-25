@@ -12,6 +12,10 @@ import {
   TAB_FOR_GROUP, TRACKS, TRACK_ORDER, isRegistered, lastKeyTime, makeTrack, makeTrackKey,
   quantise, sortKeys, type TrackSource,
 } from '../engine/tracks'
+import {
+  BUILT_INS, POSE_TRACKS, readPreset, sanitisePreset, shortestPath, tracksForScope,
+  type Preset, type PresetScope,
+} from '../engine/presets'
 
 const STORAGE_KEY = 'gooder-device-branding.v1'
 
@@ -25,16 +29,21 @@ export interface Project {
   background: BackgroundState
   screen: ScreenState
   composition: Composition
-  views: SavedView[]
+  /** Named parameter sets. Built-ins are code; these are the user's own. */
+  presets: Preset[]
 }
 
 /** What `localStorage` may hold, including shapes this version no longer writes. */
-type PersistedProject = Partial<Project> & { keyframes?: LegacyKeyframe[] }
+type PersistedProject = Partial<Project> & {
+  keyframes?: LegacyKeyframe[]
+  /** Saved views, before presets absorbed them. */
+  views?: SavedView[]
+}
 
 /** One list, so persist / export / import cannot drift apart. */
 export const PROJECT_KEYS = [
   'device', 'variant', 'frame', 'stage', 'lighting',
-  'transform', 'background', 'screen', 'composition', 'views',
+  'transform', 'background', 'screen', 'composition', 'presets',
 ] as const
 
 function pickProject(s: Project): Project {
@@ -221,7 +230,7 @@ export interface KeySelection {
   kind: 'key' | 'segment'
 }
 
-export type InspectorTab = 'Stage' | 'Look' | 'Light' | 'Control' | 'Views' | 'Export'
+export type InspectorTab = 'Stage' | 'Look' | 'Light' | 'Control' | 'Angles' | 'Export'
 
 /** How many steps of undo are kept. */
 export const HISTORY_LIMIT = 20
@@ -238,6 +247,37 @@ interface Snapshot {
   /** Blobs live outside the project but a background swap has to come back with it. */
   backgroundVideoBlob: Blob | null
   screenVideoBlob: Blob | null
+}
+
+/**
+ * Saved views were presets with a fixed scope and no description.
+ *
+ * Carried over rather than kept alongside: two lists of named poses is one list
+ * too many, and every view is expressible as a Pose-scoped preset.
+ */
+function migrateViews(persisted: PersistedProject): Preset[] {
+  if (persisted.presets) {
+    return persisted.presets.map(sanitisePreset).filter((p): p is Preset => p !== null)
+  }
+  const views = persisted.views
+  if (!Array.isArray(views)) return []
+  return views.flatMap((v) => {
+    if (!v?.transform) return []
+    const t = { ...DEFAULT_TRANSFORM, ...v.transform }
+    return [{
+      id: v.id ?? `ps_${Math.random().toString(36).slice(2, 10)}`,
+      name: v.name ?? 'View',
+      description: '',
+      value: {
+        position: { x: t.posX, y: t.posY, z: t.posZ },
+        rotation: { x: t.rotX, y: t.rotY, z: t.rotZ },
+        scale: { uniform: t.scale },
+      },
+      tracks: [...POSE_TRACKS],
+      ...(v.thumb ? { thumb: v.thumb } : {}),
+      createdAt: v.createdAt ?? Date.now(),
+    } satisfies Preset]
+  })
 }
 
 interface Store extends Project {
@@ -327,9 +367,21 @@ interface Store extends Project {
   clearComposition(): void
   selectKey(sel: KeySelection | null): void
 
-  saveView(name: string, thumb: string): void
-  deleteView(id: string): void
-  renameView(id: string, name: string): void
+  /** Capture the current scene at `scope` as a named preset. */
+  savePreset(name: string, description: string, scope: PresetScope, thumb: string): void
+  updatePreset(id: string, patch: { name?: string; description?: string }): void
+  /** Replace a preset's values with the current scene, keeping its scope. */
+  recapturePreset(id: string, thumb: string): void
+  deletePreset(id: string): void
+  /**
+   * Write a preset's values. Auto-key turns that into a key at the playhead for
+   * anything already animated.
+   *
+   * `only` narrows it — alt-clicking a built-in applies the rotation alone.
+   */
+  applyPreset(id: string, only?: TrackId[]): void
+  /** Force a key at the playhead for every track the preset carries. */
+  applyPresetAsKeys(id: string): void
 
   undo(): void
   redo(): void
@@ -392,7 +444,7 @@ const initial: Project = {
   background: { ...DEFAULT_BACKGROUND, ...persisted.background },
   screen: { ...DEFAULT_SCREEN, ...persisted.screen },
   composition: migrateKeyframes(persisted),
-  views: persisted.views ?? [],
+  presets: migrateViews(persisted),
 }
 
 /**
@@ -497,6 +549,45 @@ function withAutoKey(s: Store, patch: Partial<Project>): Partial<Project> {
   if (s.playing || s.exporting) return patch
   const keyed = autoKey(s, trackSource({ ...s, ...patch }))
   return keyed ? { ...patch, ...keyed } : patch
+}
+
+/** Built-ins are code, so they are not in the project's own list. */
+function findPreset(s: Store, id: string): Preset | undefined {
+  return BUILT_INS.find((p) => p.id === id) ?? s.presets.find((p) => p.id === id)
+}
+
+/**
+ * Write a sample back through the ordinary setters.
+ *
+ * Going through the setters rather than straight into state is the point: they
+ * are what auto-key hangs off, so applying a preset keys itself exactly as
+ * dragging the device does, with no preset-shaped special case in the timeline.
+ */
+function writeSample(s: Store, value: Sample, tracks: TrackId[], label: string) {
+  const pose: Partial<Transform> = {}
+  for (const id of tracks) {
+    const v = value[id]
+    if (!v) continue
+    if (id === 'position') Object.assign(pose, { posX: v.x, posY: v.y, posZ: v.z })
+    else if (id === 'rotation') Object.assign(pose, { rotX: v.x, rotY: v.y, rotZ: v.z })
+    else if (id === 'scale') Object.assign(pose, { scale: v.uniform })
+    else if (id === 'camera') s.setStage({ fov: v.fov, distance: v.distance })
+    else if (id === 'environment') {
+      s.setLighting({ environment: { intensity: v.intensity, rotationY: v.rotationY, exposure: v.exposure } })
+    } else if (id === 'shadow') s.setLighting({ shadows: { opacity: v.opacity, softness: v.softness } })
+    else if (id === 'screen') s.setScreen({ brightness: v.brightness })
+    else if (id === 'background') {
+      s.setBackground({ vignette: v.vignette, gradient: { ...s.background.gradient, speed: v.speed } })
+    } else if (id.endsWith('Light')) {
+      s.setLight(id.replace('Light', '') as LightId, {
+        intensity: v.intensity, position: [v.x, v.y, v.z],
+      })
+    }
+  }
+  if (Object.keys(pose).length > 0) s.setTransform(pose)
+  // The label rides on the coalesce window the setters already opened, so the
+  // whole preset is one undo step.
+  void label
 }
 
 export const useStore = create<Store>((set, get) => {
@@ -754,16 +845,61 @@ export const useStore = create<Store>((set, get) => {
       })
     },
 
-    saveView: (name, thumb) => set((s) => after({
-      views: [
-        { id: `vw_${Math.random().toString(36).slice(2, 10)}`, name, thumb, transform: { ...s.transform }, createdAt: Date.now() },
-        ...s.views,
-      ].slice(0, 40),
-    }, 'Save view')),
-    deleteView: (id) => set((s) => after({ views: s.views.filter((v) => v.id !== id) }, 'Delete view')),
-    renameView: (id, name) => set((s) => after({
-      views: s.views.map((v) => (v.id === id ? { ...v, name } : v)),
-    }, 'Rename view', `view:${id}`)),
+    savePreset: (name, description, scope, thumb) => set((s) => {
+      const tracks = tracksForScope(scope)
+      const preset: Preset = {
+        id: `ps_${Math.random().toString(36).slice(2, 10)}`,
+        name, description, tracks,
+        value: readPreset(trackSource(s), tracks),
+        ...(thumb ? { thumb } : {}),
+        createdAt: Date.now(),
+      }
+      return after({ presets: [preset, ...s.presets].slice(0, 60) }, 'Save preset')
+    }),
+
+    updatePreset: (id, patch) => set((s) => after({
+      presets: s.presets.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+    }, 'Rename preset', `preset:${id}`)),
+
+    recapturePreset: (id, thumb) => set((s) => {
+      const preset = s.presets.find((p) => p.id === id)
+      if (!preset) return {}
+      return after({
+        presets: s.presets.map((p) => (p.id === id
+          ? { ...p, value: readPreset(trackSource(s), p.tracks), ...(thumb ? { thumb } : {}) }
+          : p)),
+      }, 'Update preset')
+    }),
+
+    deletePreset: (id) => set((s) => after({
+      presets: s.presets.filter((p) => p.id !== id),
+    }, 'Delete preset')),
+
+    applyPreset: (id, only) => {
+      const s = get()
+      const preset = findPreset(s, id)
+      if (!preset) return
+      const wanted = only ?? preset.tracks
+      // Short-path first, so the value that lands — and is keyed — turns the
+      // near way rather than only looking like it does.
+      const value = shortestPath(preset.value, s.transform)
+      if (s.playing) s.setPlaying(false)
+      writeSample(s, value, wanted, `Apply ${preset.name.toLowerCase()}`)
+    },
+
+    applyPresetAsKeys: (id) => {
+      const s = get()
+      const preset = findPreset(s, id)
+      if (!preset) return
+      const value = shortestPath(preset.value, s.transform)
+      if (s.playing) s.setPlaying(false)
+      // Arm every track the preset carries first, so auto-key has somewhere to
+      // write — a track armed part-way along gets its 0s key as usual.
+      for (const id2 of preset.tracks) {
+        if (!get().composition.tracks[id2]) get().keyTrack(id2, `Apply ${preset.name.toLowerCase()}`)
+      }
+      writeSample(get(), value, preset.tracks, `Apply ${preset.name.toLowerCase()}`)
+    },
 
     undo: () => travel('past'),
     redo: () => travel('future'),
@@ -805,7 +941,7 @@ export const useStore = create<Store>((set, get) => {
       // A file with no animation at all leaves the current one alone; only a
       // file that actually carries one replaces it.
       composition: p.composition || p.keyframes ? migrateKeyframes(p) : s.composition,
-      views: p.views ?? s.views,
+      presets: p.presets || p.views ? migrateViews(p) : s.presets,
     }, 'Import project')),
   }
 })

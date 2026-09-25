@@ -4,8 +4,9 @@ import { Dials } from './ui/Dials'
 import { Gizmo } from './ui/Gizmo'
 import { resetTransform } from './ui/resetTransform'
 import {
-  BackgroundPanel, DevicePanel, FramePanel, ProjectPanel, ScreenPanel, ViewsPanel,
+  BackgroundPanel, DevicePanel, FramePanel, ProjectPanel, ScreenPanel,
 } from './ui/Panels'
+import { PresetsPanel } from './ui/PresetsPanel'
 import {
   EnvironmentPanel, LightingHelpersPanel, LightsPanel, ShadowPanel,
 } from './ui/LightingPanel'
@@ -15,7 +16,7 @@ import { ExportPanel } from './ui/ExportPanel'
 import { useStore, type InspectorTab } from './state/store'
 import './styles.css'
 
-const TABS: InspectorTab[] = ['Stage', 'Look', 'Light', 'Control', 'Views', 'Export']
+const TABS: InspectorTab[] = ['Stage', 'Look', 'Light', 'Control', 'Angles', 'Export']
 
 export default function App() {
   // The active tab lives in the store: selecting a keyframe moves it, so it is
@@ -129,7 +130,7 @@ export default function App() {
                 </p>
               </section>
             )}
-            {tab === 'Views' && (<><ViewsPanel /><ProjectPanel /></>)}
+            {tab === 'Angles' && (<><PresetsPanel /><ProjectPanel /></>)}
             {tab === 'Export' && <ExportPanel />}
           </div>
             </>
