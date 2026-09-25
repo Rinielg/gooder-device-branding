@@ -127,6 +127,18 @@ describe('describeChanges', () => {
     expect(describeChanges(b, { ...b, variant: 'Plum' }).headline).toBe('Black → Plum')
   })
 
+  it('does not call floating-point noise a change', () => {
+    // 0.1 + 0.2 is 0.30000000000000004, and a pose that came back from a drag
+    // is full of values like it. Comparing exactly would fill the history with
+    // "Moved" for a device that did not move.
+    const b = base()
+    const noisy = { ...b, transform: { ...b.transform, posX: 0.1 + 0.2 } }
+    const clean = { ...b, transform: { ...b.transform, posX: 0.3 } }
+    expect(details(noisy, clean)).toEqual([])
+    // And a change that is actually visible still registers.
+    expect(details(clean, { ...b, transform: { ...b.transform, posX: 0.31 } })).toEqual(['Moved'])
+  })
+
   it('ignores a resolved asset URL, which nobody edited', () => {
     // Opening a project swaps signed URLs in. That is not a change anyone made
     // and must not fill the history with noise.

@@ -155,6 +155,8 @@ established patterns, worth reusing:
 | `src/state/cloud.ts` | Session, project list, autosave and conflict handling |
 | `src/state/projectRow.ts` | The columns lifted out of the document, and the fingerprint that decides whether to save |
 | `src/ui/CloudSheet.tsx` · `src/ui/CloudBadge.tsx` | Signing in, the project list, and whether the work is safe |
+| `src/state/changes.ts` | What changed between two versions, in the undo stack's vocabulary |
+| `src/ui/HistorySheet.tsx` | The history: a summary per version, expandable, restorable |
 
 ### The two ideas worth keeping in mind
 

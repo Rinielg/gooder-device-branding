@@ -19,6 +19,8 @@ Where the project stands, and what done looks like for the current phase.
 | Angles | Six built-in elevations plus saved presets, each carrying a description for later automation; shortest-path rotation; popover in the viewport and a full panel |
 | Export | PNG at 1-3x including transparent; MP4/H.264 and WebM/VP9, encoded frame-by-frame |
 | Loading a project | Every value validated against the defaults on import and on boot; an unknown device or a collapsed frame can no longer get in |
+| Projects | Many per account, created fresh or saved from what is open; autosaved with conflict detection |
+| History | A version a minute, fifty deep to match undo, each with a summary and an expandable list of what moved; restoring saves forward so nothing is destroyed |
 | Recovery | A render that throws shows what failed and offers a reload or a discard, instead of a blank page |
 | Selection | Shift-click builds a group of keyframes, across tracks; dragging any member moves them all as one undo step, Delete removes them all |
 | Clip length | A grip at the end of the ruler, which cannot be dragged in past the last key |

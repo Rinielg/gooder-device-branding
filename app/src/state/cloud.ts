@@ -109,6 +109,18 @@ let lastSent: string | null = null
  * and the side being replaced is the one already in this tab's hands.
  */
 let lastDocument: Project | null = null
+/**
+ * The document as of the last history entry — which is not the same as the
+ * last save.
+ *
+ * Saves happen every couple of seconds and versions about once a minute, so
+ * diffing a version against the previous *save* describes only the last few
+ * seconds of work and silently drops everything the throttle skipped over.
+ * Measured: a version that followed a device swap, a reframe and two keyframes
+ * read "Rotated", because rotating was all that happened since the save
+ * before it.
+ */
+let lastVersionDocument: Project | null = null
 /** When this tab last appended to the history. */
 let lastVersionAt = 0
 
@@ -121,6 +133,9 @@ let lastVersionAt = 0
  */
 export function markSynced() {
   lastDocument = stripRuntimeUrls(useStore.getState().exportProject())
+  // The history baseline moves too: after opening a project, the next version
+  // should describe what changed since it opened, not since some other one.
+  lastVersionDocument = lastDocument
   lastSent = fingerprint(lastDocument)
 }
 let timer: ReturnType<typeof setTimeout> | undefined
@@ -309,6 +324,7 @@ export const useCloud = create<CloudState>((set, get) => ({
       return
     }
     lastDocument = document
+    lastVersionDocument = document
     lastSent = fingerprint(document)
     lastVersionAt = Date.now()
     writeBound(data.id, data.revision)
@@ -360,7 +376,9 @@ export const useCloud = create<CloudState>((set, get) => ({
       return
     }
 
-    const previous = lastDocument
+    // Against the last entry in the history, so a version accounts for every
+    // edit since the previous one rather than only the most recent save.
+    const previous = lastVersionDocument ?? lastDocument
     lastDocument = document
     lastSent = print
     writeBound(boundId, data[0].revision)
@@ -372,6 +390,7 @@ export const useCloud = create<CloudState>((set, get) => ({
     const due = label != null || Date.now() - lastVersionAt > VERSION_MS
     if (due && previous) {
       lastVersionAt = Date.now()
+      lastVersionDocument = document
       const described = describeChanges(previous, document)
       await supabase.from('project_versions').insert({
         project_id: boundId,
@@ -391,7 +410,8 @@ export const useCloud = create<CloudState>((set, get) => ({
     const { boundId, userId } = get()
     if (!supabase || !userId || !boundId) return
     const document = stripRuntimeUrls(useStore.getState().exportProject())
-    const described = lastDocument ? describeChanges(lastDocument, document) : null
+    const baseline = lastVersionDocument ?? lastDocument
+    const described = baseline ? describeChanges(baseline, document) : null
     await supabase.from('project_versions').insert({
       project_id: boundId,
       document: document as unknown as Json,
@@ -403,6 +423,7 @@ export const useCloud = create<CloudState>((set, get) => ({
       created_by: userId,
     })
     lastVersionAt = Date.now()
+    lastVersionDocument = document
     set({ message: `Saved a version${label.trim() ? ` — ${label.trim()}` : ''}.` })
     void get().loadVersions()
   },
@@ -431,6 +452,7 @@ export const useCloud = create<CloudState>((set, get) => ({
   unbind: () => {
     lastSent = null
     lastDocument = null
+    lastVersionDocument = null
     lastVersionAt = 0
     set({ versions: [] })
     writeBound(null, 1)

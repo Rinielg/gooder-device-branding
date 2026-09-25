@@ -177,6 +177,27 @@ const MUTANTS = [
     '  const needed = Math.round(texW / screenAspect)',
     '  const needed = Math.round(texW * screenAspect)'],
 
+  ['describeChanges: drop the "and N more" tail', 'src/state/changes.ts',
+    '  return `${first.detail}, ${second.detail} and ${changes.length - 2} more`',
+    '  return `${first.detail}, ${second.detail}`'],
+  ['describeChanges: call no changes something', 'src/state/changes.ts',
+    "  if (changes.length === 0) return 'No changes'", "  if (false) return 'No changes'"],
+  ['describeChanges: compare floats exactly', 'src/state/changes.ts',
+    'const near = (a: number, b: number) => Math.abs(a - b) < 1e-4',
+    'const near = (a: number, b: number) => a === b'],
+  ['describeChanges: split the pose into three rows', 'src/state/changes.ts',
+    "    const joined = parts.length === 1 ? parts[0]\n      : `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`",
+    '    const joined = parts[0]'],
+  ['describeChanges: count tracks instead of keyframes', 'src/state/changes.ts',
+    '    const countB = [...tb.values()].reduce((n, t) => n + t.keys.length, 0)',
+    '    const countB = tb.size'],
+  ['describeChanges: let a resolved url read as an edit', 'src/state/changes.ts',
+    '    if (a.screen.name !== b.screen.name || a.screen.assetId !== b.screen.assetId) {',
+    '    if (a.screen.name !== b.screen.name || a.screen.url !== b.screen.url) {'],
+  ['describeChanges: miss a track that started animating', 'src/state/changes.ts',
+    '    for (const id of tb.keys()) {\n      if (!ta.has(id)) add(out, \'Timeline\', `${labelOf(id)} animated`)\n    }',
+    '    for (const id of tb.keys()) {\n      if (false) add(out, \'Timeline\', `${labelOf(id)} animated`)\n    }'],
+
 ]
 
 let caught = 0
