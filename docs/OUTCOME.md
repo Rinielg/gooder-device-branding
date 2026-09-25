@@ -9,7 +9,8 @@ Where the project stands, and what done looks like for the current phase.
 | Two devices, four colourways | Extracted from the source USDZ's own variant set; names cross-checked against the `.lsd` to eight decimal places |
 | Adjustable frame | 7 presets plus custom, 1:1 to 21:9, up to 4K; preview letterboxed to the export aspect |
 | Backgrounds | Mesh gradient (Lottie, default), procedural gradient, colour, image, video, transparent |
-| Screen content | Image or video, cover-cropped to the display's true 0.4599 aspect; follows the colourway by default |
+| Screen content | Image or video, fitted to the display's full width and top aligned, never cropped at the sides; short images padded with their own edge colour; follows the colourway by default |
+| Screen fidelity | The display is unlit, so an upload renders as the file that was uploaded — measured pixel-exact. Brightness scales it from there |
 | Pose | Drag to rotate, shift-drag to pan, scroll to scale, DialKit numeric controls in step with all three |
 | Saved views | Named, with thumbnails |
 | Lighting | Environment (studio / HDRI / sky / none), key-fill-rim rig, shadow panel, ground modes, light gizmos |

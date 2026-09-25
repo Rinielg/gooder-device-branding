@@ -25,6 +25,27 @@ size the catcher to the shadow footprint. Getting that order backwards moves the
 clip rather than removing it.
 *Symptom: a hard straight edge across the image that moves when you orbit.*
 
+**An emissive map on a standard material is still a lit surface.** The
+display was `emissive` white, `emissiveMap` the upload, `color` black — which
+looks unlit and is not. Measured on a flat `#3366cc`: it rendered `#4e7bcf`.
+Turning off tone mapping gave `#4a72d0`, clearing `scene.environment` gave
+`#3767cc`, and only silencing the lights as well gave `#3366cb` — the source. A
+dielectric reflects about four per cent of whatever is in front of it however
+rough it is, and `envMapIntensity = 0` did not stop the scene environment
+reaching it. `MeshBasicMaterial` with `toneMapped = false` is the only thing
+that renders an upload as the file that was uploaded.
+
+**Swapping a material means swapping it everywhere it is looked up.** The map
+kept its old name in `Device.materials`, so `setScreen` wrote the texture to a
+material no longer on any mesh and the display went white. The entry is deleted
+on the swap: a lookup by name returning a detached material is a write that
+silently goes nowhere.
+
+**Fitting by width leaves a gap when the image is the shorter shape.**
+Clamp-to-edge repeats the last row of pixels down it, which streaks unless that
+row is one colour — the shipped wallpaper's last row runs from `#000000` to
+`#341719`. Short images are padded on a canvas with that row's mean instead.
+
 **`scene.background = Color` wipes the background pass.**
 It sets `forceClear`, which **bypasses `autoClear`** and clears colour and depth
 at the start of the main render (`WebGLBackground.js:53-82`). This project never

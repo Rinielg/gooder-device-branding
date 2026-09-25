@@ -150,6 +150,7 @@ established patterns, worth reusing:
 | `src/ui/projectFile.ts` | Save and load a project file, shared by the panel and the menu |
 | `scripts/mutants.mjs` | Breaks each function on purpose to prove the tests notice |
 | `src/ui/ruler.ts` | Pointer position to seconds, with the limit as an argument |
+| `src/engine/screen.ts` | How an upload sits on the display: width edge to edge, top aligned, padded if short |
 
 ### The two ideas worth keeping in mind
 

@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { padHeight, screenCrop } from './screen'
 import {
   DEVICES, SCREEN_MATERIAL,
   type DeviceId, type Transform, type Variant, type VariantManifest, type ScreenState,
@@ -43,6 +44,64 @@ function loadModelTexture(url: string, srgb: boolean): Promise<THREE.Texture> {
   })
 }
 
+/**
+ * Load an image for the display, extended downward if it falls short of the
+ * display's shape.
+ *
+ * Fitting the width is what keeps an uploaded UI whole, and the price is that
+ * an image proportionally shorter than the display runs out before the bottom.
+ * Clamp-to-edge would repeat its last row of pixels down the gap: the shipped
+ * wallpaper's last row runs from #000000 to #341719, so that streaks. The
+ * row's mean reads as the image continuing instead.
+ */
+async function loadScreenTexture(url: string, screenAspect: number): Promise<THREE.Texture> {
+  let img: HTMLImageElement
+  try {
+    img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.src = url
+    await img.decode()
+  } catch {
+    // Undecodable here does not mean unloadable there; let the loader try.
+    return loadModelTexture(url, true)
+  }
+
+  const w = img.naturalWidth
+  const padded = padHeight(w, img.naturalHeight, screenAspect)
+  if (!padded) return loadModelTexture(url, true)
+
+  try {
+    const canvas = document.createElement('canvas')
+    canvas.width = w
+    canvas.height = padded
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return loadModelTexture(url, true)
+    ctx.drawImage(img, 0, 0)
+    ctx.fillStyle = meanRow(ctx, w, img.naturalHeight - 1)
+    ctx.fillRect(0, img.naturalHeight, w, padded - img.naturalHeight)
+
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.flipY = false
+    tex.colorSpace = THREE.SRGBColorSpace
+    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping
+    tex.anisotropy = 8
+    return tex
+  } catch {
+    // A cross-origin image taints the canvas and getImageData throws. The
+    // unpadded texture is still better than no screen at all.
+    return loadModelTexture(url, true)
+  }
+}
+
+/** The mean of one row of pixels, as a CSS colour. */
+function meanRow(ctx: CanvasRenderingContext2D, w: number, y: number): string {
+  const d = ctx.getImageData(0, y, w, 1).data
+  let r = 0, g = 0, b = 0
+  for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2] }
+  const n = d.length / 4
+  return `rgb(${Math.round(r / n)} ${Math.round(g / n)} ${Math.round(b / n)})`
+}
+
 export class Device {
   readonly group = new THREE.Group()
   /** Inner node carries the model; `group` carries the user transform. */
@@ -59,6 +118,9 @@ export class Device {
 
   /** Height of the device in world units, used to place the camera. */
   heightUnits = 16.34
+  /** The display's material. Unlit, so an upload renders as authored. */
+  private screenMat: THREE.MeshBasicMaterial | null = null
+
   /** Untransformed bounds of the model, for fitting shadow frustums. */
   localBounds = new THREE.Box3(new THREE.Vector3(-4, -8, -0.7), new THREE.Vector3(4, 8, 0.7))
 
@@ -68,12 +130,11 @@ export class Device {
   }
 
   get screenVideoElement() { return this.screenVideo }
-  get screenMaterial() { return this.materials.get(SCREEN_MATERIAL) ?? null }
+  get screenMaterial() { return this.screenMat }
 
   /** Per-frame setter for the animated screen track. A single property write. */
   setScreenBrightness(brightness: number) {
-    const mat = this.screenMaterial
-    if (mat) mat.emissiveIntensity = brightness
+    this.screenMat?.color.setScalar(brightness)
   }
 
   async load(id: DeviceId) {
@@ -140,11 +201,40 @@ export class Device {
       }
     })
 
-    // The display should read as emitted light, not a lit surface.
-    const screen = this.materials.get(SCREEN_MATERIAL)
-    if (screen) {
-      screen.emissive = new THREE.Color(0xffffff)
-      screen.toneMapped = true
+    // The display is unlit, so an upload arrives as the thing that was
+    // uploaded.
+    //
+    // Measured on a flat #3366cc test image: as a lit material it rendered
+    // #4e7bcf. Turning off tone mapping gave #4a72d0, clearing the scene
+    // environment gave #3767cc, and only silencing the lights as well gave
+    // #3366cb — the source. An emissive map on a standard material cannot
+    // avoid either contribution, because a dielectric reflects about 4% of
+    // whatever is in front of it however rough it is. A basic material is the
+    // only one that ignores both.
+    //
+    // The cost is honest: the display no longer catches a reflection. That is
+    // the trade for a mockup showing the design rather than the studio.
+    const lit = this.materials.get(SCREEN_MATERIAL)
+    if (lit) {
+      const basic = new THREE.MeshBasicMaterial({
+        name: SCREEN_MATERIAL,
+        toneMapped: false,
+        side: lit.side,
+      })
+      this.screenMat = basic
+      // Out of the map as well: a lookup by name returning a material that is
+      // no longer on any mesh is a write that silently goes nowhere, which is
+      // exactly how this landed as a white screen the first time.
+      this.materials.delete(SCREEN_MATERIAL)
+      this.root.traverse((o) => {
+        const mesh = o as THREE.Mesh
+        if (!mesh.isMesh) return
+        if (Array.isArray(mesh.material)) {
+          mesh.material = mesh.material.map((m) => (m === lit ? basic : m))
+        } else if (mesh.material === lit) {
+          mesh.material = basic
+        }
+      })
     }
   }
 
@@ -208,7 +298,7 @@ export class Device {
 
   /** Put an image or video on the display. */
   async setScreen(state: ScreenState) {
-    const mat = this.materials.get(SCREEN_MATERIAL)
+    const mat = this.screenMat
     if (!mat) return
 
     if (this.screenUrl !== state.url || (state.kind === 'video') !== !!this.screenVideo) {
@@ -231,7 +321,7 @@ export class Device {
         this.screenVideo = video
         this.screenTexture = tex
       } else {
-        this.screenTexture = await loadModelTexture(state.url, true)
+        this.screenTexture = await loadScreenTexture(state.url, DEVICES[this.id].screenAspect)
       }
       this.screenUrl = state.url
     }
@@ -239,9 +329,8 @@ export class Device {
     const tex = this.screenTexture
     if (!tex) return
 
-    // Cover-crop to the physical aspect of the display. The shipped wallpaper is
-    // 1:2 while the screen surface is 1:2.174, so fitting by aspect rather than
-    // by texture dimensions is what keeps uploads undistorted.
+    // Fitted by aspect rather than by texture dimensions, so an upload is
+    // never squashed to the display's shape.
     const w = (tex.image as { width?: number; videoWidth?: number }).width
       ?? (tex.image as { videoWidth?: number }).videoWidth ?? 1
     const h = (tex.image as { height?: number; videoHeight?: number }).height
@@ -249,21 +338,14 @@ export class Device {
     const texAspect = w / h
     const target = DEVICES[this.id].screenAspect
 
-    let rx = 1, ry = 1
-    if (texAspect > target) rx = target / texAspect
-    else ry = texAspect / target
-
-    const zoom = Math.max(state.zoom, 0.05)
-    rx /= zoom; ry /= zoom
-    tex.repeat.set(rx, ry)
-    tex.offset.set((1 - rx) / 2 + state.offsetX, (1 - ry) / 2 - state.offsetY)
+    const { repeat, offset } = screenCrop(texAspect, target, state.zoom, state.offsetX, state.offsetY)
+    tex.repeat.set(repeat[0], repeat[1])
+    tex.offset.set(offset[0], offset[1])
     tex.needsUpdate = true
 
-    mat.emissiveMap = tex
-    mat.emissive.setRGB(1, 1, 1)
-    mat.emissiveIntensity = state.brightness
-    mat.map = null
-    mat.color.setRGB(0, 0, 0)
+    mat.map = tex
+    // White is the image untouched; brightness scales it either way.
+    mat.color.setScalar(state.brightness)
     mat.needsUpdate = true
   }
 
@@ -272,7 +354,7 @@ export class Device {
    * crop that `setScreen` computed so the framing does not shift.
    */
   overrideScreenTexture(tex: THREE.Texture | null) {
-    const mat = this.materials.get(SCREEN_MATERIAL)
+    const mat = this.screenMat
     if (!mat) return
     const target = tex ?? this.screenTexture
     if (tex && this.screenTexture) {
@@ -283,7 +365,7 @@ export class Device {
       tex.offset.copy(this.screenTexture.offset)
       tex.needsUpdate = true
     }
-    mat.emissiveMap = target
+    mat.map = target
     mat.needsUpdate = true
   }
 

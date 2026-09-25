@@ -161,6 +161,22 @@ const MUTANTS = [
     '  const t = quantise((offsetX - gutter) / pxPerSec)',
     '  const t = Math.max(0, (offsetX - gutter) / pxPerSec)'],
 
+  ['screenCrop: cover-crop the sides again', 'src/engine/screen.ts',
+    '  const rx = 1 / z', '  const rx = (aspect > screenAspect ? screenAspect / aspect : 1) / z'],
+  ['screenCrop: centre the image vertically', 'src/engine/screen.ts',
+    '      TOP_V - offsetY,', '      (1 - ry) / 2 - offsetY,'],
+  ['screenCrop: leave height out of the zoom', 'src/engine/screen.ts',
+    '  const ry = aspect / screenAspect / z', '  const ry = aspect / screenAspect'],
+  ['screenCrop: stop recentring x when zoomed', 'src/engine/screen.ts',
+    '      (1 - rx) / 2 + offsetX,', '      offsetX,'],
+  ['screenCrop: divide by a zoom of zero', 'src/engine/screen.ts',
+    '  const z = Math.max(zoom, 0.05)', '  const z = zoom'],
+  ['padHeight: pad a tall image as well', 'src/engine/screen.ts',
+    '  return needed > texH ? needed : null', '  return needed'],
+  ['padHeight: pad against the wrong axis', 'src/engine/screen.ts',
+    '  const needed = Math.round(texW / screenAspect)',
+    '  const needed = Math.round(texW * screenAspect)'],
+
 ]
 
 let caught = 0
