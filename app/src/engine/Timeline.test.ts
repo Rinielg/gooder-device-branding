@@ -101,4 +101,30 @@ describe('CompositionTimeline', () => {
     // Export depends on this: a frame must not depend on the frame before it.
     expect(backwards).toEqual(forwards)
   })
+
+  test('a spring overshoots in playback, not only in the preview', () => {
+    tl.build(rotation([
+      key('a', 0, 0),
+      {
+        id: 'b', time: 1, ease: 'spring', value: { x: 0, y: 100, z: 0 },
+        spring: { stiffness: 200, damping: 6, mass: 1, velocity: 0 },
+      },
+    ]))
+
+    const peak = Math.max(...Array.from({ length: 40 }, (_, i) => tl.sample((i + 1) / 40).rotation?.y ?? 0))
+
+    expect(peak).toBeGreaterThan(100)
+  })
+
+  test('a spring still lands exactly on its key', () => {
+    tl.build(rotation([
+      key('a', 0, 0),
+      {
+        id: 'b', time: 1, ease: 'spring', value: { x: 0, y: 100, z: 0 },
+        spring: { stiffness: 200, damping: 6, mass: 1, velocity: 0 },
+      },
+    ]))
+
+    expect(tl.sample(1).rotation?.y).toBeCloseTo(100, 3)
+  })
 })

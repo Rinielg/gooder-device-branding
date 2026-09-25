@@ -364,10 +364,17 @@ export interface TrackKey {
   id: string
   /** Seconds from the start of the composition. */
   time: number
-  /** Ease used to arrive AT this key. 'custom' reads `bezier`. */
-  ease: EaseName | 'custom'
+  /** Ease used to arrive AT this key. 'custom' reads `bezier`, 'spring' reads `spring`. */
+  ease: EaseName | 'custom' | 'spring'
   /** Cubic bezier control points x1, y1, x2, y2 — only read when ease is 'custom'. */
   bezier?: [number, number, number, number]
+  /**
+   * Only read when ease is 'spring'.
+   *
+   * A spring is not a bezier and cannot be drawn as one — it overshoots and
+   * rings — so it is its own ease rather than a preset of the curve editor.
+   */
+  spring?: { stiffness: number; damping: number; mass: number; velocity: number }
   value: TrackValue
 }
 

@@ -1,5 +1,6 @@
 import gsap from 'gsap'
 import type { TrackKey } from '../engine/types'
+import { DEFAULT_SPRING, springEase } from './spring'
 
 /** Seeded when a transition is switched to Custom: a plain symmetric ease. */
 export const SEED_BEZIER: [number, number, number, number] = [0.42, 0, 0.58, 1]
@@ -15,6 +16,7 @@ export const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v,
  * never disagree about what a segment does.
  */
 export function easeFn(key: TrackKey): (x: number) => number {
+  if (key.ease === 'spring') return springEase(key.spring ?? DEFAULT_SPRING)
   if (key.ease === 'custom') return cubicBezier(key.bezier ?? SEED_BEZIER)
   const parsed = gsap.parseEase(key.ease)
   return typeof parsed === 'function' ? parsed : (x: number) => x

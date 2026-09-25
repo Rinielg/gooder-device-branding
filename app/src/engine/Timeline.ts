@@ -1,6 +1,7 @@
 import gsap from 'gsap'
 import { CustomEase } from 'gsap/CustomEase'
 import { mergeTransform } from './tracks'
+import { DEFAULT_SPRING, springEase } from '../ui/spring'
 import type { Composition, Sample, Track, TrackId, TrackKey, TrackValue, Transform } from './types'
 
 gsap.registerPlugin(CustomEase)
@@ -119,6 +120,9 @@ function buildTrack(track: Track): TrackRunner {
 }
 
 function easeOf(key: TrackKey): string | gsap.EaseFunction {
+  // A spring is a function, not a curve GSAP knows the name of. Handing it the
+  // same function the preview draws is what stops the two disagreeing.
+  if (key.ease === 'spring') return springEase(key.spring ?? DEFAULT_SPRING)
   if (key.ease !== 'custom') return key.ease
   const b = key.bezier
   if (!b) return 'power2.inOut'

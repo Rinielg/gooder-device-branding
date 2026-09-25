@@ -16,6 +16,7 @@ import {
   BUILT_INS, POSE_TRACKS, readPreset, sanitisePreset, shortestPath, tracksForScope,
   type Preset, type PresetScope,
 } from '../engine/presets'
+import { STARTERS, buildStarter } from '../engine/starters'
 
 const STORAGE_KEY = 'gooder-device-branding.v1'
 
@@ -367,6 +368,8 @@ interface Store extends Project {
   /** Explicit composition length; 0 returns it to deriving one from the content. */
   setCompositionLength(seconds: number): void
   clearComposition(): void
+  /** Fill an empty timeline from a ready-made starting animation. */
+  applyStarter(id: string): void
   selectKey(sel: KeySelection | null): void
 
   /** Capture the current scene at `scope` as a named preset. */
@@ -821,10 +824,22 @@ export const useStore = create<Store>((set, get) => {
       return after(patchTrack(s, id, { ...track, keys }), 'Capture keyframe')
     }),
 
-    removeTrack: (id) => set((s) => after({
-      ...dropTrack(s, id),
-      selection: s.selection?.track === id ? null : s.selection,
-    }, `Stop animating ${TRACKS[id]?.label.toLowerCase() ?? id}`)),
+    removeTrack: (id) => {
+      const s = get()
+      // Hand the property back where it looked, not where the base drifted to.
+      //
+      // Editing an animated property writes a key and also moves the base,
+      // because the canvas drag accumulates from the base and would stop
+      // accumulating otherwise. While the track exists the sample shadows that
+      // drift; deleting it would reveal the drift as a jump. So the last
+      // sampled value becomes the base on the way out.
+      const sampled = s.sampled?.[id]
+      set(after({
+        ...dropTrack(s, id),
+        selection: s.selection?.track === id ? null : s.selection,
+      }, `Stop animating ${TRACKS[id]?.label.toLowerCase() ?? id}`))
+      if (sampled) writeSample(get(), { [id]: sampled }, [id], 'hand back')
+    },
 
     setTrackEnabled: (id, enabled) => set((s) => {
       const track = s.composition.tracks[id]
@@ -835,6 +850,20 @@ export const useStore = create<Store>((set, get) => {
     setCompositionLength: (seconds) => set((s) => after({
       composition: { ...s.composition, duration: seconds > 0 ? quantise(seconds) : 0 },
     }, 'Change length', 'length')),
+
+    applyStarter: (id) => set((s) => {
+      const built = buildStarter(id, trackSource(s))
+      const ids = Object.keys(built) as TrackId[]
+      if (ids.length === 0) return {}
+      // Replaces rather than merges: a starter is a whole animation, and
+      // folding one into an existing set makes a mess of both.
+      const tracks: Composition['tracks'] = {}
+      for (const tid of ids) tracks[tid] = makeTrack(tid, built[tid]!)
+      return after({
+        composition: { schemaVersion: 1, duration: 0, tracks },
+        selection: null,
+      }, `Add ${STARTERS.find((x) => x.id === id)?.name.toLowerCase() ?? 'animation'}`)
+    }),
 
     clearComposition: () => set(after({
       composition: structuredClone(DEFAULT_COMPOSITION),

@@ -5,6 +5,7 @@ import { TRACKS, TRACK_ORDER, hasAnimation, quantise, trackDef } from '../engine
 import type { Composition, Track, TrackId } from '../engine/types'
 import { CurveEditor } from './CurveEditor'
 import { ScrubField } from './ScrubField'
+import { STARTERS } from '../engine/starters'
 
 const ROW_H = 28
 /** How tall the value graph stands when it replaces the lanes. */
@@ -47,6 +48,7 @@ export function TimelinePanel() {
   const setTrackEnabled = useStore((s) => s.setTrackEnabled)
   const setCompositionLength = useStore((s) => s.setCompositionLength)
   const clearComposition = useStore((s) => s.clearComposition)
+  const applyStarter = useStore((s) => s.applyStarter)
 
   const rows = useMemo(() => rowsOf(composition), [composition])
 
@@ -508,12 +510,25 @@ export function TimelinePanel() {
       )}
 
       {rows.length === 0 && (
-        <p className="note tl-empty">
-          Pose the device, then <strong>Key pose</strong> to start animating. After that, posing the
-          device at a new point on the timeline keys itself. Pick a single property from
-          <strong> Animate</strong> to give it its own row. Select a key or the bar between two to
-          edit it in the panel on the right.
-        </p>
+        <div className="tl-start">
+          <p className="note">
+            Pose the device, then start from one of these — each animates <em>into</em> the shot you
+            have set up, and you can take it apart afterwards. Or <strong>Key pose</strong> and build
+            it yourself.
+          </p>
+          <div className="tl-starters">
+            {STARTERS.map((s) => (
+              <button
+                key={s.id} type="button" className="tl-starter"
+                title={s.description}
+                onClick={() => applyStarter(s.id)}
+              >
+                <strong>{s.name}</strong>
+                <em>{s.description}</em>
+              </button>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )

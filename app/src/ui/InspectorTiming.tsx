@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useStore } from '../state/store'
 import { trackDef } from '../engine/tracks'
 import { SEED_BEZIER, clamp, easeFn } from './ease'
+import { DEFAULT_SPRING } from './spring'
 import { ScrubField } from './ScrubField'
 import { EASES, type EaseName } from '../engine/types'
 
@@ -38,6 +39,8 @@ export function InspectorTiming() {
   if (!selection || !track || !def || !key) return null
 
   const isCustom = key.ease === 'custom'
+  const isSpring = key.ease === 'spring'
+  const spring = key.spring ?? DEFAULT_SPRING
   const segment = selection.kind === 'segment'
 
   return (
@@ -93,12 +96,14 @@ export function InspectorTiming() {
               disabled={!prev}
               onChange={(e) => {
                 const value = e.target.value
-                updateKey(selection.track, key.id, value === 'custom'
-                  ? { ease: 'custom', bezier: key.bezier ?? SEED_BEZIER }
+                updateKey(selection.track, key.id,
+                  value === 'custom' ? { ease: 'custom', bezier: key.bezier ?? SEED_BEZIER }
+                  : value === 'spring' ? { ease: 'spring', spring: key.spring ?? DEFAULT_SPRING }
                   : { ease: value as EaseName })
               }}
             >
               {EASES.map((e) => <option key={e} value={e}>{e}</option>)}
+              <option value="spring">spring</option>
               <option value="custom">custom…</option>
             </select>
           </label>
@@ -107,6 +112,23 @@ export function InspectorTiming() {
               cubic-bezier({(key.bezier ?? SEED_BEZIER).map((n) => n.toFixed(2)).join(', ')})
             </span>
           )}
+          {isSpring && ([
+            ['stiffness', 'Stiffness', 1, 400],
+            ['damping', 'Damping', 0.5, 60],
+            ['mass', 'Mass', 0.1, 10],
+            ['velocity', 'Velocity', 0, 40],
+          ] as const).map(([field, label, min, max]) => (
+            <label key={field} className="tr-field">
+              <span>{label}</span>
+              <ScrubField
+                value={spring[field]} min={min} max={max}
+                step={field === 'mass' ? 0.05 : 0.5} handle="◇" width={92}
+                onChange={(n) => updateKey(selection.track, key.id, {
+                  ease: 'spring', spring: { ...spring, [field]: n },
+                })}
+              />
+            </label>
+          ))}
         </div>}
 
         <div className="tr-col grow">

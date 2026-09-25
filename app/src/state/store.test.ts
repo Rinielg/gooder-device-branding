@@ -15,8 +15,9 @@ beforeEach(() => {
   st().clearComposition()
   useStore.setState({
     composition: structuredClone(DEFAULT_COMPOSITION),
-    playhead: 0, past: [], future: [], selection: null, presets: [],
+    playhead: 0, past: [], future: [], selection: null, presets: [], sampled: null,
   })
+  useStore.setState({ lighting: structuredClone(DEFAULT_LIGHTING) })
 })
 
 describe('shiftTrackKeys', () => {
@@ -219,5 +220,74 @@ describe('history', () => {
 
     expect(st().past).toHaveLength(0)
     expect(st().screen.brightness).toBe(2)
+  })
+})
+
+describe('applyStarter', () => {
+  test('fills an empty timeline with something that moves', () => {
+    st().applyStarter('slide-in')
+
+    const keys = st().composition.tracks.position!.keys
+    expect(keys).toHaveLength(2)
+    expect(keys[0].time).toBe(0)
+  })
+
+  test('ends on the pose that was already set up', () => {
+    st().setTransform({ posX: 0.4 })
+
+    st().applyStarter('slide-in')
+
+    const keys = st().composition.tracks.position!.keys
+    expect(keys[keys.length - 1].value.x).toBe(0.4)
+  })
+
+  test('is one undo step', () => {
+    st().applyStarter('bounce')
+
+    expect(st().past).toHaveLength(1)
+  })
+
+  test('replaces whatever was there rather than merging into it', () => {
+    st().applyStarter('showcase')
+    st().applyStarter('turn')
+
+    expect(Object.keys(st().composition.tracks)).toEqual(['rotation'])
+  })
+})
+
+describe('removing a track', () => {
+  test('leaves the property where it looked, not where the base drifted to', () => {
+    // Editing an animated property writes a key AND moves the base, because the
+    // canvas drag accumulates from the base. That is harmless while the sample
+    // shadows it — but deleting the track would otherwise reveal the drift as a
+    // jump to wherever the last edit happened to land.
+    st().setTransform({ rotY: 0 })
+    st().keyTrack('rotation')
+    useStore.setState({ playhead: 2 })
+    st().setTransform({ rotY: 90 })
+    useStore.setState({ playhead: 1 })
+    st().setSampled({ rotation: { x: -8, y: 45, z: 0 } })
+
+    st().removeTrack('rotation')
+
+    expect(st().transform.rotY).toBe(45)
+  })
+
+  test('leaves the base alone when nothing was being sampled', () => {
+    st().setTransform({ rotY: 30 })
+    st().keyTrack('rotation')
+
+    st().removeTrack('rotation')
+
+    expect(st().transform.rotY).toBe(30)
+  })
+
+  test('hands back a light the same way', () => {
+    st().keyTrack('keyLight')
+    st().setSampled({ keyLight: { intensity: 3.5, x: 1, y: 1, z: 1 } })
+
+    st().removeTrack('keyLight')
+
+    expect(st().lighting.lights.key.intensity).toBe(3.5)
   })
 })
