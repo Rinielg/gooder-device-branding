@@ -20,6 +20,7 @@ import { CloudSheet } from './ui/CloudSheet'
 import { HistorySheet } from './ui/HistorySheet'
 import { CloudBadge } from './ui/CloudBadge'
 import { useCloud } from './state/cloud'
+import { cloudEnabled } from './state/supabase'
 import { useStore, type InspectorTab } from './state/store'
 import './styles.css'
 
@@ -59,9 +60,18 @@ export default function App() {
       if (tag === 'INPUT' || tag === 'TEXTAREA') return
 
       if (e.key === '?') { e.preventDefault(); setShortcuts((v) => !v); return }
-      // A bare letter, like K for the pose. ⌘H hides the application on a Mac
-      // and is not ours to take.
-      if ((e.key === 'h' || e.key === 'H') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      // Bare letters, like K for the pose. The obvious modifiers are taken:
+      // ⌘H hides the application on a Mac and ⌘P prints.
+      const bare = !e.metaKey && !e.ctrlKey && !e.altKey
+      if (bare && (e.key === 'p' || e.key === 'P')) {
+        // Not gated on being signed in: signed out, this is the panel you sign
+        // in from, which is the most useful thing it can be.
+        if (!cloudEnabled) return
+        e.preventDefault()
+        setProjects((v) => !v)
+        return
+      }
+      if (bare && (e.key === 'h' || e.key === 'H')) {
         if (!signedIn) return
         e.preventDefault()
         setHistory((v) => !v)

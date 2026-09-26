@@ -26,6 +26,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { keys: ['Esc'], action: 'Close a panel, menu or popover' },
       { keys: ['⌘', 'Z'], action: 'Undo' },
       { keys: ['⌘', '⇧', 'Z'], action: 'Redo' },
+      { keys: ['P'], action: 'Open projects', note: 'Sign in, or switch project' },
       { keys: ['H'], action: 'Open the history', note: 'Signed in' },
     ],
   },
